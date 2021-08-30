@@ -1,6 +1,8 @@
 #pragma once
 #include "GuiCode2/pch.hpp"
 #include "GuiCode2/Event.hpp"
+#include "GuiCode2/Graphics.hpp"
+
 namespace GuiCode
 {
 	struct Dimensions
@@ -45,7 +47,12 @@ namespace GuiCode
 	class Component : public Dimensions
 	{
 	public:
+		Component();
+
 		virtual bool Hitbox(const Vec2<double>& pos) const { return pos.Inside(dimensions); }
+
+
+		virtual void Render(CommandCollection& d) const {};
 
 		template<int state>
 		int State() const { return m_States.contains(state) ? m_States.at(state) : NoValue; }

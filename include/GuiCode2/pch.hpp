@@ -14,10 +14,12 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <codecvt>
 #include <filesystem>
 #include <functional>
 #include <fstream>
 #include <iostream>
+#include <locale>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -31,15 +33,12 @@
 #include <variant>
 #include <vector>
 
-#define min(x, y) std::min(x, y)
-#define max(x, y) std::max(x, y)
 #define constrain(x, y, z) (x < y ? y : x > z ? z : x)
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <dwmapi.h>
 #include <unknwn.h>
-#include <gdiplus.h>
 #include <windowsx.h>
 
 // Rarely updated local headers

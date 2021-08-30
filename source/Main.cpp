@@ -5,6 +5,7 @@
 #include "GuiCode2/BasicEvents.hpp"
 #include "GuiCode2/Panel.hpp"
 #include "GuiCode2/Layout.hpp"
+#include <GuiCode2/Window.hpp>
 
 using namespace GuiCode;
 
@@ -63,6 +64,11 @@ public:
 		{
 			std::cout << "Press!" << id << std::endl;
 		};
+		
+		listener += [this](const MouseClick& e)
+		{
+			std::cout << "Click!" << id << std::endl;
+		};
 
 		listener += [this](const MouseRelease& e)
 		{
@@ -80,25 +86,27 @@ public:
 		};
 	}
 
+	void Render(CommandCollection& d) const override
+	{
+		d.Fill({ 255, 255, 255, 255 });
+		d.Quad(dimensions);
+	}
+
 	int id;
 };
 
 int main()
 {
-	Panel _myPanel;
-	_myPanel.div = { { .id = 1 } };
-	Apple& _comp = _myPanel.Emplace<Apple>(1);
-	Apple& _comp2 = _myPanel.Emplace<Apple>(2);
-	_comp.dimensions = { 8, 8, 4, 4 };
-	_comp2.dimensions = { 1, 1, 6, 6 };
 
+	WindowsWindow window{ { .name = "Hello" }};
 
-	_myPanel.listener(MouseMove{ { 10, 10 } });
-	_myPanel.listener(MousePress{ { 10, 10 } });
-	_myPanel.listener(MouseDrag{ { 2, 5 } });
-	_myPanel.listener(MouseRelease{ { 2, 2 } });
-	_myPanel.listener(MouseMove{ { 2, 2 } });
-	_myPanel.listener(MousePress{ { 2, 5 } });
+	Apple& _comp = window.panel.Emplace<Apple>(1);
+	Apple& _comp2 = window.panel.Emplace<Apple>(2);
+	_comp.dimensions = { 8, 8, 50, 50 };
+	_comp2.dimensions = { 100, 50, 50, 50 };
 
-
+	while (true)
+	{
+		window.Loop();
+	}
 }

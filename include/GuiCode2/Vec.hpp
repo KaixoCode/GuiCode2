@@ -8,20 +8,25 @@ namespace GuiCode
     template<typename T>
     struct Vec2
     {
-        union { T width, x, r, start; };
-        union { T height, y, g, end; };
+        union { T width, x, r, h, start; };
+        union { T height, y, g, s, end; };
 
         Vec2 operator -() { return { -x, -y }; }
         Vec2 operator -(const Vec2& other) { return { x - other.x, y - other.y }; }
         Vec2 operator +(const Vec2& other) { return { x + other.x, y + other.y }; }
         Vec2 operator *(const Vec2& other) { return { x * other.x, y * other.y }; }
+        Vec2 operator /(const Vec2& other) { return { x / other.x, y / other.y }; }
         Vec2 operator *(T other) { return { x * other, y * other }; }
+        Vec2 operator /(T other) { return { x / other, y / other }; }
         Vec2 operator +(T other) { return { x + other, y + other }; }
+        Vec2 operator -(T other) { return { x - other, y - other }; }
         Vec2& operator =(const Vec2& other) { x = other.x, y = other.y; return *this; }
         Vec2& operator+=(const Vec2& other) { x += other.x; y += other.y; return *this; }
         Vec2& operator-=(const Vec2& other) { x -= other.x; y -= other.y; return *this; }
+        bool operator==(const Vec2& other) const { return x == other.x && y == other.y; }
+        bool operator!=(const Vec2& other) const { return x != other.x || y != other.y; }
 
-        operator glm::vec2() { return { x, y }; }
+        operator glm::vec2() const { return { x, y }; }
 
         bool Inside(const Vec4<T>& o) const
         {
@@ -53,9 +58,9 @@ namespace GuiCode
     template<typename T>
     struct Vec3
     {
-        union { T width, x, r; };
-        union { T height, y, g; };
-        union { T depth, z, b; };
+        union { T width, x, r, h; };
+        union { T height, y, g, s; };
+        union { T depth, z, b, v; };
 
         Vec3 operator -() { return { -x, -y, -z }; }
         Vec3 operator -(const Vec3& other) { return { x - other.x, y - other.y, z - other.z }; }
@@ -65,8 +70,9 @@ namespace GuiCode
         Vec3& operator =(const Vec3& other) { x = other.x, y = other.y; z = other.z; return *this; }
         Vec3& operator+=(const Vec3& other) { x += other.x; y += other.y; z += other.z; return *this; }
         Vec3& operator-=(const Vec3& other) { x -= other.x; y -= other.y; z -= other.z; return *this; }
+        bool operator==(const Vec3& other) const { return x == other.x && y == other.y && z == other.z; }
 
-        operator glm::vec3() { return { x, y, z }; }
+        operator glm::vec3() const { return { x, y, z }; }
 
         template <size_t I>
         auto& get()&
@@ -96,10 +102,25 @@ namespace GuiCode
     template<typename T>
     struct Vec4
     {
-        union { T x, r; };
-        union { T y, g; };
-        union { T z, b, width; };
-        union { T w, a, height; };
+        union
+        {
+            Vec2<T> position{ 0, 0 };
+            struct
+            {
+                union { T x, r, h, left; };
+                union { T y, g, s, top; };
+            };
+        };
+
+        union
+        {
+            Vec2<T> size{ 0, 0 };
+            struct
+            {
+                union { T z, b, v, width, right; };
+                union { T w, a, height, bottom; };
+            };
+        };
 
         Vec4 operator -() const { return { -x, -y, -z }; }
         Vec4 operator -(const Vec4& other) const { return { x - other.x, y - other.y, z - other.z, w - other.w }; }
@@ -116,10 +137,10 @@ namespace GuiCode
         {
             if (width == -1 || height == -1)
                 return o;
-            T x5 = max(x, o.x);
-            T y5 = max(y, o.y);
-            T x6 = min(x + width, o.x + o.width);
-            T y6 = min(y + height, o.y + o.height);
+            T x5 = std::max(x, o.x);
+            T y5 = std::max(y, o.y);
+            T x6 = std::min(x + width, o.x + o.width);
+            T y6 = std::min(y + height, o.y + o.height);
             if (x5 > x6 || y5 > y6)
                 return { 0, 0, 0, 0 };
             return { x5, y5, x6 - x5, y6 - y5 };
@@ -135,7 +156,7 @@ namespace GuiCode
             return o.x >= x && o.x <= x + width && o.y > y && o.y < y + height;
         }
 
-        operator glm::vec4() { return { x, y, z, w }; }
+        operator glm::vec4() const { return { x, y, z, w }; }
 
         template <size_t I>
         auto& get()&
@@ -164,6 +185,8 @@ namespace GuiCode
             else if constexpr (I == 3) return std::move(w);
         }
     };
+
+    using Color = Vec4<float>;
 }
 
 namespace std
