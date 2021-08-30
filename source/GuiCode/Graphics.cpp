@@ -197,7 +197,7 @@ namespace GuiCode
             Command& a = d.Get()[i];
 
             switch(a.data.index()) {
-            case Fill: m_Fill = std::get<Fill>(a.data).color; break;
+            case Fill: m_Fill = std::get<Fill>(a.data).color / 256; break;
             case Quad: m_Quad(std::get<Quad>(a.data).dimensions, std::get<Quad>(a.data).rotation); break;
             case Line: m_Line(Vec4<double>{ std::get<Line>(a.data).start, std::get<Line>(a.data).end }, std::get<Line>(a.data).thickness); break;
             case Ellipse: m_Ellipse(std::get<Ellipse>(a.data).dimensions, std::get<Ellipse>(a.data).angles); break;

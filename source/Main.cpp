@@ -88,7 +88,13 @@ public:
 
 	void Render(CommandCollection& d) const override
 	{
-		d.Fill({ 255, 255, 255, 255 });
+		if (State<Pressed>())
+			d.Fill({ 200, 200, 200, 255 });
+		else if (State<Hovering>())
+			d.Fill({ 235, 235, 235, 255 });
+		else
+			d.Fill({ 255, 255, 255, 255 });
+
 		d.Quad(dimensions);
 	}
 
