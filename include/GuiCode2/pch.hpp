@@ -43,15 +43,7 @@
 #include <windowsx.h>
 
 // Rarely updated local headers
-#include "GuiCode/data/Vec.hpp"
-
-using Color = Vec4<float>;
-
-enum struct Align
-{
-    CENTER, LEFT, RIGHT, TOP, BOTTOM
-};
-
+#include "GuiCode2/Vec.hpp"
 
 #define M_PI 3.14159265359
 

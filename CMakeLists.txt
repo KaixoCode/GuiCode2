@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.0)
 project (GuiCode2)
 
-set (CMAKE_CXX_STANDARD 17)
+set (CMAKE_CXX_STANDARD 20)
 
 find_package(OpenGL REQUIRED)
 
@@ -28,7 +28,7 @@ include_directories(
   include/
 )
 
-add_executable(GuiCode2 STATIC
+add_executable(GuiCode2
   ${SOURCE}
 )
 
@@ -44,7 +44,6 @@ target_link_libraries(GuiCode2
   glfw
   GLAD
   freetype
-  ModuleBase
   comctl32
   propsys
   dwmapi
