@@ -30,89 +30,78 @@ namespace GuiCode
 		};
 	};
 
-	struct Render : public Event
-	{
-		Render(CommandCollection& c)
-			: collection(c)
-		{}
-
-		bool Forward(const Component& c) const override { return true; };
-
-		CommandCollection& collection;
-	};
-
 	struct MouseMove : public Event
 	{
-		MouseMove(Vec2<double> pos)
+		MouseMove(Vec2<float> pos)
 			: pos(pos)
 		{}
 
 		bool Forward(const Component& c) const override { return c.State<Hovering>(); };
 
-		Vec2<double> pos;
+		Vec2<float> pos;
 	};
 
 	struct MouseDrag : public Event
 	{
-		MouseDrag(Vec2<double> pos, int buttons, int mod)
+		MouseDrag(Vec2<float> pos, int buttons, int mod)
 			: pos(pos), buttons(buttons), mod(mod)
 		{}
 
 		bool Forward(const Component& c) const override { return c.State<Pressed>(); };
 
-		Vec2<double> pos; // Position of cursor
+		Vec2<float> pos; // Position of cursor
 		int buttons;      // Buttons held down
 		int mod;          // Key mods
 	};
 
 	struct MousePress : public Event
 	{
-		MousePress(Vec2<double> pos, int button, int mod)
+		MousePress(Vec2<float> pos, int button, int mod)
 			: pos(pos), button(button), mod(mod)
 		{}
 
 		bool Forward(const Component& c) const override { return c.State<Hovering>(); };
 
-		Vec2<double> pos;
+		Vec2<float> pos;
 		int button;
 		int mod;
 	};
 
 	struct MouseClick : public Event
 	{
-		MouseClick(Vec2<double> pos, int button, int mod)
+		MouseClick(Vec2<float> pos, int button, int mod)
 			: pos(pos), button(button), mod(mod)
 		{}
 
 		bool Forward(const Component& c) const override { return c.State<Hovering>(); };
 
-		Vec2<double> pos;
+		Vec2<float> pos;
 		int button;
 		int mod;
 	};
 
 	struct MouseWheel : public Event
 	{
-		MouseWheel(Vec2<double> pos, int amount, int mod)
+		MouseWheel(Vec2<float> pos, int amount, int mod)
 			: pos(pos), amount(amount), mod(mod)
 		{}
 
 		bool Forward(const Component& c) const override { return c.State<Hovering>(); };
 
-		Vec2<double> pos;
+		Vec2<float> pos;
 		int amount;
 		int mod;
 	};
 
 	struct MouseRelease : public Event
 	{
-		MouseRelease(Vec2<double> pos, int button, int mod)
+		MouseRelease(Vec2<float> pos, int button, int mod)
 			: pos(pos), button(button), mod(mod)
 		{}
 
 		bool Forward(const Component& c) const override { return c.State<Focused>(); };
 
-		Vec2<double> pos;
+		Vec2<float> pos;
 		int button;
 		int mod;
 	};

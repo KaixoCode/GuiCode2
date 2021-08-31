@@ -25,8 +25,8 @@ namespace GuiCode
 	struct MouseInfo
 	{
 		int pressedMouseButtons = 0;
-		Vec2<double> cursorPosition{ 0, 0 };
-		Vec2<double> pressedCursorPosition{ 0, 0 };
+		Vec2<float> cursorPosition{ 0, 0 };
+		Vec2<float> pressedCursorPosition{ 0, 0 };
 	};
 
 	struct WindowInfo
@@ -52,7 +52,7 @@ namespace GuiCode
 		std::unique_ptr<GraphicsBase> graphics;
 
 	protected:
-		virtual bool BorderHitbox(const Vec2<double>&) const { return false; }
+		virtual bool BorderHitbox(const Vec2<float>&) const { return false; }
 
 	private:
 		static inline int m_WindowIdCounter = 0;

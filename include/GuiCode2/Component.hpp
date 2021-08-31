@@ -11,7 +11,7 @@ namespace GuiCode
 			: dimensions{ 0, 0, 0, 0 }
 		{}
 
-		Dimensions(double a, double b, double c, double d)
+		Dimensions(float a, float b, float c, float d)
 			: dimensions{ a, b, c, d }
 		{}
 
@@ -20,11 +20,11 @@ namespace GuiCode
 
 		union
 		{
-			struct { double x, y, width, height; };
-			struct { Vec2<double> position, size; };
-			Vec4<double> dimensions;
+			struct { float x, y, width, height; };
+			struct { Vec2<float> position, size; };
+			Vec4<float> dimensions;
 		};
-		double zIndex = 0;
+		float zIndex = 0;
 
 		Dimensions& operator=(Dimensions&& other)
 		{
@@ -58,7 +58,7 @@ namespace GuiCode
 	public:
 		EventListener listener;
 
-		virtual bool Hitbox(const Vec2<double>& pos) const { return pos.Inside(dimensions); }
+		virtual bool Hitbox(const Vec2<float>& pos) const { return pos.Inside(dimensions); }
 
 		void CalculateOrder();
 		void RegisterComponent(Component& c);

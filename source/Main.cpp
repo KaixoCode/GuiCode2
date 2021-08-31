@@ -117,7 +117,7 @@ public:
 
 	}
 
-	Vec2<double> press;
+	Vec2<float> press;
 	int id;
 };
 

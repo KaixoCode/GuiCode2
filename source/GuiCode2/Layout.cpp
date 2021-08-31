@@ -2,6 +2,7 @@
 
 namespace GuiCode
 {
+
 	Span* Span::Find(int id)
 	{
 		if (settings.id == id)
@@ -21,19 +22,6 @@ namespace GuiCode
 	{
 		if (component)
 		{
-			// Sizing
-			switch(settings.layout.x)
-			{
-			case Fit: settings.dimensions.width = component->dimensions.width; break;
-			case Fill: component->dimensions.width = settings.dimensions.width; break;
-			}
-
-			switch (settings.layout.y)
-			{
-			case Fit: settings.dimensions.height = component->dimensions.height; break;
-			case Fill: component->dimensions.height = settings.dimensions.height; break;
-			}
-
 			// Positioning
 			if (settings.align & Align::Right) component->dimensions.x = settings.dimensions.x + settings.dimensions.width - component->dimensions.width;
 			else if (settings.align & Align::XCenter) component->dimensions.x = settings.dimensions.x + settings.dimensions.width / 2 - component->dimensions.width / 2;

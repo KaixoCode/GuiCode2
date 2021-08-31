@@ -273,7 +273,7 @@ namespace GuiCode
 
 
         int _offset = IsMaximized(hWnd) ? 8 : 0;
-        double _padding = 8.0;
+        float _padding = 8.0;
         if (_self->mouseInfo.pressedMouseButtons != MouseButton::None || !_self->BorderHitbox(_self->mouseInfo.cursorPosition))
             switch (uMsg)
             {
@@ -446,9 +446,9 @@ namespace GuiCode
         mouseInfo.cursorPosition.x = x;
         mouseInfo.cursorPosition.y = y;
         if (mouseInfo.pressedMouseButtons == MouseButton::None)
-            m_EventQueue.emplace(new MouseMove{ { (double)x, (double)y } });
+            m_EventQueue.emplace(new MouseMove{ { (float)x, (float)y } });
         else
-            m_EventQueue.emplace(new MouseDrag{ { (double)x, (double)y }, mouseInfo.pressedMouseButtons, mod });
+            m_EventQueue.emplace(new MouseDrag{ { (float)x, (float)y }, mouseInfo.pressedMouseButtons, mod });
     }
 
     void WindowsWindow::MouseButtonCallback(int button, bool press, int mod)
@@ -471,7 +471,7 @@ namespace GuiCode
 
     void WindowsWindow::MouseWheelCallback(int amount, int mod, int x, int y)
     {
-        m_EventQueue.emplace(new MouseWheel{ { (double)x, (double)y }, amount, mod });
+        m_EventQueue.emplace(new MouseWheel{ { (float)x, (float)y }, amount, mod });
     }
 
     void WindowsWindow::KeyCallback(int key, bool repeat, int action, int mod)
@@ -489,8 +489,8 @@ namespace GuiCode
 
     void WindowsWindow::WindowSizeCallback(int x, int y, int width, int height)
     {
-        dimensions = { (double)x, (double)y, (double)width, (double)height };
-        m_PrevDims = { (double)x, (double)y, (double)width, (double)height };
+        dimensions = { (float)x, (float)y, (float)width, (float)height };
+        m_PrevDims = { (float)x, (float)y, (float)width, (float)height };
 
         graphics->SetProjection(glm::ortho(0.0f, (float)std::max(width, 5), 0.0f, (float)std::max(height, 5)));
     }

@@ -12,7 +12,7 @@ namespace GuiCode
     Color rgb2hsv(Color in)
     {
         Color       out;
-        double      min, max, delta;
+        float      min, max, delta;
         out.a = in.a;
 
         min = in.r < in.g ? in.r : in.g;
@@ -57,7 +57,7 @@ namespace GuiCode
 
     Color hsv2rgb(Color in)
     {
-        double      hh, p, q, t, ff;
+        float      hh, p, q, t, ff;
         long        i;
         Color       out;
         out.a = in.a;
@@ -200,7 +200,7 @@ namespace GuiCode
     void OpenGL::Clip(const glm::vec4& a) 
     {
         glEnable(GL_SCISSOR_TEST);
-        Vec4<double> clip = {
+        Vec4<float> clip = {
             std::ceil((a.x + m_Matrix[3][0]) / m_Scaling),
                 std::ceil((a.y + m_Matrix[3][1]) / m_Scaling),
                 std::ceil(a.z / m_Scaling),
@@ -220,7 +220,7 @@ namespace GuiCode
         else
         {
             glEnable(GL_SCISSOR_TEST);
-            Vec4<double> clip2 = m_ClipStack.top();
+            Vec4<float> clip2 = m_ClipStack.top();
             m_ClipStack.pop();
             m_Clip = clip2;
             glScissor(clip2.x, clip2.y, clip2.width, clip2.height);
@@ -241,7 +241,7 @@ namespace GuiCode
             std::floor(a.w / m_Scaling));
     }
 
-    void OpenGL::Line(const glm::vec4& dim, double width)
+    void OpenGL::Line(const glm::vec4& dim, float width)
     {
         
         static Shader _shader
@@ -360,7 +360,7 @@ namespace GuiCode
         glDrawArrays(GL_LINES, 0, 2);
     }
 
-    void OpenGL::Quad(const glm::vec4& dim, double rotation)
+    void OpenGL::Quad(const glm::vec4& dim, float rotation)
     {
         static Shader _shader
         {
