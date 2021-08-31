@@ -2,14 +2,14 @@
 
 namespace GuiCode
 {
-	Div* Div::Find(int id)
+	Span* Span::Find(int id)
 	{
 		if (settings.id == id)
 			return this;
 
 		for (auto& i : divs)
 		{
-			Div* _div = i.Find(id);
+			Span* _div = i.Find(id);
 			if (_div)
 				return _div;
 		}
@@ -17,7 +17,7 @@ namespace GuiCode
 		return nullptr;
 	}
 
-	void Div::Layout() 
+	void Span::Layout() 
 	{
 		if (component)
 		{
@@ -35,12 +35,12 @@ namespace GuiCode
 			}
 
 			// Positioning
-			if (settings.align & Right) component->dimensions.x = settings.dimensions.x + settings.dimensions.width - component->dimensions.width;
-			else if (settings.align & XCenter) component->dimensions.x = settings.dimensions.x + settings.dimensions.width / 2 - component->dimensions.width / 2;
+			if (settings.align & Align::Right) component->dimensions.x = settings.dimensions.x + settings.dimensions.width - component->dimensions.width;
+			else if (settings.align & Align::XCenter) component->dimensions.x = settings.dimensions.x + settings.dimensions.width / 2 - component->dimensions.width / 2;
 			else component->dimensions.x = settings.dimensions.x;
 
-			if (settings.align & Bottom) component->dimensions.y = settings.dimensions.y + settings.dimensions.height - component->dimensions.height;
-			else if (settings.align & YCenter) component->dimensions.y = settings.dimensions.y + settings.dimensions.height / 2 - component->dimensions.height / 2;
+			if (settings.align & Align::Bottom) component->dimensions.y = settings.dimensions.y + settings.dimensions.height - component->dimensions.height;
+			else if (settings.align & Align::YCenter) component->dimensions.y = settings.dimensions.y + settings.dimensions.height / 2 - component->dimensions.height / 2;
 			else component->dimensions.y = settings.dimensions.y;
 		}
 		else

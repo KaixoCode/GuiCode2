@@ -138,7 +138,7 @@ int main()
 	_comp2.dimensions = { 40, 40, 50, 50 };
 	_comp3.dimensions = { 10, 35, 50, 50 };
 
-	_comp3.State<Visible>(true);
+	_comp3.State<Visible>(false);
 
 	while (window.Loop())
 	{

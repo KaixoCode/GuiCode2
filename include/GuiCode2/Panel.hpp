@@ -32,7 +32,7 @@ namespace GuiCode
 			return false;
 		}
 
-		Div div;
+		Span div;
 
 	private:
 		std::vector<std::unique_ptr<Component>> m_Components;

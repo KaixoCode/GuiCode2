@@ -76,8 +76,8 @@ namespace GuiCode
 		void State(int state, int value) { m_States[state] = value; }
 
 	protected:
-		void ForwardRender(CommandCollection& d);
-		void ForwardUpdate();
+		virtual void ForwardRender(CommandCollection& d);
+		virtual void ForwardUpdate();
 
 	private:
 		mutable std::unordered_map<int, int> m_States;
