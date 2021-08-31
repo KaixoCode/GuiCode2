@@ -44,7 +44,7 @@ namespace GuiCode
 	enum State
 	{
 		NoValue = 0, 
-		Hovering, Focused, Pressed, UseDepth,
+		Hovering, Focused, Pressed, UseDepth, Visible
 	};
 
 	class Component : public Dimensions
@@ -65,19 +65,21 @@ namespace GuiCode
 		void UnregisterComponent(Component& obj);
 
 		virtual void Render(CommandCollection& d) const {};
+		virtual void Update() {};
 
 		template<int state>
-		int State() const { return m_States.contains(state) ? m_States.at(state) : NoValue; }
-		int State(int state) const { return m_States.contains(state) ? m_States.at(state) : NoValue; }
+		int State() const { return m_States[state]; }
+		int State(int state) const { return m_States[state]; }
 
 		template<int state>
 		void State(int value) { m_States[state] = value; }
 		void State(int state, int value) { m_States[state] = value; }
 
 	protected:
-		virtual void ForwardRender(CommandCollection& d) final;
+		void ForwardRender(CommandCollection& d);
+		void ForwardUpdate();
 
 	private:
-		std::map<int, int> m_States;
+		mutable std::unordered_map<int, int> m_States;
 	};
 }

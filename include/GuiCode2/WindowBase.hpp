@@ -3,15 +3,20 @@
 
 namespace GuiCode
 {
+	enum WindowState
+	{
+		Hide, Show, Minimize, Maximize, Close
+	};
+
 	class WindowBase;
 	struct WindowData
 	{
 		std::string name;
-		Vec2<int> size;
+		Dimensions dimensions{ 0, 0, 500, 500 };
 		bool alwaysOnTop = false;
 		bool transparentBuffer = false;
 		bool hideOnClose = false;
-		bool showOnCreate = true;
+		int state = Show;
 		bool resizeable = true;
 		bool decorated = true;
 		WindowBase* parent = nullptr;
@@ -26,21 +31,30 @@ namespace GuiCode
 
 	struct WindowInfo
 	{
-
+		bool hideOnClose = false;
 	};
 
-	class WindowBase : public Component
+
+
+	class WindowBase : public Panel
 	{
 	public:
 		WindowBase(const WindowData& d)
 		{
-			RegisterComponent(panel);
+			windowId = m_WindowIdCounter++;
 		}
 
-		virtual void Loop() = 0;
+		virtual bool Loop() = 0;
 
 		MouseInfo mouseInfo;
 		WindowInfo info;
-		Panel panel;
+		int windowId;
+		std::unique_ptr<GraphicsBase> graphics;
+
+	protected:
+		virtual bool BorderHitbox(const Vec2<double>&) const { return false; }
+
+	private:
+		static inline int m_WindowIdCounter = 0;
 	};
 }

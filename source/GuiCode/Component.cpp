@@ -5,7 +5,9 @@ namespace GuiCode
 {
 	Component::Component()
 		: listener{ m_Components }
-	{}
+	{
+		State<Visible>(true);
+	}
 
 	void Component::CalculateOrder()
 	{
@@ -26,11 +28,25 @@ namespace GuiCode
 
 	void Component::ForwardRender(CommandCollection& d)
 	{
+		d.PushClip();
+		d.PushMatrix();
 		Render(d);
 		if (State<UseDepth>())
 			CalculateOrder();
 		for (auto i = m_Components.rbegin(); i != m_Components.rend(); ++i)
-			(*i)->ForwardRender(d);
+			if ((*i)->State<Visible>())
+				(*i)->ForwardRender(d);
+		d.PopMatrix();
+		d.PopClip();
 	}
 
+	void Component::ForwardUpdate()
+	{
+		Update();
+		if (State<UseDepth>())
+			CalculateOrder();
+		for (auto i = m_Components.rbegin(); i != m_Components.rend(); ++i)
+			if ((*i)->State<Visible>())
+				(*i)->ForwardUpdate();
+	}
 }

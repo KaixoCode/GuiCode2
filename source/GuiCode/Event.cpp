@@ -15,11 +15,13 @@ namespace GuiCode
 			int _amount = 0; // Key track of limit
 			for (auto& l : h.handlers) // Go through handlers for this state
 				for (auto& i : m_Components) // If over limit, set overflow = true
-					_amount += l->Call(e, *i, _amount >= h.settings.limit);
+					if (i->State<Visible>())
+						_amount += l->Call(e, *i, _amount >= h.settings.limit);
 		}
 
 		// Go through components and check if we should forward event.
 		for (auto& i : m_Components)
-			if (e.Forward(*i)) i->listener(e);
+			if (i->State<Visible>())
+				if (e.Forward(*i)) i->listener(e);
 	}
 }

@@ -4,7 +4,7 @@
 #include "GuiCode2/BasicEvents.hpp"
 #include "GuiCode2/Panel.hpp"
 #include "GuiCode2/Layout.hpp"
-#include <GuiCode2/Window.hpp>
+#include "GuiCode2/Frame.hpp"
 
 using namespace GuiCode;
 
@@ -61,6 +61,7 @@ public:
 
 		listener += [this](const MousePress& e)
 		{
+			press = e.pos;
 			std::cout << "Press!" << id << std::endl;
 		};
 		
@@ -71,6 +72,7 @@ public:
 
 		listener += [this](const MouseRelease& e)
 		{
+			zIndex = 0;
 			std::cout << "Release!" << id << std::endl;
 		};
 
@@ -81,44 +83,65 @@ public:
 
 		listener += [this](const MouseDrag& e)
 		{
+			if (press.x > x + width - 10 && press.y > y + height - 10)
+			{
+				size = e.pos - position;
+				press = e.pos;
+			} else {
+				position += e.pos - press;
+				press = e.pos;
+				zIndex = 10;
+			}
 			std::cout << "Drag!" << id << std::endl;
 		};
 	}
 
 	void Render(CommandCollection& d) const override
 	{
-		if (State<Pressed>())
-			d.Fill({ 200, 200, 200, 255 });
-		else if (State<Hovering>())
-			d.Fill({ 235, 235, 235, 255 });
-		else
-			d.Fill({ 255, 255, 255, 255 });
-
+		d.Fill({ 255, 255, 255, 255 });
 		d.Quad(dimensions);
+
+		if (State<Pressed>())
+			d.Fill({ 200, 0, 0, 255 });
+		else if (State<Hovering>())
+			d.Fill({ 235, 0, 0, 255 });
+		else
+			d.Fill({ 255, 0, 0, 255 });
+
+		d.Quad(dimensions - 1);
+
 	}
 
+	void Update() override
+	{
+
+	}
+
+	Vec2<double> press;
 	int id;
 };
 
 int main()
 {
 
-	WindowsWindow window{ { .name = "Hello" }};
-
+	Frame window{ {
+		.name = "Hello", 
+		.dimensions{ 500, 100, 500, 500 }, 
+		.state = Show
+	} };
 
 	window.panel.State<UseDepth>(true);
 	Apple& _comp = window.panel.Emplace<Apple>(1);
 	Apple& _comp2 = window.panel.Emplace<Apple>(2);
 	Apple& _comp3 = window.panel.Emplace<Apple>(3);
 	_comp.dimensions = { 8, 8, 50, 50 };
-	_comp.zIndex = 10;
 	_comp2.dimensions = { 40, 40, 50, 50 };
-	_comp2.zIndex = 5;	
 	_comp3.dimensions = { 10, 35, 50, 50 };
-	_comp3.zIndex = 0;
 
-	while (true)
+	_comp3.State<Visible>(true);
+
+	while (window.Loop())
 	{
-		window.Loop();
+		LIMIT_FPS(60);
 	}
 }
