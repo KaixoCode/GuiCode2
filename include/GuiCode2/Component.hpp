@@ -24,16 +24,19 @@ namespace GuiCode
 			struct { Vec2<double> position, size; };
 			Vec4<double> dimensions;
 		};
+		double zIndex = 0;
 
 		Dimensions& operator=(Dimensions&& other)
 		{
 			dimensions = other.dimensions;
+			zIndex = other.zIndex;
 			return *this;
 		}
 
 		Dimensions& operator=(const Dimensions& other)
 		{
 			dimensions = other.dimensions;
+			zIndex = other.zIndex;
 			return *this;
 		}
 	};
@@ -41,7 +44,7 @@ namespace GuiCode
 	enum State
 	{
 		NoValue = 0, 
-		Hovering, Focused, Pressed, 
+		Hovering, Focused, Pressed, UseDepth,
 	};
 
 	class Component : public Dimensions
@@ -49,8 +52,17 @@ namespace GuiCode
 	public:
 		Component();
 
+	private:
+		std::list<Component*> m_Components;
+
+	public:
+		EventListener listener;
+
 		virtual bool Hitbox(const Vec2<double>& pos) const { return pos.Inside(dimensions); }
 
+		void CalculateOrder();
+		void RegisterComponent(Component& c);
+		void UnregisterComponent(Component& obj);
 
 		virtual void Render(CommandCollection& d) const {};
 
@@ -62,7 +74,8 @@ namespace GuiCode
 		void State(int value) { m_States[state] = value; }
 		void State(int state, int value) { m_States[state] = value; }
 
-		EventListener listener;
+	protected:
+		virtual void ForwardRender(CommandCollection& d) final;
 
 	private:
 		std::map<int, int> m_States;

@@ -54,7 +54,7 @@ namespace GuiCode
                 //d.Get().reserve(m_EstimateCommandSize);
                 d.Clip({ 0, 0, width, height });
                 d.Viewport({ 0, 0, width, height });
-                panel.listener(Render{ d });
+                ForwardRender(d);
                 d.PopClip();
                 //m_EstimateCommandSize = d.Get().size() + 100;
                 //d.Command<Graphics::FrameBufferEnd>();

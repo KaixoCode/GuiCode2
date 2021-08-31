@@ -15,7 +15,7 @@ namespace GuiCode
 		Type& Emplace(Args&&...args)
 		{
 			auto& _component = m_Components.emplace_back(std::make_unique<Type>(std::forward<Args>(args)...));
-			listener.RegisterComponent(*_component);
+			RegisterComponent(*_component);
 			return *static_cast<Type*>(_component.get());
 		}
 
@@ -25,7 +25,7 @@ namespace GuiCode
 			auto _it = std::find_if(m_Components.begin(), m_Components.end(), [&](auto& c) { return c.get() == &obj; });
 			if (_it != m_Components.end())
 			{
-				listener.UnregisterComponent(obj);
+				UnregisterComponent(obj);
 				m_Components.erase(_it);
 				return true;
 			}

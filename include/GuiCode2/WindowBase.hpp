@@ -29,11 +29,13 @@ namespace GuiCode
 
 	};
 
-	class WindowBase : public Dimensions
+	class WindowBase : public Component
 	{
 	public:
 		WindowBase(const WindowData& d)
-		{}
+		{
+			RegisterComponent(panel);
+		}
 
 		virtual void Loop() = 0;
 

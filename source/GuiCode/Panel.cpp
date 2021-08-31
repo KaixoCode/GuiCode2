@@ -4,7 +4,7 @@ namespace GuiCode
 {
 	Panel::Panel()
 	{
-		listener += State::Hovering ->* [](const MouseMove& e, const Component& c) -> int
+		listener.State<Hovering>({ .limit = 1 }) += [](const MouseMove& e, const Component& c) -> int
 		{
 			int prev = c.State<Hovering>();
 			int curr = c.Hitbox(e.pos);
@@ -16,9 +16,9 @@ namespace GuiCode
 				c.listener(MouseExit{});
 
 			return curr;
-		};		
+		};
 		
-		listener += State::Focused ->* [](const MousePress& e, const Component& c) -> int
+		listener.State<Focused>({ .limit = 1 }) += [](const MousePress& e, const Component& c) -> int
 		{
 			int prev = c.State<Focused>();
 			int curr = c.State<Hovering>();
@@ -32,7 +32,8 @@ namespace GuiCode
 			return curr;
 		};
 
-		listener += State::Pressed ->* [](const MousePress& e, const Component& c) -> int { return c.State<Hovering>(); };
-		listener += State::Pressed ->* [](const MouseRelease& e, const Component& c) -> int { return false; };
+		(listener.State<Pressed>({ .limit = 1 }) 
+			+= [](const MousePress& e, const Component& c) -> int { return c.State<Hovering>(); })
+			+= [](const MouseRelease& e, const Component& c) -> int { return false; };
 	}
 }

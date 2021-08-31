@@ -1,7 +1,6 @@
 #include "GuiCode2/pch.hpp"
 
 #include "GuiCode2/Component.hpp"
-#include "GuiCode2/Event.hpp"
 #include "GuiCode2/BasicEvents.hpp"
 #include "GuiCode2/Panel.hpp"
 #include "GuiCode2/Layout.hpp"
@@ -106,10 +105,17 @@ int main()
 
 	WindowsWindow window{ { .name = "Hello" }};
 
+
+	window.panel.State<UseDepth>(true);
 	Apple& _comp = window.panel.Emplace<Apple>(1);
 	Apple& _comp2 = window.panel.Emplace<Apple>(2);
+	Apple& _comp3 = window.panel.Emplace<Apple>(3);
 	_comp.dimensions = { 8, 8, 50, 50 };
-	_comp2.dimensions = { 100, 50, 50, 50 };
+	_comp.zIndex = 10;
+	_comp2.dimensions = { 40, 40, 50, 50 };
+	_comp2.zIndex = 5;	
+	_comp3.dimensions = { 10, 35, 50, 50 };
+	_comp3.zIndex = 0;
 
 	while (true)
 	{
