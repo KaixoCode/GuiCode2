@@ -8,8 +8,8 @@ namespace GuiCode
     template<typename T>
     struct Vec2
     {
-        union { T width, x, r, h, start; };
-        union { T height, y, g, s, end; };
+        union { T width; T x; T r; T h; T start; };
+        union { T height; T y; T g; T s; T end; };
 
         Vec2 operator -() const { return { -x, -y }; }
         Vec2 operator -(const Vec2& other) const { return { x - other.x, y - other.y }; }
@@ -102,25 +102,10 @@ namespace GuiCode
     template<typename T>
     struct Vec4
     {
-        union
-        {
-            Vec2<T> position{ 0, 0 };
-            struct
-            {
-                union { T x, r, h, left; };
-                union { T y, g, s, top; };
-            };
-        };
-
-        union
-        {
-            Vec2<T> size{ 0, 0 };
-            struct
-            {
-                union { T z, b, v, width, right; };
-                union { T w, a, height, bottom; };
-            };
-        };
+        union { T x; T r; T h; T left; };
+        union { T y; T g; T s; T top; };
+        union { T z; T b; T v; T width; T right; };
+        union { T w; T a; T height; T bottom; };
 
         Vec4 operator -() const { return { -x, -y, -z }; }
         Vec4 operator -(const Vec4& other) const { return { x - other.x, y - other.y, z - other.z, w - other.w }; }

@@ -114,7 +114,7 @@ namespace GuiCode
 		float padding = State<Visible>() == Maximize ? 8 : 0;
 
 		titlebar.dimensions = { padding, padding, width - 2 * padding, 32 };
-		panel.dimensions = { padding, 32 + padding, width - 2 * padding, height - 2 * padding };
+		panel.dimensions = { padding, 32 + padding, width - 2 * padding, height - 2 * padding - 32 };
 	}
 
 	void Frame::Render(CommandCollection& d) const 

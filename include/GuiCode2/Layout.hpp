@@ -13,13 +13,29 @@ namespace GuiCode
 	 *  - Direction: row, rowReverse, column, columnReverse
 	 *  - Ratio: Calculates ratio based on value, 0 = use own size.
 	 *  - Overflow: 
-	 *     - Fit: Make sure content fits
-	 *     - Hidden: Hides overflow
-	 *     - Wrap: Wraps overflow to next col/row
-	 *     - WrapReverse: Wraps, but starts at
+	 *     - Show: Shows overflow
+	 *     - Hide: Hides overflow
 	 *     - Scroll: Adds scrollbar
 	 *  - Align: Alignment of result.
 	 *     
+	 * 
+	 * 
+	 * Properties:
+	 *  - Id
+	 *  - Direction
+	 *  - Overflow
+	 *  - Ratio
+	 *  - Padding
+	 *  - Margin
+	 *  - Border
+	 *  - zIndex
+	 *  - size
+	 *  - min size
+	 *  - max size
+	 *  - Alignment
+	 *  - Background
+	 * 
+	 * 
 	 * 
 	 * 
 	 */
@@ -52,7 +68,8 @@ namespace GuiCode
 	{
 		enum
 		{
-			Fit,         // Makes sure content fits
+			Free,        // Content is free to be anywhere
+			Fit,         // Makes sure content fits, overflow not hidden
 			Hidden,      // Hides overflowing content
 			Wrap,        // Wraps content
 			WrapReverse, // Wraps content, but in reverse
@@ -60,7 +77,7 @@ namespace GuiCode
 		};
 	};
 
-	class Span
+	class Span : public Dimensions
 	{
 		static inline int id = 0;
 	public:
@@ -69,10 +86,29 @@ namespace GuiCode
 		struct Settings
 		{
 			int id = NextId();
-			int align = Align::Center;
+			float ratio = 1;
 			int direction = Direction::Row;
-			int overflow = Overflow::Hidden;
-			Dimensions dimensions{ 0, 0, 1, 1 };
+			int overflow = Overflow::Fit;
+			Vec4<float> padding{ 0, 0, 0, 0 };
+			Vec4<float> margin{ 0, 0, 0, 0 };
+			struct
+			{
+				struct B
+				{
+					float width = -1;
+					Color color;
+				};
+
+				B left; B right; B top; B bottom;
+				float width = -1;
+				Color color;
+			} border;
+			float zIndex = 0;
+			Vec2<float> size{ -1, -1 };
+			Vec2<float> min{ -1, -1 };
+			Vec2<float> max{ -1, -1 };
+			int align = Align::Center;
+			Color background{ 0, 0, 0, 0 };
 		};
 
 		Span()
@@ -82,12 +118,12 @@ namespace GuiCode
 			: settings(s)
 		{}
 
-		Span(const std::vector<Span>& d)
-			: divs(d)
+		Span(const std::list<Span>& d)
+			: spans(d)
 		{}
 
-		Span(const Settings& s, const std::vector<Span>& d)
-			: settings(s), divs(d)
+		Span(const Settings& s, const std::list<Span>& d)
+			: settings(s), spans(d)
 		{}
 
 		Span(const Settings& s, Component& c)
@@ -100,9 +136,10 @@ namespace GuiCode
 
 		Settings settings;
 		Component* component = nullptr;
-		std::vector<Span> divs;
+		std::list<Span> spans;
 
 		Span* Find(int id);
 		void Layout();
+		void ForwardRender(CommandCollection&);
 	};
 }

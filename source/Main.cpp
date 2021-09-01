@@ -83,14 +83,10 @@ public:
 
 		listener += [this](const MouseDrag& e)
 		{
-			if (press.x > x + width - 10 && press.y > y + height - 10)
+			if (press.x > x + width - 10)
 			{
-				size = e.pos - position;
+				width = e.pos.x - x;
 				press = e.pos;
-			} else {
-				position += e.pos - press;
-				press = e.pos;
-				zIndex = 10;
 			}
 			std::cout << "Drag!" << id << std::endl;
 		};
@@ -123,6 +119,7 @@ public:
 
 int main()
 {
+	constexpr int size = sizeof Span::Settings;
 
 	Frame window{ {
 		.name = "Hello", 
@@ -134,14 +131,99 @@ int main()
 	Apple& _comp = window.panel.Emplace<Apple>(1);
 	Apple& _comp2 = window.panel.Emplace<Apple>(2);
 	Apple& _comp3 = window.panel.Emplace<Apple>(3);
-	_comp.dimensions = { 8, 8, 50, 50 };
-	_comp2.dimensions = { 40, 40, 50, 50 };
-	_comp3.dimensions = { 10, 35, 50, 50 };
+	Apple& _comp4 = window.panel.Emplace<Apple>(4);
+	Apple& _comp5 = window.panel.Emplace<Apple>(5);
+	Apple& _comp6 = window.panel.Emplace<Apple>(6);
+	_comp6.size = _comp5.size = _comp4.size = _comp3.size = _comp2.size = _comp.size = { 50, 50 };
 
-	_comp3.State<Visible>(false);
+	_comp.zIndex = 1;
+	_comp2.zIndex = 1;
+	_comp2.zIndex = 1;
+
+	Span::Settings _test
+	{
+		.direction = Direction::Row,
+		.overflow = Overflow::Hidden,
+		.padding = 
+		{ 
+			.left = 1, 
+			.top = 1, 
+			.right = 1,
+			.bottom = 1 
+		},
+		.margin = 
+		{ 
+			.left = 1, 
+		    .top = 1, 
+			.right = 1, 
+			.bottom = 1 
+		},
+		.border = 
+		{
+			.width = 1,
+			.color{ 255, 255, 255, 255 } 
+		},
+		.zIndex = 1,
+		.size = 
+		{
+			.width = 200, 
+			.height = 200 
+		},
+	    .align = Align::Left | Align::Top,
+		.background = 
+		{
+			.r = 0, 
+			.g = 0, 
+			.b = 0, 
+			.a = 255 
+		}
+	};
+
+	//window.panel.span =
+	//	Span{ {.direction = Direction::Row },
+	//	{
+	//		Span{ {.ratio = 1,
+	//			   .zIndex = 2,
+	//			   .direction = Direction::Row,
+	//			   .layout = Layout::Fit,
+	//			   .padding{ 8, 8, 8, 8 },
+	//			   .background{ 0, 0, 128, 255 } },
+	//			{
+	//				Span{ {.ratio = 0 }, _comp },
+	//				Span{ {.ratio = 0 }, _comp2 },
+	//				Span{ {.ratio = 0 }, _comp3 },
+	//			}
+	//		},
+	//		Span{ {.ratio = 2,
+	//			   .direction = Direction::Row,
+	//			   .layout = Layout::Free,
+	//			   .padding{ 8, 0, 8, 8 },
+	//			   .background{ 0, 128, 0, 255 } },
+	//			{
+	//				Span{ {.ratio = 1,
+	//					   .direction = Direction::Column,
+	//					   .padding{ 0, 0, 8, 0 },
+	//					   .background{ 0, 128, 128, 255 } },
+	//					{
+	//						Span{ {.ratio = 2 }, _comp4 },
+	//						Span{ {.ratio = 1 }, _comp5 },
+	//					}
+	//				},
+	//				Span{ {.ratio = 1 }, _comp6 },
+	//			}
+	//		}
+	//	}
+	//};
 
 	while (window.Loop())
 	{
+		window.panel.span.Layout();
+
+		Component* _hovering = window.panel.Get(Focused);
+
+		if (_hovering)
+			std::cout << _hovering << std::endl;
+
 		LIMIT_FPS(60);
 	}
 }

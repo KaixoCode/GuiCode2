@@ -5,18 +5,20 @@
 
 namespace GuiCode
 {
+	/**
+	 * Dimensions object contains a union for easy access to all
+	 * aspects of dimensions, like position/size etc. Also contains
+	 * a z-index
+	 */
 	struct Dimensions
 	{
-		Dimensions()
-			: dimensions{ 0, 0, 0, 0 }
-		{}
-
-		Dimensions(float a, float b, float c, float d)
-			: dimensions{ a, b, c, d }
-		{}
-
+		Dimensions() : dimensions{ 0, 0, 0, 0 } {}
+		Dimensions(float a, float b, float c, float d) : dimensions{ a, b, c, d } {}
 		Dimensions(Dimensions&& other) { *this = other; }
 		Dimensions(const Dimensions& other) { *this = other; }
+
+		Vec2<float> min;
+		Vec2<float> max;
 
 		union
 		{
@@ -75,9 +77,26 @@ namespace GuiCode
 		void State(int value) { m_States[state] = value; }
 		void State(int state, int value) { m_States[state] = value; }
 
-	protected:
 		virtual void ForwardRender(CommandCollection& d);
 		virtual void ForwardUpdate();
+
+
+		Component* Get(int state)
+		{
+			Component* _c;
+			for (auto& i : m_Components)
+			{
+				_c = i->Get(state);
+				if (_c)
+					return _c;
+			}
+
+			if (State(state))
+				return this;
+
+			return nullptr;
+		}
+
 
 	private:
 		mutable std::unordered_map<int, int> m_States;
