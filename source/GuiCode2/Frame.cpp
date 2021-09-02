@@ -43,10 +43,12 @@ namespace GuiCode
 		titlebar.minimize.callback = [this]() { State<Visible>(Minimize); };
 		titlebar.maximize.callback = [this]() { State<Visible>() == Maximize ? State<Visible>(Show) : State<Visible>(Maximize); };
 
+		titlebar.close.hover = { 255, 0, 0, 111 };
+		titlebar.close.press = { 170, 0, 0, 111 };
 		titlebar.close.render = [this](CommandCollection& d)
 		{
-			if (titlebar.close.State<Pressed>()) d.Fill({ 170, 0, 0, 111 });
-			else if (titlebar.close.State<Hovering>()) d.Fill({ 255, 0, 0, 111 });
+			if (titlebar.close.State<Pressed>()) d.Fill(titlebar.close.press);
+			else if (titlebar.close.State<Hovering>()) d.Fill(titlebar.close.hover);
 			else d.Fill({ 0, 0, 0, 0 });
 
 			d.Quad(titlebar.close.dimensions);
@@ -59,10 +61,12 @@ namespace GuiCode
 			d.Line({ centerx - pad, centery + pad, centerx + pad, centery - pad }, 1.7);
 		};
 
+		titlebar.minimize.hover = { 128, 128, 128, 92 };
+		titlebar.minimize.press = { 128, 128, 128, 92 };
 		titlebar.minimize.render = [this](CommandCollection& d)
 		{
-			if (titlebar.minimize.State<Pressed>()) d.Fill({ 128, 128, 128, 92 });
-			else if (titlebar.minimize.State<Hovering>()) d.Fill({ 128, 128, 128, 58 });
+			if (titlebar.minimize.State<Pressed>()) d.Fill(titlebar.minimize.press);
+			else if (titlebar.minimize.State<Hovering>()) d.Fill(titlebar.minimize.hover);
 			else d.Fill({ 0, 0, 0, 0 });
 
 			d.Quad(titlebar.minimize.dimensions);
@@ -73,10 +77,12 @@ namespace GuiCode
 			d.Quad({ centerx - 5, centery, 10, 1 });
 		};
 
+		titlebar.maximize.hover = { 128, 128, 128, 92 };
+		titlebar.maximize.press = { 128, 128, 128, 92 };
 		titlebar.maximize.render = [this](CommandCollection& d)
 		{
-			if (titlebar.maximize.State<Pressed>()) d.Fill({ 128, 128, 128, 92 });
-			else if (titlebar.maximize.State<Hovering>()) d.Fill({ 128, 128, 128, 58 });
+			if (titlebar.maximize.State<Pressed>()) d.Fill(titlebar.maximize.press);
+			else if (titlebar.maximize.State<Hovering>()) d.Fill(titlebar.maximize.hover);
 			else d.Fill({ 0, 0, 0, 0 });
 
 			d.Quad(titlebar.maximize.dimensions);
@@ -109,12 +115,13 @@ namespace GuiCode
 		RegisterComponent(panel);
 	}
 
-	void Frame::Update() 
+	void Frame::ForwardUpdate()
 	{
 		float padding = State<Visible>() == Maximize ? 8 : 0;
 
 		titlebar.dimensions = { padding, padding, width - 2 * padding, 32 };
 		panel.dimensions = { padding, 32 + padding, width - 2 * padding, height - 2 * padding - 32 };
+		Window::ForwardUpdate();
 	}
 
 	void Frame::Render(CommandCollection& d) const 

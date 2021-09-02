@@ -17,8 +17,8 @@ namespace GuiCode
 		Dimensions(Dimensions&& other) { *this = other; }
 		Dimensions(const Dimensions& other) { *this = other; }
 
-		Vec2<float> min;
-		Vec2<float> max;
+		Vec2<float> min{ -1, -1 };
+		Vec2<float> max{ -1, -1 };
 
 		union
 		{
@@ -46,13 +46,20 @@ namespace GuiCode
 	enum State
 	{
 		NoValue = 0, 
-		Hovering, Focused, Pressed, UseDepth, Visible
+		Hovering, Focused, Pressed, Visible
 	};
 
 	class Component : public Dimensions
 	{
 	public:
 		Component();
+
+		Component(const Component& c) 
+			: m_Components(c.m_Components), listener(m_Components), 
+			m_States(c.m_States)
+		{}
+
+		virtual ~Component() {};
 
 	private:
 		std::list<Component*> m_Components;
@@ -62,9 +69,10 @@ namespace GuiCode
 
 		virtual bool Hitbox(const Vec2<float>& pos) const { return pos.Inside(dimensions); }
 
-		void CalculateOrder();
-		void RegisterComponent(Component& c);
-		void UnregisterComponent(Component& obj);
+		virtual void CalculateOrder();
+		virtual void ConstrainSize();
+		virtual void RegisterComponent(Component& c);
+		virtual void UnregisterComponent(Component& obj);
 
 		virtual void Render(CommandCollection& d) const {};
 		virtual void Update() {};

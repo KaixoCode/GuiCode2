@@ -12,6 +12,8 @@ namespace GuiCode
 
 			void Render(CommandCollection& d) const override { render(d); }
 
+			Color hover;
+			Color press;
 			std::function<void(void)> callback;
 			std::function<void(CommandCollection&)> render;
 		};
@@ -33,7 +35,7 @@ namespace GuiCode
 	public:
 		Frame(const WindowData& data);
 
-		void Update() override;
+		void ForwardUpdate() override;
 		void Render(CommandCollection& d) const override;
 
 		Color background{ 26, 26, 26, 255 };

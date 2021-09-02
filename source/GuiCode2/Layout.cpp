@@ -36,200 +36,199 @@ namespace GuiCode
 		}
 		else
 		{
-			float Dimensions::* _axisMainp;
-			float Dimensions::* _sizeMainp;
-			float Vec2<float>::* _sizeMainsp;
-			float Dimensions::* _axisOtherp;
-			float Dimensions::* _sizeOtherp;
-			float Vec2<float>::* _sizeOthersp;
+			if (spans.size() == 0)
+				return;
 
-			bool _variableMain;
-			bool _variableOther;
-			float _maxMain;
-			float _maxOther;
-			float _startMain;
-			float _startOther;
-
-			// Retrieve max main/other size and the main/other axis/size of sub-span, 
-			// if size == -1, set to own size, which is set by parent as usable size.
-			if (settings.direction == Direction::Row || settings.direction == Direction::RowReverse)
-				_axisMainp = &Dimensions::x, _sizeMainp = &Dimensions::width,
-				_axisOtherp = &Dimensions::y, _sizeOtherp = &Dimensions::height,
-				_sizeMainsp = &Vec2<float>::width, _sizeOthersp = &Vec2<float>::height,
-				_variableMain = settings.size.width == -1,
-				_variableOther = settings.size.height == -1,
-				_maxMain = (_variableMain ? width : settings.size.width) - settings.padding.x - settings.padding.width,
-				_maxOther = (_variableOther ? height : settings.size.height) - settings.padding.y - settings.padding.height,
-				_startMain = x + settings.padding.x, _startOther = y + settings.padding.y;
-			
-			else
-				_axisMainp = &Dimensions::y, _sizeMainp = &Dimensions::height,
-				_axisOtherp = &Dimensions::x, _sizeOtherp = &Dimensions::width,
-				_sizeMainsp = &Vec2<float>::height, _sizeOthersp = &Vec2<float>::width,
-				_variableMain = settings.size.height == -1,
-				_variableOther = settings.size.width == -1,
-				_maxMain = (_variableMain ? height : settings.size.height) - settings.padding.y - settings.padding.height,
-				_maxOther = (_variableOther ? width : settings.size.width) - settings.padding.x - settings.padding.width,
-				_startMain = y + settings.padding.y, _startOther = x + settings.padding.x;
-
-
-			// Determine max ratio/max size
-			float _maxRatio = 0;
-			float _maxExplicitSize = 0;
-			float _maxSubSize = _maxOther;
-			for (auto& _span : spans)
+			// layouting
+			switch (settings.layout)
 			{
-				// Get size from sun-span settings
-				float& _sizeMain = _span.settings.size.*_sizeMainsp;
-				float& _sizeOther = _span.settings.size.*_sizeOthersp;
-
-				// If there is a ratio, add to ratio, otherwise to max explicit size
-				if (_span.settings.ratio > 0)
-					_maxRatio += _span.settings.ratio;
-				else if (!_span.component || _span.settings.size.*_sizeMainsp != -1)
-					_maxExplicitSize += _sizeMain;
-				else
-					_maxExplicitSize += _span.component->size.*_sizeMainsp;
-
-				// Retrieve max size
-				if (_maxSubSize < _sizeOther)
-					_maxSubSize = _sizeOther;
-			}
-
-			// Constrain explicit size to prevent size inversion
-			float _overflowMult = 1;
-			if (_maxMain - _maxExplicitSize < 0 && _maxExplicitSize > 0)
+			case Layout::Row:
 			{
-				_overflowMult = _maxMain / _maxExplicitSize;
-				_maxExplicitSize = _maxMain;
-			}
+				// Calculate the sum of all the ratios
+				float _ratioSum = 0, _explicitWidthSum = 0;
+				for (auto& _s : spans)
+					if (_s.settings.ratio == 0) // If no ratio, check what width it will become
+						_explicitWidthSum += _s.SetDimensions({ -1, -1, -1, -1 }).width;
+					else // Otherwise add to ratio sum
+						_ratioSum += _s.settings.ratio;
 
-			switch (settings.overflow)
-			{
-			case Overflow::Free:
-			{
-				for (auto& _span : spans)
-					_span.Layout();
-			}
-			case Overflow::Fit:
-			{
-				switch(settings.direction)
+				// Account for padding in the size, and 
+				float _x = x + settings.padding.left;
+				float _y = y + settings.padding.top;
+				float _width = width - settings.padding.left - settings.padding.right;
+				float _height = height - settings.padding.top - settings.padding.bottom;
+				float _ratioWidth = _width - _explicitWidthSum;
+				for (auto& _s : spans)
 				{
-				case Direction::Row:
-				case Direction::Column:
-				{
-					float _position = _startMain;
+					Vec4<float> _newDims{ _x, _y, -1, -1 };
 
-					// Go through all sub-spans
-					for (auto& _span : spans)
+					// When height not set, set to this height.
+					if (_s.settings.size.height == -1) _newDims.height = _height;
+
+					// Set the width if ratio is defined
+					if (_s.settings.ratio != 0) 
+						_newDims.width = _ratioWidth * _s.settings.ratio / _ratioSum;
+
+					// Set the dimensions, taking into account margin etc. incr with width
+					float _addedWidth = _s.SetDimensions(_newDims).width;
+					_x += _addedWidth;
+
+					// If we didn't add everything to width, we've reached max. Account for
+					// that by acting like this component now has a fixed size (it's max size)
+					if (_s.settings.ratio != 0 && _addedWidth != _newDims.width)
+						_ratioWidth -= _addedWidth,     // By removing the width from ratio
+						_ratioSum -= _s.settings.ratio; // And removing ratio from sum.
+				}
+
+				// If there is remaining space due to the max size of some components,
+				// we'll loop here until that space is <= 1.
+				float _toFill = (x + settings.padding.left + _width) - _x;
+				for (int tries = 0; tries < spans.size() && _toFill > 1; tries++)
+				{   
+					// x + padding + width = goal for x to reach, difference needs to be filled
+					_toFill = (x + settings.padding.left + _width) - _x;
+					_x = x + settings.padding.left; // Reset x
+					for (auto& _s : spans)
 					{
-						// Retrieve their axis and sizes.
-						float& _axisMain = (_span).*_axisMainp;
-						float& _axisOther = (_span).*_axisOtherp;
-						float& _sizeMain = (_span).*_sizeMainp;
-						float& _sizeOther = (_span).*_sizeOtherp;
+						Vec4<float> _offsets = _s.Offsets();
 
-						// Use ratio, or defined size. Use overflow multiplier to prevent overflow.
-						if (_span.settings.ratio > 0)
-							_sizeMain = (_maxMain - _maxExplicitSize) * _span.settings.ratio / _maxRatio;
-						else if (!_span.component || _span.settings.size.*_sizeMainsp != -1)
-							_sizeMain = _span.settings.size.*_sizeMainsp * _overflowMult;
+						// If the width != max width, we can add stuff
+						if (_s.settings.ratio != 0 && _s.width != _s.max.width)
+						{
+							Vec4<float> _newDims{ _x, _y, -1, -1 };
+
+							// When height not set, set to this height.
+							if (_s.settings.size.height == -1) _newDims.height = _height;
+
+							// using the offsets, calculate the new width by adding the ratio of
+							// toFill to the width.
+							_newDims.width = _offsets.left + _offsets.right + _s.width
+								+ _toFill * _s.settings.ratio / _ratioSum;
+
+							// Set the dimensions, taking into account margin etc. incr with width
+							float _addedWidth = _s.SetDimensions(_newDims).width;
+							_x += _addedWidth;
+
+							// If we didn't add everything to width, we've reached max. Account for
+							// that by acting like this component now has a fixed size (it's max size)
+							if (_newDims.width != -1 && _addedWidth != _newDims.width)
+								_ratioWidth -= _addedWidth,		// By removing the width from ratio
+								_ratioSum -= _s.settings.ratio;	// And removing ratio from sum.
+						}
+						// Otherwise just set the correct new x coord, and increment _x
 						else
-							_sizeMain = _span.component->size.*_sizeMainsp;
-
-						// If no size defined for other axis
-						if (_span.settings.size.*_sizeOthersp == -1)
-							_sizeOther = _variableOther ? _maxSubSize : _maxOther;
-
-						// Otherwise set to defined size for sub-span
-						else
-							_sizeOther = _span.settings.size.*_sizeOthersp;
-
-						_axisMain = _position;
-						_axisOther = _startOther;
-
-						_position += _sizeMain;
-
-						_span.Layout();
+						{
+							_s.x = _x + _offsets.left;
+							_x += _s.width + _offsets.left + _offsets.right;
+						}
 					}
-					break;
-				}
-				case Direction::RowReverse:
-				case Direction::ColumnReverse:
-				{
-					
-					break;
-				}
 				}
 				break;
 			}
-			case Overflow::Hidden: break;
-			case Overflow::Wrap: break;
-			case Overflow::WrapReverse: break;
-			case Overflow::Scroll: break;
+			case Layout::Column:
+			{
+				// Calculate the sum of all the ratios
+				float _ratioSum = 0, _explicitHeightSum = 0;
+				for (auto& _s : spans)
+					if (_s.settings.ratio == 0) // If no ratio, check what height it will become
+						_explicitHeightSum += _s.SetDimensions({ -1, -1, -1, -1 }).height;
+					else // Otherwise add to ratio sum
+						_ratioSum += _s.settings.ratio;
+
+				// Account for padding in the size, and 
+				float _x = x + settings.padding.left;
+				float _y = y + settings.padding.top;
+				float _width = width - settings.padding.left - settings.padding.right;
+				float _height = height - settings.padding.top - settings.padding.bottom;
+				float _ratioHeight = _height - _explicitHeightSum;
+				for (auto& _s : spans)
+				{
+					Vec4<float> _newDims{ _x, _y, -1, -1 };
+
+					// When width not set, set to this width.
+					if (_s.settings.size.width == -1) _newDims.width = _width;
+
+					// Set the height if ratio is defined
+					if (_s.settings.ratio != 0)
+						_newDims.height = _ratioHeight * _s.settings.ratio / _ratioSum;
+
+					// Set the dimensions, taking into account margin etc. incr with height
+					float _addedHeight = _s.SetDimensions(_newDims).height;
+					_y += _addedHeight;
+
+					// If we didn't add everything to height, we've reached max. Account for
+					// that by acting like this component now has a fixed size (it's max size)
+					if (_s.settings.ratio != 0 && _addedHeight != _newDims.height)
+						_ratioHeight -= _addedHeight,   // By removing the height from ratio
+						_ratioSum -= _s.settings.ratio; // And removing ratio from sum.
+				}
+
+				// If there is remaining space due to the max size of some components,
+				// we'll loop here until that space is <= 1.
+				float _toFill = (y + settings.padding.top + _height) - _y;
+				for (int tries = 0; tries < spans.size() && _toFill > 1; tries++)
+				{
+					// y + padding + height = goal for x to reach, difference needs to be filled
+					_toFill = (y + settings.padding.top + _height) - _y;
+					_y = y + settings.padding.top; // Reset y
+					for (auto& _s : spans)
+					{
+						Vec4<float> _offsets = _s.Offsets();
+
+						// If the height != max height, we can add stuff
+						if (_s.settings.ratio != 0 && _s.height != _s.max.height)
+						{
+							Vec4<float> _newDims{ _x, _y, -1, -1 };
+
+							// When width not set, set to this width.
+							if (_s.settings.size.width == -1) _newDims.width = _width;
+
+							// using the offsets, calculate the new width by adding the ratio of
+							// toFill to the width.
+							_newDims.height = _offsets.top + _offsets.bottom + _s.height
+								+ _toFill * _s.settings.ratio / _ratioSum;
+
+							// Set the dimensions, taking into account margin etc. incr with width
+							float _addedHeight = _s.SetDimensions(_newDims).height;
+							_y += _addedHeight;
+
+							// If we didn't add everything to height, we've reached max. Account for
+							// that by acting like this component now has a fixed size (it's max size)
+							if (_s.settings.ratio != 0 && _addedHeight != _newDims.height)
+								_ratioHeight -= _addedHeight,		// By removing the width from ratio
+								_ratioSum -= _s.settings.ratio;	// And removing ratio from sum.
+						}
+						// Otherwise just set the correct new x coord, and increment _x
+						else
+						{
+							_s.y = _y + _offsets.top;
+							_y += _s.height + _offsets.top + _offsets.bottom;
+						}
+					}
+				}
+				break;
 			}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-			// Determine max size:
-			//  - If defined
-			//  - Otherwise variable size
-
-			// Determine axis
-
-			// If variable size in 'direction' axis:
-			//  - Fit: fills space of parent, uses ratio to determine sub-span sizes
-			//  - Hidden: Fit. If no ratio, and sizes of sub-spans overflow: hidden
-			//  - Wrap: Fit. If no ratio, and sizes of sub-spans overflow: wrap
-			//  - WrapReverse: Wrap
-			//  - Scroll: Hidden, but scroll instead.
-
-			// If variable size in other 'direction':
-			//  - Fit: Uses sub-span size, if not defined: use biggest sub-span size
-			//  - Hidden: Fit, overflow hidden
-			//  - Wrap: Fit, but when wrapping, biggest size resets
-			//  - WrapReverse: Wrap
-			//  - Scroll: Fit
-
-			// If fixed size in 'direction' axis:
-			//  - Fit: Uses ratio to determine sub-span sizes
-			//  - Hidden: Fit. If no ratio, and sizes of sub-spans overflow: hidden
-			//  - Wrap: Fit. If no ratio, and sizes of sub-spans overflow: wrap
-			//  - WrapReverse: Wrap
-			//  - Scroll: Hidden, but scroll instead.
-
-			// If fixed size in other 'direction':
-			//  - Fit: Uses sub-span size. If no sub-span size, fill, overflow is not hidden.
-			//  - Hidden: Fit. Overflow hidden
-			//  - Wrap: Fit.
-			//  - WrapReverse: Fit.
-			//  - Scroll: Fit, when overflow: scrollbar.
-
-
-
-
+			}
 		}
+	}
+
+	void Span::ForwardUpdate()
+	{
+		Layout();
+		for (auto& _s : spans)
+			_s.ForwardUpdate();
 	}
 
 	void Span::ForwardRender(CommandCollection& d)
 	{
+		d.PushClip();
+		d.PushMatrix();
 		d.Fill(settings.background);
 		d.Quad(dimensions);
+
+		// Fill borders
+
+		// If overflow == Hide || Scroll: add Clip/Translation
 		
 		if (component)
 			component->ForwardRender(d);
@@ -242,5 +241,10 @@ namespace GuiCode
 
 		for (auto& _span : _spans)
 			_span->ForwardRender(d);
+
+		scrollbar.x.ForwardRender(d);
+		scrollbar.y.ForwardRender(d);
+		d.PopMatrix();
+		d.PopClip();
 	}
 }

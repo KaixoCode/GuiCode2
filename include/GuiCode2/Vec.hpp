@@ -172,8 +172,6 @@ namespace GuiCode
             else if constexpr (I == 3) return std::move(w);
         }
     };
-
-    using Color = Vec4<float>;
 }
 
 namespace std

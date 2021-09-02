@@ -39,13 +39,15 @@ namespace GuiCode
 		(listener.State<Pressed>({ .limit = 1 }) 
 			+= [](const MousePress& e, const Component& c) -> int { return c.State<Hovering>(); })
 			+= [](const MouseRelease& e, const Component& c) -> int { return false; };
+
+		RegisterComponent(span);
 	}
 
 	void Panel::ForwardUpdate()
 	{
 		// Set dimensions of the span, then forward normally
-		span.dimensions = dimensions;
-		span.settings.size = size;
+		span.SetDimensions(dimensions);
+		span.zIndex = std::numeric_limits<int>::max();
 		Component::ForwardUpdate();
 	}
 
