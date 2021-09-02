@@ -28,7 +28,7 @@ namespace GuiCode
 		 * @param c component list
 		 */
 		EventListener(std::list<Component*>& c)
-			: m_Components(c)
+			: components(c)
 		{}
 
 		/**
@@ -159,7 +159,7 @@ namespace GuiCode
 		void operator()(const Event& e) const;
 
 	private:
-		std::list<Component*>& m_Components;
+		std::list<Component*>& components;
 		std::vector<std::unique_ptr<EventFunctionBase>> m_Listeners;
 		std::map<int, StateHandler> m_StateHandlers;
 	};

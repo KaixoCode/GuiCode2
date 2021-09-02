@@ -13,9 +13,9 @@ namespace GuiCode
 
 	Frame::TitleBar::TitleBar()
 	{
-		RegisterComponent(close);
-		RegisterComponent(minimize);
-		RegisterComponent(maximize);
+		components.push_back(&close);
+		components.push_back(&minimize);
+		components.push_back(&maximize);
 	}
 
 	void Frame::TitleBar::Update()
@@ -111,8 +111,8 @@ namespace GuiCode
 			}
 		};
 
-		RegisterComponent(titlebar);
-		RegisterComponent(panel);
+		components.push_back(&titlebar);
+		components.push_back(&panel);
 	}
 
 	void Frame::ForwardUpdate()

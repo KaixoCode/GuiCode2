@@ -28,51 +28,39 @@ namespace GuiCode
 		};
 		float zIndex = 0;
 
-		Dimensions& operator=(Dimensions&& other)
-		{
-			dimensions = other.dimensions;
-			zIndex = other.zIndex;
-			return *this;
-		}
-
-		Dimensions& operator=(const Dimensions& other)
-		{
-			dimensions = other.dimensions;
-			zIndex = other.zIndex;
-			return *this;
-		}
+		Dimensions& operator=(Dimensions&& other);
+		Dimensions& operator=(const Dimensions& other);
 	};
 
+	/**
+	 * Standard states
+	 */
 	enum State
 	{
 		NoValue = 0, 
 		Hovering, Focused, Pressed, Visible
 	};
 
+	/**
+	 * Base class for objects that receive events and are drawable.
+	 */
 	class Component : public Dimensions
 	{
 	public:
 		Component();
-
-		Component(const Component& c) 
-			: m_Components(c.m_Components), listener(m_Components), 
-			m_States(c.m_States)
-		{}
+		Component(const Component& c);
 
 		virtual ~Component() {};
 
-	private:
-		std::list<Component*> m_Components;
+		Component& operator=(const Component& c);
 
-	public:
+		std::list<Component*> components;
 		EventListener listener;
 
 		virtual bool Hitbox(const Vec2<float>& pos) const { return pos.Inside(dimensions); }
 
 		virtual void CalculateOrder();
 		virtual void ConstrainSize();
-		virtual void RegisterComponent(Component& c);
-		virtual void UnregisterComponent(Component& obj);
 
 		virtual void Render(CommandCollection& d) const {};
 		virtual void Update() {};
@@ -87,24 +75,6 @@ namespace GuiCode
 
 		virtual void ForwardRender(CommandCollection& d);
 		virtual void ForwardUpdate();
-
-
-		Component* Get(int state)
-		{
-			Component* _c;
-			for (auto& i : m_Components)
-			{
-				_c = i->Get(state);
-				if (_c)
-					return _c;
-			}
-
-			if (State(state))
-				return this;
-
-			return nullptr;
-		}
-
 
 	private:
 		mutable std::unordered_map<int, int> m_States;

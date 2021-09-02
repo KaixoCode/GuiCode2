@@ -40,12 +40,13 @@ namespace GuiCode
 			+= [](const MousePress& e, const Component& c) -> int { return c.State<Hovering>(); })
 			+= [](const MouseRelease& e, const Component& c) -> int { return false; };
 
-		RegisterComponent(span);
+		components.push_back(&span);
 	}
 
 	void Panel::ForwardUpdate()
 	{
 		// Set dimensions of the span, then forward normally
+		span.settings.size = size; 
 		span.SetDimensions(dimensions);
 		span.zIndex = std::numeric_limits<int>::max();
 		Component::ForwardUpdate();

@@ -3,27 +3,41 @@
 
 namespace GuiCode
 {
+	Dimensions& Dimensions::operator=(Dimensions&& other)
+	{
+		dimensions = other.dimensions;
+		zIndex = other.zIndex;
+		return *this;
+	}
+
+	Dimensions& Dimensions::operator=(const Dimensions& other)
+	{
+		dimensions = other.dimensions;
+		zIndex = other.zIndex;
+		return *this;
+	}
+
 	Component::Component()
-		: listener{ m_Components }
+		: listener{ components }
 	{
 		State<Visible>(true);
 	}
 
+	Component::Component(const Component& c)
+		: components(c.components), listener(components),
+		m_States(c.m_States)
+	{}
+
+	Component& Component::operator=(const Component& c)
+	{
+		components = c.components;
+		m_States = c.m_States;
+		return *this;
+	}
+
 	void Component::CalculateOrder()
 	{
-		m_Components.sort([](Component* a, Component* b) { return a->zIndex > b->zIndex; });
-	}
-
-	void Component::RegisterComponent(Component& c)
-	{
-		m_Components.push_back(&c);
-	}
-
-	void Component::UnregisterComponent(Component& obj)
-	{
-		auto _it = std::find_if(m_Components.begin(), m_Components.end(), [&](auto& c) { return c == &obj; });
-		if (_it != m_Components.end())
-			m_Components.erase(_it);
+		components.sort([](Component* a, Component* b) { return a->zIndex > b->zIndex; });
 	}
 
 	void Component::ForwardRender(CommandCollection& d)
@@ -32,7 +46,7 @@ namespace GuiCode
 		d.PushMatrix();
 		Render(d);
 		CalculateOrder();
-		for (auto i = m_Components.rbegin(); i != m_Components.rend(); ++i)
+		for (auto i = components.rbegin(); i != components.rend(); ++i)
 			if ((*i)->State<Visible>())
 				(*i)->ForwardRender(d);
 		d.PopMatrix();
@@ -55,7 +69,7 @@ namespace GuiCode
 	{
 		Update();
 		ConstrainSize();
-		for (auto i = m_Components.rbegin(); i != m_Components.rend(); ++i)
+		for (auto i = components.rbegin(); i != components.rend(); ++i)
 			if ((*i)->State<Visible>())
 				(*i)->ForwardUpdate();
 	}

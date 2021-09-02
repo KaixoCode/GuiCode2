@@ -139,7 +139,9 @@ int main()
 	Apple& _comp8 = window.panel.Emplace<Apple>(6);
 	Apple& _comp9 = window.panel.Emplace<Apple>(6);
 	Apple& _comp10 = window.panel.Emplace<Apple>(6);
-	_comp10.size = _comp9.size = _comp8.size = _comp7.size = _comp6.size = 
+	Apple& _comp11 = window.panel.Emplace<Apple>(6);
+	Apple& _comp12 = window.panel.Emplace<Apple>(6);
+	_comp12.size = _comp11.size = _comp10.size = _comp9.size = _comp8.size = _comp7.size = _comp6.size = 
 		_comp5.size = _comp4.size = _comp3.size = _comp2.size = _comp.size = { 50, 50 };
 
 	window.titlebar.close.hover = { 0xed5b51 };
@@ -151,49 +153,74 @@ int main()
 	window.titlebar.color = { 0x40916C };
 	window.background = { 0x52B788 };
 	Span _mainSpan
-	{
+	{ 
 		{
 			.layout = Layout::Column,
-			.padding = { 4, 4, 4, 4 },
+			.padding = { 8, 8, 8, 8 },
 			.margin = { 8, 8, 8, 8 },
 			.background{ 0x74C69D }
-		},
-		{
-			{
+		}, 
+		{ 
+			{ 
 				{
 					.ratio = 1,
 					.layout = Layout::Row,
-					.padding = { 4, 4, 4, 4 },
-					.margin = { 8, 8, 8, 8 },
+					.padding = { 4, 4, 4, 0 },
 					.background{ 0x52B788 }
-				},
+				}, 
 				{
-					{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{  -1,  -1 }, .min{ 10, 10 }, .max{ 500, -1 } }, _comp },
-					{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .size{ 100, 100 }, .min{ 10, 10 }, .max{  -1, -1 } }, _comp4 },
-					{ {.ratio = 2, .margin{ 4, 4, 4, 4 }, .size{ 100, 150 }, .min{ 10, 10 }, .max{ 240, -1 } }, _comp2 },
-					{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .size{ 100, 100 }, .min{ 10, 10 }, .max{ 220, -1 } }, _comp3 },
-				}
-			},
-			{
+					{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ -1, -1 }, .min{ 10, 10 }, .max{ 500, -1 } }, _comp },
+					{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .size{ -1, -1 }, .min{ 10, 10 }, .max{  -1, -1 } }, _comp2 },
+					{ {.ratio = 2, .margin{ 4, 4, 4, 4 }, .size{ -1, -1 }, .min{ 10, 10 }, .max{ 240, -1 } }, _comp3 },
+					{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .size{ -1, -1 }, .min{ 10, 10 }, .max{ 220, -1 } }, _comp4 },
+				} 
+			}, 
+			{ 
 				{
 					.ratio = 2,
 					.layout = Layout::Row,
-					.padding = { 4, 4, 4, 4 },
-					.margin = { 8, 8, 8, 8 },
 					.zIndex = -1,
 					.background{ 0x52B788 }
-				},
-				{
-					{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .size{ 100, 210 }, .min{ 10, 10 }, .max{ 200, -1 } }, _comp5 },
-					{ {.ratio = 3, .margin{ 4, 4, 4, 4 }, .size{ 100, 250 }, .min{ 10, 10 }, .max{ 180, -1 } }, _comp6 },
-					{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{  -1, 170 }, .min{ 10, 10 }, .max{ 160, -1 } }, _comp7 },
-					{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .size{ 100, 180 }, .min{ 10, 10 }, .max{ 160, -1 } }, _comp8 },
+				}, 
+				{ 
+					{ 
+						{
+							.ratio = 1,
+							.layout = Layout::Column,
+							.padding = { 4, 0, 0, 4 },
+							.zIndex = -1,
+							.background{ 0x52B788 }
+						}, 
+						{
+							{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ -1, -1 }, .min{ 10, 10 }, .max{ -1, 100 } }, _comp5 },
+							{ {.ratio = 3, .margin{ 4, 4, 4, 4 }, .size{ -1, -1 }, .min{ 10, 10 }, .max{ -1, 200 } }, _comp6 },
+							{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .size{ -1, -1 }, .min{ 10, 10 }, .max{ -1,  40 } }, _comp7 },
+							{ {.ratio = 2, .margin{ 4, 4, 4, 4 }, .size{ -1, -1 }, .min{ 10, 10 }, .max{ -1, 100 } }, _comp8 },
+						} 
+					}, 
+					{ 
+						{
+							.ratio = 2,
+							.layout = Layout::Row,
+							.padding = { 0, 0, 4, 4 },
+							.zIndex = -1,
+							.background{ 0x52B788 }
+						}, 
+						{
+							{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ -1, -1 }, .min{ 10, 10 }, .max{ 200, -1 } }, _comp9 },
+							{ {.ratio = 2, .margin{ 4, 4, 4, 4 }, .size{ -1, -1 }, .min{ 10, 10 }, .max{ 480, -1 } }, _comp10 },
+							{ {.ratio = 2, .margin{ 4, 4, 4, 4 }, .size{ -1, -1 }, .min{ 10, 10 }, .max{ 160, -1 } }, _comp11 },
+						}
+					}
 				}
 			}
 		}
 	};
 
 	window.panel.span = _mainSpan;
+
+	Span::Settings s;
+	s = window.panel.span.settings;
 
 	while (window.Loop())
 	{
