@@ -48,11 +48,8 @@ namespace GuiCode
 	{
 	public:
 		Component();
-		Component(const Component& c);
 
 		virtual ~Component() {};
-
-		Component& operator=(const Component& c);
 
 		std::list<Component*> components;
 		EventListener listener;
@@ -78,5 +75,7 @@ namespace GuiCode
 
 	private:
 		mutable std::unordered_map<int, int> m_States;
+	
+		void InitListeners();
 	};
 }

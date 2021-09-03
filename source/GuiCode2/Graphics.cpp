@@ -208,7 +208,7 @@ namespace GuiCode
         };
         clip = clip.Overlap(m_Clip);
         m_Clip = clip;
-        glScissor(clip.x, clip.y, clip.width, clip.height);
+        glScissor(clip.x, m_Size.height - clip.y - clip.height, clip.width, clip.height);
     }
 
     void OpenGL::PopClip()
@@ -223,7 +223,7 @@ namespace GuiCode
             Vec4<float> clip2 = m_ClipStack.top();
             m_ClipStack.pop();
             m_Clip = clip2;
-            glScissor(clip2.x, clip2.y, clip2.width, clip2.height);
+            glScissor(clip2.x, m_Size.height - clip2.y - clip2.height, clip2.width, clip2.height);
         }
     }
 

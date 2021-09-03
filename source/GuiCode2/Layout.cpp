@@ -1,19 +1,185 @@
 #include "GuiCode2/Layout.hpp"
 
+// Scrollbar
 namespace GuiCode
 {
+	Span::Scrollbar::Scrollbar()
+	{
+		size = { 16, 16 };
 
-	Span* Span::Find(int id)
+		listener += [this](const MousePress& e)
+		{
+			pvalue = value; // pressed value
+
+			// Calculate things using axis
+			float _size     = axis == horizontal ? width : height;
+			float _pos      = axis == horizontal ? x : y;
+			float _mousePos = axis == horizontal ? e.pos.x : e.pos.y;
+
+			float _barSize = _size * visibleRange / (max - min + visibleRange);
+			float _relPos  = _pos + (_size - _barSize) * (value - min) / (max - min);
+			
+			// If hovering over the bar, set dragging to true
+			if (_mousePos > _relPos && _mousePos < _relPos + _barSize)
+				dragging = true;
+		};
+
+		listener += [this](const MouseRelease& e)
+		{
+			dragging = false;
+		};
+
+		listener += [this](const MouseDrag& e)
+		{
+			// Only scroll when left mouse and dragging
+			if (!(e.buttons & MouseButton::Left) || !dragging)
+				return;
+
+			// Calculate things using axis
+			float _size      = axis == horizontal ? width : height;
+			float _pos       = axis == horizontal ? x : y;
+			float _mousePos  = axis == horizontal ? e.pos.x : e.pos.y;
+			float _sourcePos = axis == horizontal ? e.source.x : e.source.y;
+			float _barSize = _size * visibleRange / (max - min + visibleRange);
+
+			// Calculate the value, and then constrain it
+			value = pvalue + (_mousePos - _sourcePos) * (max - min) / (_size - _barSize);
+			value = constrain(value, min, max);
+		};
+
+	}
+
+	bool Span::Scrollbar::Necessary() const
+	{
+		return max - min > 1; // Scrollbar is necessary when scrollable range size > 1
+	}
+
+	void Span::Scrollbar::Update()
+	{
+		value = constrain(value, min, max); // Always constrain the value
+	}
+
+	void Span::Scrollbar::Render(CommandCollection& d) const
+	{
+		float _size = axis == horizontal ? width : height;
+		float _pos  = axis == horizontal ? x : y;
+		float _barSize = _size * visibleRange / (max - min + visibleRange);
+		float _relPos  = _pos + (_size - _barSize) * (value - min) / (max - min);
+
+		d.Fill(background);
+		d.Quad(dimensions);
+
+		d.Fill({ 128, 128, 128 });
+		if (axis == horizontal)
+			d.Quad({ _relPos, y, _barSize, height });
+		else
+			d.Quad({ x, _relPos, width, _barSize });
+	}
+}
+
+// Span id
+namespace GuiCode
+{
+	Span::Id::Id()
+		: m_Id(m_Counter++)
+	{}
+
+	Span::Id::Id(const Id& other)
+		: m_Id(other.m_Id)
+	{
+		if (other.m_Used)
+			throw std::exception("You can't assign an id more than once");
+		other.m_Used = true;
+	}
+
+	Span::Id& Span::Id::operator=(const Id& other)
+	{
+		if (other.m_Used)
+			throw std::exception("You can't assign an id more than once");
+		m_Id = other.m_Id;
+	}
+}
+
+// Span
+namespace GuiCode
+{
+	Span::Span()
+	{
+		Init();
+	}
+
+	Span::Span(const Settings& s)
+		: settings(s)
+	{
+		Init();
+	}
+
+	Span::Span(const Settings& s, const std::list<Span>& d)
+		: settings(s), 
+		spans(d)
+	{
+		Init();
+	}
+
+	Span::Span(const Settings& s, Component& c)
+		: settings(s), 
+		component(&c)
+	{
+		Init();
+	}
+
+	Span::Span(const Span& other)
+		: settings(other.settings), 
+		component(other.component),
+		spans(other.spans)
+	{
+		Init();
+	}
+
+	Span& Span::operator=(const Span& other)
+	{
+		components.clear();
+
+		settings = other.settings;
+		component = other.component;
+		spans = other.spans;
+		if (component)
+			components.push_back(component);
+
+		scrollbar.x.zIndex = std::numeric_limits<int>::max();
+		scrollbar.y.zIndex = std::numeric_limits<int>::max();
+
+		for (auto& i : spans)
+			components.push_back(&i);
+
+		components.push_back(&scrollbar.x);
+		components.push_back(&scrollbar.y);
+		return *this;
+	}
+
+	void Span::Init()
+	{
+		if (component)
+			components.push_back(component);
+
+		for (auto& i : spans)
+			components.push_back(&i);
+
+		scrollbar.x.zIndex = std::numeric_limits<int>::max();
+		scrollbar.y.zIndex = std::numeric_limits<int>::max();
+
+		components.push_back(&scrollbar.x);
+		components.push_back(&scrollbar.y);
+	}
+
+	Span* Span::Find(Id& id)
 	{
 		if (settings.id == id)
 			return this;
 
 		for (auto& i : spans)
-		{
-			Span* _div = i.Find(id);
-			if (_div)
+			if (Span* _div = i.Find(id))
 				return _div;
-		}
 
 		return nullptr;
 	}
@@ -39,11 +205,30 @@ namespace GuiCode
 			if (spans.size() == 0)
 				return;
 
+			Vec2<float> _scrollTranslate{ 0, 0 };
+			Vec2<float> _scrollbarOffsets{ 0, 0 };
+
+			if (scrollbar.x.Necessary())
+				_scrollTranslate.x = -scrollbar.x.value,
+				_scrollbarOffsets.y = scrollbar.x.height;
+
+			if (scrollbar.y.Necessary())
+				_scrollTranslate.y = -scrollbar.y.value,
+				_scrollbarOffsets.x = scrollbar.y.width;
+
+			float _contentX = x + settings.padding.left + _scrollTranslate.x;
+			float _contentY = y + settings.padding.top + _scrollTranslate.y;
+			float _width = width - settings.padding.left - settings.padding.right - _scrollbarOffsets.x;
+			float _height = height - settings.padding.top - settings.padding.bottom - _scrollbarOffsets.y;
+
 			// layouting
 			switch (settings.layout)
 			{
 			case Layout::Row:
 			{
+				m_Viewport.x = 0;
+				m_Viewport.y = 0;
+
 				// Calculate the sum of all the ratios
 				float _ratioSum = 0, _explicitWidthSum = 0, _biggestHeight = 0;
 				for (auto& _s : spans)
@@ -64,10 +249,8 @@ namespace GuiCode
 					height = _biggestHeight + settings.padding.top + settings.padding.bottom;
 
 				// Account for padding in the size, and 
-				float _x = x + settings.padding.left;
-				float _y = y + settings.padding.top;
-				float _width = width - settings.padding.left - settings.padding.right;
-				float _height = height - settings.padding.top - settings.padding.bottom;
+				float _x = _contentX;
+				float _y = _contentY;
 				float _ratioWidth = _width - _explicitWidthSum;
 
 				// Loop
@@ -95,18 +278,20 @@ namespace GuiCode
 
 				// If there is remaining space due to the max size of some components,
 				// we'll loop here until that space is <= 1.
-				float _toFill = (x + settings.padding.left + _width) - _x;
-				for (int tries = 0; tries < spans.size() && _toFill > 1; tries++)
+				float _toFill = (_contentX + _width) - _x;
+				for (int tries = 0; tries < spans.size(); tries++)
 				{
 					// x + padding + width = goal for x to reach, difference needs to be filled
-					_toFill = (x + settings.padding.left + _width) - _x;
-					_x = x + settings.padding.left; // Reset x
+					_toFill = (_contentX + _width) - _x;
+					if (_toFill < 1 && _toFill > -1)
+						break;
+					_x = _contentX; // Reset x
 					for (auto& _s : spans)
 					{
 						Vec4<float> _offsets = _s.Offsets();
 
 						// If the width != max width, we can add stuff
-						if (_s.settings.ratio != 0 && _s.width != _s.max.width)
+						if (_s.settings.ratio != 0 && _s.width != _s.max.width && _s.width != _s.min.width)
 						{
 							Vec4<float> _newDims{ _x, _y, -1, -1 };
 
@@ -136,10 +321,17 @@ namespace GuiCode
 						}
 					}
 				}
+
+				m_Viewport.width = (_x - _contentX) + settings.padding.right + settings.padding.left + _scrollbarOffsets.x;
+				m_Viewport.height = (_biggestHeight + settings.padding.top + settings.padding.bottom + _scrollbarOffsets.y);
+
 				break;
 			}
 			case Layout::Column:
 			{
+				m_Viewport.x = 0;
+				m_Viewport.y = 0;
+
 				// Calculate the sum of all the ratios
 				float _ratioSum = 0, _explicitHeightSum = 0, _biggestWidth = 0;
 				for (auto& _s : spans)
@@ -160,10 +352,8 @@ namespace GuiCode
 					width = _biggestWidth + settings.padding.left + settings.padding.right;
 
 				// Account for padding in the size, and 
-				float _x = x + settings.padding.left;
-				float _y = y + settings.padding.top;
-				float _width = width - settings.padding.left - settings.padding.right;
-				float _height = height - settings.padding.top - settings.padding.bottom;
+				float _x = _contentX;
+				float _y = _contentY;
 				float _ratioHeight = _height - _explicitHeightSum;
 				for (auto& _s : spans)
 				{
@@ -189,12 +379,12 @@ namespace GuiCode
 
 				// If there is remaining space due to the max size of some components,
 				// we'll loop here until that space is <= 1.
-				float _toFill = (y + settings.padding.top + _height) - _y;
+				float _toFill = (_contentY + _height) - _y;
 				for (int tries = 0; tries < spans.size() && _toFill > 1; tries++)
 				{
 					// y + padding + height = goal for x to reach, difference needs to be filled
-					_toFill = (y + settings.padding.top + _height) - _y;
-					_y = y + settings.padding.top; // Reset y
+					_toFill = (_contentY + _height) - _y;
+					_y = _contentY; // Reset y
 					for (auto& _s : spans)
 					{
 						Vec4<float> _offsets = _s.Offsets();
@@ -230,6 +420,10 @@ namespace GuiCode
 						}
 					}
 				}
+
+				m_Viewport.width = (_biggestWidth + settings.padding.right + settings.padding.left + _scrollbarOffsets.x);
+				m_Viewport.height = (_y - _contentY) + settings.padding.top + settings.padding.bottom + _scrollbarOffsets.y;
+
 				break;
 			}
 			}
@@ -238,13 +432,43 @@ namespace GuiCode
 
 	void Span::ForwardUpdate()
 	{
+		Vec2<float> _scrollbarOffsets{ 0, 0 };
+		
+		if (scrollbar.y.Necessary()) _scrollbarOffsets.x = scrollbar.y.width;
+		if (scrollbar.x.Necessary()) _scrollbarOffsets.y = scrollbar.x.height;
+
+		scrollbar.x.max = m_Viewport.x + m_Viewport.width - width;
+		scrollbar.x.min = m_Viewport.x;
+		scrollbar.x.visibleRange = width;
+		scrollbar.x.position = { x, y + height - scrollbar.x.height };
+		scrollbar.x.width = width - _scrollbarOffsets.x;
+		scrollbar.x.axis = Scrollbar::horizontal;
+
+		scrollbar.y.max = m_Viewport.y + m_Viewport.height - height;
+		scrollbar.y.min = m_Viewport.y;
+		scrollbar.y.visibleRange = height;
+		scrollbar.y.position = { x + width - scrollbar.y.width, y };
+		scrollbar.y.height = height - _scrollbarOffsets.y;
+		scrollbar.y.axis = Scrollbar::vertical;
+
 		RefreshLayout();
-		for (auto& _s : spans)
-			_s.ForwardUpdate();
+	
+		scrollbar.x.State<Visible>(scrollbar.x.Necessary());
+		scrollbar.y.State<Visible>(scrollbar.y.Necessary());
+		scrollbar.x.ForwardUpdate();
+		scrollbar.y.ForwardUpdate();
+
+		if (component)
+			component->ForwardUpdate();
+
+		else
+			for (auto& _s : spans)
+				_s.ForwardUpdate();
 	}
 
 	void Span::ForwardRender(CommandCollection& d)
 	{
+		CalculateOrder();
 		d.PushClip();
 		d.PushMatrix();
 		d.Fill(settings.background);
@@ -252,36 +476,31 @@ namespace GuiCode
 
 		// Fill borders
 
-		// If overflow == Hide || Scroll: add Clip/Translation
-		
+		if (settings.overflow != Overflow::Show)
+			d.Clip({ x, y, width - scrollbar.y.Necessary() * 16, height - scrollbar.x.Necessary() * 16 });
+
 		if (component)
 			component->ForwardRender(d);
+		else
+		{
+			std::list<Span*> _spans;
+			for (auto& _span : spans)
+				_spans.push_back(&_span);
 
-		std::list<Span*> _spans;
-		for (auto& _span : spans)
-			_spans.push_back(&_span);
+			_spans.sort([](Span* a, Span* b) -> bool { return a->settings.zIndex < b->settings.zIndex; });
 
-		_spans.sort([](Span* a, Span* b) -> bool { return a->settings.zIndex < b->settings.zIndex; });
+			for (auto& _span : _spans)
+				_span->ForwardRender(d);
+		}
 
-		for (auto& _span : _spans)
-			_span->ForwardRender(d);
-
-		//scrollbar.x.ForwardRender(d);
-		//scrollbar.y.ForwardRender(d);
 		d.PopMatrix();
 		d.PopClip();
-	}
 
-	bool Span::Hitbox(const Vec2<float>& v) const
-	{
-		if (scrollbar.x.Hitbox(v) || scrollbar.y.Hitbox(v))
-			return true;
-
-		for (auto& _s : spans)
-			if (_s.Hitbox(v))
-				return true;
-
-		return false;
+		if (scrollbar.x.State<Visible>())
+			scrollbar.x.ForwardRender(d);
+		
+		if (scrollbar.y.State<Visible>())
+			scrollbar.y.ForwardRender(d);
 	}
 
 	/**

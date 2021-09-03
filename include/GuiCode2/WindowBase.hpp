@@ -36,7 +36,7 @@ namespace GuiCode
 
 
 
-	class WindowBase : public Panel
+	class WindowBase : public Component
 	{
 	public:
 		WindowBase(const WindowData& d)

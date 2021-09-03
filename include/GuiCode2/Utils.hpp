@@ -38,6 +38,10 @@ namespace GuiCode
             : r(r), g(g), b(b), a(a)
         {}
 
+        constexpr Color(float r, float g, float b)
+            : r(r), g(g), b(b), a(255)
+        {}
+
         constexpr Color(unsigned int hex)
             : r((hex & 0x00FF0000) >> 16), g((hex & 0x0000FF00) >> 8), b(hex & 0x000000FF), a((hex & 0xFF000000) >> 24)
         {}        

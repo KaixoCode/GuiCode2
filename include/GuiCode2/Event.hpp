@@ -8,6 +8,7 @@ namespace GuiCode
 	struct StateSettings
 	{
 		int limit = -1;
+		bool visible = true;
 	};
 
 	struct Event
@@ -28,7 +29,10 @@ namespace GuiCode
 		 * @param c component list
 		 */
 		EventListener(std::list<Component*>& c)
-			: components(c)
+			: components(&c)
+		{}
+
+		EventListener(const EventListener& other)
 		{}
 
 		/**
@@ -36,11 +40,14 @@ namespace GuiCode
 		 * method, derived class tries casting to contained Event Type and
 		 * if successful, will call the contained callback.
 		 */ 
-		struct EventFunctionBase { virtual void Call(const Event&) = 0; };
+		struct EventFunctionBase 
+		{ 
+			virtual void Call(const Event&) = 0;
+		};
 
 		template<typename, typename>
 		struct EventFunction;
-		template<typename Func, typename Type>
+		template<typename Func, std::derived_from<Event> Type>
 		struct EventFunction<Func, void(const Type&)> : EventFunctionBase
 		{
 			EventFunction(Func f) : fun(f) {}
@@ -64,17 +71,17 @@ namespace GuiCode
 		 */
 		struct StateFunctionBase
 		{
-			virtual int Call(const Event&, Component&, bool overflow) = 0;
+			virtual int Call(const Event&, Component&, int) = 0;
 		};
 
 		template<typename, typename>
 		struct StateFunction;
 		template<typename Func, typename Type, typename Obj>
-		struct StateFunction<Func, int(const Type&, const Obj&)> : StateFunctionBase
+		struct StateFunction<Func, int(const Type&, const Obj&, int)> : StateFunctionBase
 		{
 			StateFunction(int a, Func b) : state(a), callback(b) {}
 
-			int Call(const Event& e, Component& c, bool overflow) override
+			int Call(const Event& e, Component& c, int left) override
 			{
 				// Try casting both objects to the correct type
 				const Type* _e = dynamic_cast<const Type*>(&e);
@@ -83,15 +90,8 @@ namespace GuiCode
 				// If successful, we can call the callback
 				if (_e && _c)
 				{
-					// If we're overflowing the limit, set state to 0
-					if (overflow)
-					{
-						_c->State(state, 0);
-						return 0;
-					}
-
 					// Calculate new state with callback function
-					int _state = callback(*_e, *_c);
+					int _state = callback(*_e, *_c, left);
 					_c->State(state, _state);
 					return _state;
 				}
@@ -159,7 +159,7 @@ namespace GuiCode
 		void operator()(const Event& e) const;
 
 	private:
-		std::list<Component*>& components;
+		std::list<Component*>* components = nullptr;
 		std::vector<std::unique_ptr<EventFunctionBase>> m_Listeners;
 		std::map<int, StateHandler> m_StateHandlers;
 	};

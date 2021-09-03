@@ -448,7 +448,7 @@ namespace GuiCode
         if (mouseInfo.pressedMouseButtons == MouseButton::None)
             m_EventQueue.emplace(new MouseMove{ { (float)x, (float)y } });
         else
-            m_EventQueue.emplace(new MouseDrag{ { (float)x, (float)y }, mouseInfo.pressedMouseButtons, mod });
+            m_EventQueue.emplace(new MouseDrag{ mouseInfo.pressedCursorPosition, { (float)x, (float)y }, mouseInfo.pressedMouseButtons, mod });
     }
 
     void WindowsWindow::MouseButtonCallback(int button, bool press, int mod)

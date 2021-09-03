@@ -21,18 +21,46 @@ namespace GuiCode
 		: listener{ components }
 	{
 		State<Visible>(true);
+		InitListeners();
 	}
 
-	Component::Component(const Component& c)
-		: components(c.components), listener(components),
-		m_States(c.m_States)
-	{}
-
-	Component& Component::operator=(const Component& c)
+	void Component::InitListeners()
 	{
-		components = c.components;
-		m_States = c.m_States;
-		return *this;
+		// Hovering state has limit of 1. When MouseMoved event occurs it will check hovering.
+		// if there is a change in state it will also send out the MouseEnter/MouseExit event
+		// accordingly. MouseEnter/MouseExit also update the state, which is crucial for 
+		// sub-components.
+		((listener.State<Hovering>({ .limit = 1 })
+			+= [this](const MouseMove& e, const Component& c, int first) -> int
+			{
+				bool prev = c.State<Hovering>();
+				bool curr = c.Hitbox(e.pos) && first; // first == 1 if no other component Hovering.
+
+				if (!prev && curr) c.listener(MouseEnter{});
+				else if (prev && !curr) c.listener(MouseExit{});
+
+				return curr;
+			})
+			+= [](const MouseEnter& e, const Component& c, int) -> int { return true; })
+			+= [](const MouseExit& e, const Component& c, int) -> int { return false; };
+
+		// The focused state also has a limit of 1, and is triggered by a MousePress event
+		// If there is a state change it will also send out the Focus/Unfocus events accordingly.
+		listener.State<Focused>({ .limit = 1 }) += [](const MousePress& e, const Component& c, int) -> int
+		{
+			int prev = c.State<Focused>();
+			int curr = c.State<Hovering>();
+
+			if (!prev && curr) c.listener(Focus{});
+			else if (prev && !curr) c.listener(Unfocus{});
+
+			return curr;
+		};
+
+		// Pressed also has limit of 1, and is handled simply by the MousePress and MouseRelease
+		(listener.State<Pressed>({ .limit = 1 })
+			+= [](const MousePress& e, const Component& c, int) -> int { return c.State<Hovering>(); })
+			+= [](const MouseRelease& e, const Component& c, int) -> int { return false; };
 	}
 
 	void Component::CalculateOrder()

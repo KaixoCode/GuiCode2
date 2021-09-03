@@ -18,7 +18,7 @@ namespace GuiCode
 			std::function<void(CommandCollection&)> render;
 		};
 
-		class TitleBar : public Panel
+		class TitleBar : public Component
 		{
 		public:
 			TitleBar();

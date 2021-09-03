@@ -33,7 +33,7 @@ namespace GuiCode
 
 	bool Frame::TitleBar::Hitbox(const Vec2<float>& v) const
 	{
-		return Panel::Hitbox(v) && !(v.x < 8 || v.x >= width - 8 || v.y < 8);
+		return Component::Hitbox(v) && !(v.x < 8 || v.x >= width - 8 || v.y < 8);
 	}
 	
 	Frame::Frame(const WindowData& data)
@@ -109,6 +109,11 @@ namespace GuiCode
 				d.Quad({ centerx - 5, centery - 6, 10, 1 });
 				d.Quad({ centerx - 5, centery - 6, 1, 10 });
 			}
+		};
+
+		titlebar.maximize.listener += [](const MouseExit& e)
+		{
+			std::cout << "eifsone f aef ae a" << std::endl;
 		};
 
 		components.push_back(&titlebar);

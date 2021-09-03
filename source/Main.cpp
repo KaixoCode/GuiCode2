@@ -121,7 +121,6 @@ public:
 
 int main()
 {
-	constexpr int size = sizeof Span::Settings;
 
 	Frame window{ {
 		.name = "Hello", 
@@ -129,18 +128,19 @@ int main()
 		.state = Show
 	} };
 
-	Apple& _comp = window.panel.Emplace<Apple>(1);
-	Apple& _comp2 = window.panel.Emplace<Apple>(2);
-	Apple& _comp3 = window.panel.Emplace<Apple>(3);
-	Apple& _comp4 = window.panel.Emplace<Apple>(4);
-	Apple& _comp5 = window.panel.Emplace<Apple>(5);
-	Apple& _comp6 = window.panel.Emplace<Apple>(6);
-	Apple& _comp7 = window.panel.Emplace<Apple>(6);
-	Apple& _comp8 = window.panel.Emplace<Apple>(6);
-	Apple& _comp9 = window.panel.Emplace<Apple>(6);
-	Apple& _comp10 = window.panel.Emplace<Apple>(6);
-	Apple& _comp11 = window.panel.Emplace<Apple>(6);
-	Apple& _comp12 = window.panel.Emplace<Apple>(6);
+	Apple _comp{1};
+	Apple _comp2{2};
+	Apple _comp3{3};
+	Apple _comp4{4};
+	Apple _comp5{5};
+	Apple _comp6{6};
+	Apple _comp7{7};
+	Apple _comp8{8};
+	Apple _comp9{9};
+	Apple _comp10{10};
+	Apple _comp11{11};
+	Apple _comp12{12};
+
 	_comp12.size = _comp11.size = _comp10.size = _comp9.size = _comp8.size = _comp7.size = _comp6.size = 
 		_comp5.size = _comp4.size = _comp3.size = _comp2.size = _comp.size = { 50, 50 };
 
@@ -152,7 +152,8 @@ int main()
 	window.titlebar.maximize.press = { 0x1B4332 };
 	window.titlebar.color = { 0x40916C };
 	window.background = { 0x52B788 };
-	Span _mainSpan
+
+	/*Span _mainSpan
 	{ 
 		{
 			.layout = Layout::Column,
@@ -215,12 +216,58 @@ int main()
 				}
 			}
 		}
+	};*/
+
+	Span::Id _myId;
+
+	Span _row{
+		{
+			.layout = Layout::Column,
+			.overflow = Overflow::Hide,
+			.padding{ 8, 8, 8, 8 },
+			.margin{ 0, 0, 0, 0 }
+		},
+		{	
+			{
+				{
+					.ratio = 1,
+					.layout = Layout::Row,
+					.overflow = Overflow::Scroll,
+					.padding{ 8, 8, 8, 8 },
+					.margin{ 4, 4, 4, 4 },
+					.background{ 0x74C69D }
+				},
+				{
+					{ {.ratio = 5, .margin{ 4, 4, 4, 4 }, .min{ 110, 110 } }, _comp },
+					{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .min{ 150, -1 } }, _comp2 },
+					{ {.ratio = 2, .margin{ 4, 4, 4, 4 }, .min{ 180, 150 } }, _comp3 },
+					{ {.ratio = 3, .margin{ 4, 4, 4, 4 }, .min{ 110, -1 } }, _comp4 },
+					{ {.ratio = 3, .margin{ 4, 4, 4, 4 }, .min{ 120, -1 } }, _comp5 },
+					{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .min{ 150, -1 } }, _comp6 },
+				}
+			},
+			{
+				{
+					.ratio = 2,
+					.layout = Layout::Row,
+					.overflow = Overflow::Scroll,
+					.padding{ 8, 8, 8, 8 },
+					.margin{ 4, 4, 4, 4 },
+					.background{ 0x74C69D }
+				},
+				{
+					{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .min{ 120, 130 } }, _comp7 },
+					{ {.ratio = 3, .margin{ 4, 4, 4, 4 }, .min{ 190, -1 } }, _comp8 },
+					{ {.ratio = 2, .margin{ 4, 4, 4, 4 }, .min{ 180, -1 } }, _comp9 },
+					{ {.ratio = 2, .margin{ 4, 4, 4, 4 }, .min{ 120, -1 } }, _comp10 },
+					{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .min{ 150, -1 } }, _comp11 },
+					{ {.ratio = 5, .margin{ 4, 4, 4, 4 }, .min{ 110, 140 } }, _comp12 },
+				}
+			},
+		}
 	};
 
-	window.panel.span = _mainSpan;
-
-	Span::Settings s;
-	s = window.panel.span.settings;
+	window.panel.span = _row; 
 
 	while (window.Loop())
 	{

@@ -43,15 +43,16 @@ namespace GuiCode
 
 	struct MouseDrag : public Event
 	{
-		MouseDrag(Vec2<float> pos, int buttons, int mod)
-			: pos(pos), buttons(buttons), mod(mod)
+		MouseDrag(Vec2<float> source, Vec2<float> pos, int buttons, int mod)
+			: source(source), pos(pos), buttons(buttons), mod(mod)
 		{}
 
 		bool Forward(const Component& c) const override { return c.State<Pressed>(); };
 
-		Vec2<float> pos; // Position of cursor
-		int buttons;      // Buttons held down
-		int mod;          // Key mods
+		Vec2<float> source;  // Press position of mouse
+		Vec2<float> pos;     // Position of cursor
+		int buttons;         // Buttons held down
+		int mod;             // Key mods
 	};
 
 	struct MousePress : public Event
