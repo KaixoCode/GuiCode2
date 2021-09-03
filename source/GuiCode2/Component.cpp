@@ -30,7 +30,7 @@ namespace GuiCode
 		// if there is a change in state it will also send out the MouseEnter/MouseExit event
 		// accordingly. MouseEnter/MouseExit also update the state, which is crucial for 
 		// sub-components.
-		((listener.State<Hovering>({ .limit = 1 })
+		(listener.State<Hovering>({ .limit = 1 })
 			+= [this](const MouseMove& e, const Component& c, int first) -> int
 			{
 				bool prev = c.State<Hovering>();
@@ -41,21 +41,22 @@ namespace GuiCode
 
 				return curr;
 			})
-			+= [](const MouseEnter& e, const Component& c, int) -> int { return true; })
 			+= [](const MouseExit& e, const Component& c, int) -> int { return false; };
 
 		// The focused state also has a limit of 1, and is triggered by a MousePress event
 		// If there is a state change it will also send out the Focus/Unfocus events accordingly.
-		listener.State<Focused>({ .limit = 1 }) += [](const MousePress& e, const Component& c, int) -> int
-		{
-			int prev = c.State<Focused>();
-			int curr = c.State<Hovering>();
+		(listener.State<Focused>({ .limit = 1 }) 
+			+= [](const MousePress& e, const Component& c, int first) -> int
+			{
+				bool prev = c.State<Focused>();
+				bool curr = c.State<Hovering>() && first;
 
-			if (!prev && curr) c.listener(Focus{});
-			else if (prev && !curr) c.listener(Unfocus{});
+				if (!prev && curr) c.listener(Focus{});
+				else if (prev && !curr) c.listener(Unfocus{});
 
-			return curr;
-		};
+				return curr;
+			})
+			+= [](const Unfocus& e, const Component& c, int) -> int { return false; };
 
 		// Pressed also has limit of 1, and is handled simply by the MousePress and MouseRelease
 		(listener.State<Pressed>({ .limit = 1 })

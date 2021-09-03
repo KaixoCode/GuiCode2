@@ -68,6 +68,9 @@ namespace GuiCode
 			bool dragging = false; // true when mouse was pressed on bar, until mouse release
 
 			Color background{ 96, 96, 96 };
+			ColorState bar{ *this };
+
+			bool Hitbox(const Vec2<float>& pos) const override;
 		};
 
 		/**

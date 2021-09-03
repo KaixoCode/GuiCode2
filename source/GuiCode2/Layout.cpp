@@ -7,6 +7,8 @@ namespace GuiCode
 	{
 		size = { 16, 16 };
 
+		bar.base = { 128, 128, 128 };
+
 		listener += [this](const MousePress& e)
 		{
 			pvalue = value; // pressed value
@@ -69,11 +71,25 @@ namespace GuiCode
 		d.Fill(background);
 		d.Quad(dimensions);
 
-		d.Fill({ 128, 128, 128 });
+		d.Fill(bar.Current());
 		if (axis == horizontal)
 			d.Quad({ _relPos, y, _barSize, height });
 		else
 			d.Quad({ x, _relPos, width, _barSize });
+	}
+
+
+	bool Span::Scrollbar::Hitbox(const Vec2<float>& pos) const 
+	{
+		float _size = axis == horizontal ? width : height;
+		float _pos = axis == horizontal ? x : y;
+		float _barSize = _size * visibleRange / (max - min + visibleRange);
+		float _relPos = _pos + (_size - _barSize) * (value - min) / (max - min);
+
+		if (axis == horizontal)
+			return pos.x > _relPos && pos.x < _relPos + _barSize && pos.y > y && pos.y < y + height;
+		else
+			return pos.y > _relPos && pos.y < _relPos + _barSize && pos.x > x && pos.x < x + width;
 	}
 }
 
@@ -143,6 +159,7 @@ namespace GuiCode
 		settings = other.settings;
 		component = other.component;
 		spans = other.spans;
+
 		if (component)
 			components.push_back(component);
 

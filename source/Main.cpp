@@ -78,7 +78,7 @@ public:
 
 		listener += [this](const MouseMove& e)
 		{
-			std::cout << "Move!" << id << std::endl;
+			//std::cout << "Move!" << id << std::endl;
 		};
 
 		listener += [this](const MouseDrag& e)
@@ -93,13 +93,15 @@ public:
 				press = e.pos;
 				zIndex = 10;
 			}
-			std::cout << "Drag!" << id << std::endl;
+			//std::cout << "Drag!" << id << std::endl;
 		};
 	}
 
 	void Render(CommandCollection& d) const override
 	{
-		if (State<Pressed>())
+		if (State<Focused>())
+			d.Fill({ 0xFFD5B2 });
+		else if (State<Pressed>())
 			d.Fill({ 0x95D5B2 });
 		else if (State<Hovering>())
 			d.Fill({ 0xD8F3DC });
@@ -151,85 +153,24 @@ int main()
 	window.titlebar.maximize.hover = { 0x2D6A4F };
 	window.titlebar.maximize.press = { 0x1B4332 };
 	window.titlebar.color = { 0x40916C };
-	window.background = { 0x52B788 };
+	window.background = { 0x40916C };
 
-	/*Span _mainSpan
-	{ 
-		{
-			.layout = Layout::Column,
-			.padding = { 8, 8, 8, 8 },
-			.margin = { 8, 8, 8, 8 },
-			.background{ 0x74C69D }
-		}, 
-		{ 
-			{ 
-				{
-					.ratio = 1,
-					.layout = Layout::Row,
-					.padding = { 4, 4, 4, 0 },
-					.background{ 0x52B788 }
-				}, 
-				{
-					{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ -1, -1 }, .min{ 10, 10 }, .max{ 500, -1 } }, _comp },
-					{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .size{ -1, -1 }, .min{ 10, 10 }, .max{  -1, -1 } }, _comp2 },
-					{ {.ratio = 2, .margin{ 4, 4, 4, 4 }, .size{ -1, -1 }, .min{ 10, 10 }, .max{ 240, -1 } }, _comp3 },
-					{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .size{ -1, -1 }, .min{ 10, 10 }, .max{ 220, -1 } }, _comp4 },
-				} 
-			}, 
-			{ 
-				{
-					.ratio = 2,
-					.layout = Layout::Row,
-					.zIndex = -1,
-					.background{ 0x52B788 }
-				}, 
-				{ 
-					{ 
-						{
-							.ratio = 1,
-							.layout = Layout::Column,
-							.padding = { 4, 0, 0, 4 },
-							.zIndex = -1,
-							.background{ 0x52B788 }
-						}, 
-						{
-							{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ -1, -1 }, .min{ 10, 10 }, .max{ -1, 100 } }, _comp5 },
-							{ {.ratio = 3, .margin{ 4, 4, 4, 4 }, .size{ -1, -1 }, .min{ 10, 10 }, .max{ -1, 200 } }, _comp6 },
-							{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .size{ -1, -1 }, .min{ 10, 10 }, .max{ -1,  40 } }, _comp7 },
-							{ {.ratio = 2, .margin{ 4, 4, 4, 4 }, .size{ -1, -1 }, .min{ 10, 10 }, .max{ -1, 100 } }, _comp8 },
-						} 
-					}, 
-					{ 
-						{
-							.ratio = 2,
-							.layout = Layout::Row,
-							.padding = { 0, 0, 4, 4 },
-							.zIndex = -1,
-							.background{ 0x52B788 }
-						}, 
-						{
-							{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ -1, -1 }, .min{ 10, 10 }, .max{ 200, -1 } }, _comp9 },
-							{ {.ratio = 2, .margin{ 4, 4, 4, 4 }, .size{ -1, -1 }, .min{ 10, 10 }, .max{ 480, -1 } }, _comp10 },
-							{ {.ratio = 2, .margin{ 4, 4, 4, 4 }, .size{ -1, -1 }, .min{ 10, 10 }, .max{ 160, -1 } }, _comp11 },
-						}
-					}
-				}
-			}
-		}
-	};*/
+	Span::Id _scrollSpan1;
+	Span::Id _scrollSpan2;
 
-	Span::Id _myId;
-
-	Span _row{
+	window.panel.span = 
+	{
 		{
 			.layout = Layout::Column,
 			.overflow = Overflow::Hide,
 			.padding{ 8, 8, 8, 8 },
-			.margin{ 0, 0, 0, 0 }
+			.margin{ 8, 8, 8, 8 },
+			.background{ 0x52B788 }
 		},
-		{	
+		{
 			{
 				{
+					.id = _scrollSpan1,
 					.ratio = 1,
 					.layout = Layout::Row,
 					.overflow = Overflow::Scroll,
@@ -238,9 +179,9 @@ int main()
 					.background{ 0x74C69D }
 				},
 				{
-					{ {.ratio = 5, .margin{ 4, 4, 4, 4 }, .min{ 110, 110 } }, _comp },
+					{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .min{ 110, -1 } }, _comp },
 					{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .min{ 150, -1 } }, _comp2 },
-					{ {.ratio = 2, .margin{ 4, 4, 4, 4 }, .min{ 180, 150 } }, _comp3 },
+					{ {.ratio = 2, .margin{ 4, 4, 4, 4 }, .min{ 180, -1 } }, _comp3 },
 					{ {.ratio = 3, .margin{ 4, 4, 4, 4 }, .min{ 110, -1 } }, _comp4 },
 					{ {.ratio = 3, .margin{ 4, 4, 4, 4 }, .min{ 120, -1 } }, _comp5 },
 					{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .min{ 150, -1 } }, _comp6 },
@@ -248,6 +189,7 @@ int main()
 			},
 			{
 				{
+					.id = _scrollSpan2,
 					.ratio = 2,
 					.layout = Layout::Row,
 					.overflow = Overflow::Scroll,
@@ -256,18 +198,40 @@ int main()
 					.background{ 0x74C69D }
 				},
 				{
-					{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .min{ 120, 130 } }, _comp7 },
+					{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .min{ 120, -1 } }, _comp7 },
 					{ {.ratio = 3, .margin{ 4, 4, 4, 4 }, .min{ 190, -1 } }, _comp8 },
 					{ {.ratio = 2, .margin{ 4, 4, 4, 4 }, .min{ 180, -1 } }, _comp9 },
 					{ {.ratio = 2, .margin{ 4, 4, 4, 4 }, .min{ 120, -1 } }, _comp10 },
 					{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .min{ 150, -1 } }, _comp11 },
-					{ {.ratio = 5, .margin{ 4, 4, 4, 4 }, .min{ 110, 140 } }, _comp12 },
+					{ {.ratio = 5, .margin{ 4, 4, 4, 4 }, .min{ 110, -1 } }, _comp12 },
 				}
 			},
 		}
 	};
 
-	window.panel.span = _row; 
+	Span* _scroll1 = window.panel.span.Find(_scrollSpan1);
+
+	_scroll1->scrollbar.x.background = { 0x4ba67c };
+	_scroll1->scrollbar.x.bar.base = { 0x40916C };
+	_scroll1->scrollbar.x.bar.State<Pressed>(0x327356);
+	_scroll1->scrollbar.x.bar.State<Hovering>(0x3b8765);
+
+	_scroll1->scrollbar.y.background = { 0x4ba67c };
+	_scroll1->scrollbar.y.bar.base = { 0x40916C };
+	_scroll1->scrollbar.y.bar.State<Pressed>(0x327356);
+	_scroll1->scrollbar.y.bar.State<Hovering>(0x3b8765);
+
+	Span* _scroll2 = window.panel.span.Find(_scrollSpan2);
+
+	_scroll2->scrollbar.x.background = { 0x4ba67c };
+	_scroll2->scrollbar.x.bar.base = { 0x40916C };
+	_scroll2->scrollbar.x.bar.State<Pressed>(0x327356);
+	_scroll2->scrollbar.x.bar.State<Hovering>(0x3b8765);
+		   
+	_scroll2->scrollbar.y.background = { 0x4ba67c };
+	_scroll2->scrollbar.y.bar.base = { 0x40916C };
+	_scroll2->scrollbar.y.bar.State<Pressed>(0x327356);
+	_scroll2->scrollbar.y.bar.State<Hovering>(0x3b8765);
 
 	while (window.Loop())
 	{
