@@ -125,14 +125,17 @@ namespace GuiCode
 		float padding = State<Visible>() == Maximize ? 8 : 0;
 
 		titlebar.dimensions = { padding, padding, width - 2 * padding, 32 };
-		panel.dimensions = { padding, 32 + padding, width - 2 * padding, height - 2 * padding - 32 };
+		panel.settings.size = { width - 2 * padding, height - 2 * padding - 32 };
+		panel.SetDimensions({ padding, 32 + padding, width - 2 * padding, height - 2 * padding - 32 });
+		panel.zIndex = std::numeric_limits<int>::max();
 		Window::ForwardUpdate();
 	}
 
-	void Frame::Render(CommandCollection& d) const 
+	void Frame::ForwardRender(CommandCollection& d)
 	{
 		d.Fill(background);
 		d.Quad({ 0, 0, width, height });
+		Window::ForwardRender(d);
 	}
 
 	bool Frame::BorderHitbox(const Vec2<float>& v) const 

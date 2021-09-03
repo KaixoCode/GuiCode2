@@ -1,60 +1,147 @@
 #pragma once
-#include "GuiCode2/pch.hpp"
 #include "GuiCode2/Component.hpp"
 #include "GuiCode2/BasicEvents.hpp"
-#include "GuiCode2/Layout.hpp"
+#include "GuiCode2/StateColors.hpp"
+#include "GuiCode2/Scrollbar.hpp"
 
 namespace GuiCode
 {
+	struct Align
+	{
+		enum {
+			Left = 0x0000,    // aligned to left on x-axis
+			Right = 0x0001,   // aligned to right on x-axis
+			CenterX = 0x0002, // aligned to center on x-axis
+			Top = 0x0000,     // aligned to top on y-axis
+			Bottom = 0x0010,  // aligned to bottom on y-axis
+			CenterY = 0x0020, // aligned to center on y-axis
+			Center = 0x0022   // aligned to center on both axis
+		};
+	};
+
+	enum class Layout
+	{
+		Free,         // not aligned
+		Grid,         // grid aligned
+		Row,          // left to right on x-axis
+		RowReverse,   // right to left on x-axis
+		Column,       // top to bottom on y-axis
+		ColumnReverse // bottom to top on y-axis
+	};
+
+	enum class Overflow
+	{
+		Show,        // Overflowing content is visible
+		Hide,        // Hides overflowing content
+		Scroll       // Adds scrollbar when overflows
+	};
+
 	/**
-	 * A Panel object is made to contain Components, it has StateHandlers for the 
-	 * Hovering, Focused, and Pressed states. It also contains a Span for layouting.
+	 * A Panel contains settings for creating scroll areas
+	 * and complex layouts.
 	 */
 	class Panel : public Component
 	{
 	public:
-		Panel();
+		/**
+		 * Panel id class, generates unique id to be used in a panel.
+		 */
+		struct Id
+		{
+			Id();
+			Id(const Id& other);
+
+			Id& operator=(const Id& other);
+			bool operator==(const Id& other) const { return other.m_Id == m_Id; }
+
+		private:
+			static inline int m_Counter = 0;
+			int m_Id;
+			mutable bool m_Used = false;
+		};
 
 		/**
-		 * Emplace a Component to this panel's storage, registers it for events.
-		 * @tparam Type derived from Component
-		 * @tparam ...Args arguments for the constructor of Type
-		 * @param ...args arguments for the constructor of Type
-		 * @return reference to created Type object
+		 * Panel settings, contains visual settings like padding/margin
+		 * size information, align information, an id for lookup, etc.
 		 */
-		template<std::derived_from<Component> Type, typename ...Args>
-		Type& Emplace(Args&&...args)
+		struct Settings
 		{
-			auto& _component = m_Storage.emplace_back(std::make_unique<Type>(std::forward<Args>(args)...));
-			components.push_back(_component.get());
-			return *static_cast<Type*>(_component.get());
-		}
-
-		/**
-		 * Remove object from this panel's storage using a reference.
-		 * @tparam Type derived from Component
-		 * @param obj object to erase from storage
-		 * @return true if successful
-		 */
-		template<std::derived_from<Component> Type>
-		bool Erase(Type& obj)
-		{
-			auto _it = std::find_if(m_Storage.begin(), m_Storage.end(), [&](auto& c) { return c.get() == &obj; });
-			if (_it != m_Storage.end())
+			Id id;                              // Unique Id
+			float ratio = 0;                    // Ratio used to determine size in parent Panel
+			Layout layout = Layout::Row;        // Type of layout
+			Overflow overflow = Overflow::Show; // Overflow
+			Vec4<float> padding{ 0, 0, 0, 0 };  // Padding for all sides
+			Vec4<float> margin{ 0, 0, 0, 0 };   // Margin for all sides
+			struct Border
 			{
-				components.remove(&obj);
-				m_Storage.erase(_it);
-				return true;
-			}
-			return false;
-		}
+				struct Side
+				{
+					float width = 0;
+					Color color{ 0, 0, 0, 0 };
+				};
 
-		Span span;
+				Side left; 					    // Border can be picked
+				Side right; 				    // for individual sides
+				Side top; 					    // or for the entire border
+				Side bottom;				    // at once. If side is specified
+				float width = 0;			    // it will override width/color
+				Color color{ 0, 0, 0, 0 };	    // specified for entire border
+			} border{};
+			float zIndex = 0;				    // zIndex for this Panel in parent Panel.
+			Vec2<float> size{ -1, -1 };		    // prefered size, will be constrained to min/max
+			Vec2<float> min{ -1, -1 };		    // minimum size for this Panel
+			Vec2<float> max{ -1, -1 };		    // maximum size for this Panel
+			int align = Align::Center;		    // alignment of panel in area given by parent
+			Color background{ 0, 0, 0, 0 };	    // background color of panel
+		};
 
+		Panel();
+		Panel(const Settings& s);
+		Panel(const Settings& s, const std::list<Panel>& d);
+		Panel(const Settings& s, Component& c);
+		Panel(const Panel& other);
+		Panel& operator=(const Panel& other);
+
+		/**
+		 * Set the dimensions of this panel using the rectangle. This function
+		 * will shave off the margin and border, so the entire panel will fit
+		 * in the rectangle provided by the caller. It might not fill the entire
+		 * rectangle if some maximum size is provided, which is why it returns its size.
+		 * @return the new size this panel occupies.
+		 */
+		Vec2<float> SetDimensions(const Vec4<float>& rect);
+
+		/**
+		 * Get the offsets of the panel, this is the margin + border, since
+		 * that is not included in the dimensions of a panel.
+		 * @return offsets
+		 */
+		Vec4<float> Offsets();
+
+		/**
+		 * Find a panel with the given id. Also searches in sub-panels.
+		 * @param id id
+		 * @return panel or nullptr if no panel found
+		 */
+		Panel* Find(Id& id);
+
+		/**
+		 * Recalculates the layout.
+		 */
+		void RefreshLayout();
+
+		Settings settings;
+		Component* component = nullptr;
+		std::list<Panel> panels;
+		struct { Scrollbar x, y; } scrollbar;
+
+		void ForwardRender(CommandCollection&) override;
 		void ForwardUpdate() override;
-		void ForwardRender(CommandCollection& d) override;
+		void ConstrainSize() override;
 
 	private:
-		std::vector<std::unique_ptr<Component>> m_Storage;
+		Vec4<float> m_Viewport; // Actual dimensions of the used space in this panel (used by scrollbars)
+
+		void Init();
 	};
 }

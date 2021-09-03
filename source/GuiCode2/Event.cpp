@@ -12,6 +12,11 @@ namespace GuiCode
 		if (!components)
 			return;
 
+		if (e.beforeStateHandler)
+			for (auto& i : *components)
+				if (i->State<Visible>())
+					if (e.Forward(*i)) i->listener(e);
+
 		// Then go through all the states that this listener handles
 		for (auto& [state, h] : m_StateHandlers)
 		{
@@ -21,10 +26,10 @@ namespace GuiCode
 					if (i->State<Visible>() || !h.settings.visible)
 						_amount += l->Call(e, *i, h.settings.limit - _amount);
 		}
-		
-		// Go through components and check if we should forward event.
-		for (auto& i : *components)
-			//if (i->State<Visible>())
-				if (e.Forward(*i)) i->listener(e);
+
+		if (!e.beforeStateHandler)
+			for (auto& i : *components)
+				if (i->State<Visible>())
+					if (e.Forward(*i)) i->listener(e);
 	}
 }

@@ -3,7 +3,6 @@
 #include "GuiCode2/Component.hpp"
 #include "GuiCode2/BasicEvents.hpp"
 #include "GuiCode2/Panel.hpp"
-#include "GuiCode2/Layout.hpp"
 #include "GuiCode2/Frame.hpp"
 
 using namespace GuiCode;
@@ -155,10 +154,10 @@ int main()
 	window.titlebar.color = { 0x40916C };
 	window.background = { 0x40916C };
 
-	Span::Id _scrollSpan1;
-	Span::Id _scrollSpan2;
+	Panel::Id _scrollpanel1;
+	Panel::Id _scrollpanel2;
 
-	window.panel.span = 
+	window.panel = 
 	{
 		{
 			.layout = Layout::Column,
@@ -170,7 +169,7 @@ int main()
 		{
 			{
 				{
-					.id = _scrollSpan1,
+					.id = _scrollpanel1,
 					.ratio = 1,
 					.layout = Layout::Row,
 					.overflow = Overflow::Scroll,
@@ -189,7 +188,7 @@ int main()
 			},
 			{
 				{
-					.id = _scrollSpan2,
+					.id = _scrollpanel2,
 					.ratio = 2,
 					.layout = Layout::Row,
 					.overflow = Overflow::Scroll,
@@ -209,7 +208,7 @@ int main()
 		}
 	};
 
-	Span* _scroll1 = window.panel.span.Find(_scrollSpan1);
+	Panel* _scroll1 = window.panel.Find(_scrollpanel1);
 
 	_scroll1->scrollbar.x.background = { 0x4ba67c };
 	_scroll1->scrollbar.x.bar.base = { 0x40916C };
@@ -221,7 +220,7 @@ int main()
 	_scroll1->scrollbar.y.bar.State<Pressed>(0x327356);
 	_scroll1->scrollbar.y.bar.State<Hovering>(0x3b8765);
 
-	Span* _scroll2 = window.panel.span.Find(_scrollSpan2);
+	Panel* _scroll2 = window.panel.Find(_scrollpanel2);
 
 	_scroll2->scrollbar.x.background = { 0x4ba67c };
 	_scroll2->scrollbar.x.bar.base = { 0x40916C };

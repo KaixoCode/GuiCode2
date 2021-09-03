@@ -1,19 +1,38 @@
 #pragma once
 #include "GuiCode2/pch.hpp"
 #include "GuiCode2/Utils.hpp"
+
 namespace GuiCode
 {
 	class Component;
 
+	/**
+	 * State specific settings.
+	 */
 	struct StateSettings
 	{
-		int limit = -1;
-		bool visible = true;
+		int limit = -1; // Set limit to sum of values for state of sub-components.
+		bool visible = true; // Does component need to be visible for state handler to ask about state?
 	};
 
+	/**
+	 * Event base class. Can be extended to make custom events.
+	 * Override Forward to tell when this event should be forwarded to
+	 * a component using the component's state.
+	 */
 	struct Event
 	{
+		Event(bool bsh = true)
+			: beforeStateHandler(bsh)
+		{}
+
 		virtual bool Forward(const Component&) const = 0;
+
+		/**
+		 * Is this event handled before or after the state handler?
+		 * default is true (before state handler)
+		 */
+		bool beforeStateHandler; 
 	};
 
 	/**
@@ -31,9 +50,9 @@ namespace GuiCode
 		EventListener(std::list<Component*>& c)
 			: components(&c)
 		{}
-
-		EventListener(const EventListener& other)
-		{}
+		
+		// Don't copy anything, since callbacks may contain a now invalid this-pointer
+		EventListener(const EventListener& other) {} 
 
 		/**
 		 * Type erasure using inheritance, base class contains Call
@@ -79,7 +98,9 @@ namespace GuiCode
 		template<typename Func, typename Type, typename Obj>
 		struct StateFunction<Func, int(const Type&, const Obj&, int)> : StateFunctionBase
 		{
-			StateFunction(int a, Func b) : state(a), callback(b) {}
+			StateFunction(int a, Func b) 
+				: state(a), callback(b) 
+			{}
 
 			int Call(const Event& e, Component& c, int left) override
 			{
