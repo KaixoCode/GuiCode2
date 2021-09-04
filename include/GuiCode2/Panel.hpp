@@ -38,9 +38,9 @@ namespace GuiCode
 
 	enum Sizing
 	{
-		None = -1,
-		Auto = -2,
-		Inherit = -3
+		None = -1,   // No min/max, can't be used with normal size.
+		Auto = -2,   // Automatically size to the content. Min/max will be taken from content
+		Inherit = -3 // Give parent full control over the size. No min/max size
 	};
 
 	/**
@@ -83,8 +83,8 @@ namespace GuiCode
 				Overflow x; // Overflow
 				Overflow y; // Overflow
 			} overflow = Overflow::Show;
-			Vec4<float> padding{ 0, 0, 0, 0 };  // Padding for all sides
-			Vec4<float> margin{ 0, 0, 0, 0 };   // Margin for all sides
+			Vec4<float> padding{ 0, 0, 0, 0 }; // Padding for all sides
+			Vec4<float> margin{ 0, 0, 0, 0 };  // Margin for all sides
 			struct Border
 			{
 				struct Side
@@ -93,19 +93,19 @@ namespace GuiCode
 					Color color{ 0, 0, 0, 0 };
 				};
 
-				float width = 0;			    // Border can be picked
-				Color color{ 0, 0, 0, 0 };	    // for individual sides
-				Side left; 					    // or for the entire border
-				Side right; 				    // at once. If side is specified
-				Side top; 					    // it will override width/color
-				Side bottom;				    // specified for entire border
+				float width = 0;		   // Border can be picked
+				Color color{ 0, 0, 0, 0 }; // for individual sides
+				Side left; 				   // or for the entire border
+				Side right; 			   // at once. If side is specified
+				Side top; 				   // it will override width/color
+				Side bottom;			   // specified for entire border
 			} border{};
-			float zIndex = 0;				    // zIndex for this Panel in parent Panel.
-			Vec2<float> size{ Inherit, Inherit };// prefered size, will be constrained to min/max
-			Vec2<float> min{ None, None };		// minimum size for this Panel
-			Vec2<float> max{ None, None };		// maximum size for this Panel
-			int align = Align::Center;		    // alignment of panel in area given by parent
-			Color background{ 0, 0, 0, 0 };	    // background color of panel
+			float zIndex = 0;				      // zIndex for this Panel in parent Panel.
+			Vec2<float> size{ Inherit, Inherit }; // prefered size, will be constrained to min/max
+			Vec2<float> min{ Inherit, Inherit };  // minimum size for this Panel
+			Vec2<float> max{ Inherit, Inherit };  // maximum size for this Panel
+			int align = Align::Top | Align::Left; // alignment of panel in area given by parent
+			Color background{ 0, 0, 0, 0 };	      // background color of panel
 		};
 
 		Panel();
@@ -157,6 +157,8 @@ namespace GuiCode
 
 		void Init();
 		void RefreshScrollbars();
+
+		void RenderBorder(CommandCollection&);
 
 		void RowLayout(const Vec4<float>& content);
 		void ColumnLayout(const Vec4<float>& content);

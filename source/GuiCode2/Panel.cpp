@@ -497,6 +497,52 @@ namespace GuiCode
 		d.Fill(settings.background);
 		d.Quad(dimensions);
 
+		RenderBorder(d);
+
+		if (settings.overflow.x != Overflow::Show || settings.overflow.y != Overflow::Show)
+		{
+			Vec2<float> _scrollbarOffsets{ 0, 0 };
+
+			if (scrollbar.y.Necessary() && settings.overflow.y == Overflow::Scroll) 
+				_scrollbarOffsets.x = scrollbar.y.width;
+			if (scrollbar.x.Necessary() && settings.overflow.x == Overflow::Scroll) 
+				_scrollbarOffsets.y = scrollbar.x.height;
+
+			d.Clip({ 
+				x, 
+				y, 
+				width - _scrollbarOffsets.x,
+				height - _scrollbarOffsets.y
+			});
+		}
+
+		if (component)
+			component->ForwardRender(d);
+		else
+		{
+			std::list<Panel*> _panels;
+			for (auto& _span : panels)
+				if (_span.BoundingBox().Overlaps(BoundingBox()))
+					_panels.push_back(&_span);
+
+			_panels.sort([](Panel* a, Panel* b) -> bool { return a->settings.zIndex < b->settings.zIndex; });
+
+			for (auto& _span : _panels)
+				_span->ForwardRender(d);
+		}
+
+		d.PopMatrix();
+		d.PopClip();
+
+		if (scrollbar.x.State<Visible>())
+			scrollbar.x.ForwardRender(d);
+
+		if (scrollbar.y.State<Visible>())
+			scrollbar.y.ForwardRender(d);
+	}
+
+	void Panel::RenderBorder(CommandCollection& d)
+	{
 		Vec4<float> _widths{ 0, 0, 0, 0 };
 		Vec4<Color> _colors{ {}, {}, {}, {} };
 
@@ -542,47 +588,6 @@ namespace GuiCode
 			d.Fill(_colors.bottom);
 			d.Quad({ x - _widths.left, y + height, width + _widths.left + _widths.right, _widths.bottom });
 		}
-
-		if (settings.overflow.x != Overflow::Show || settings.overflow.y != Overflow::Show)
-		{
-			Vec2<float> _scrollbarOffsets{ 0, 0 };
-
-			if (scrollbar.y.Necessary() && settings.overflow.y == Overflow::Scroll) 
-				_scrollbarOffsets.x = scrollbar.y.width;
-			if (scrollbar.x.Necessary() && settings.overflow.x == Overflow::Scroll) 
-				_scrollbarOffsets.y = scrollbar.x.height;
-
-			d.Clip({ 
-				x, 
-				y, 
-				width - _scrollbarOffsets.x,
-				height - _scrollbarOffsets.y
-			});
-		}
-
-		if (component)
-			component->ForwardRender(d);
-		else
-		{
-			std::list<Panel*> _panels;
-			for (auto& _span : panels)
-				if (_span.BoundingBox().Overlaps(BoundingBox()))
-					_panels.push_back(&_span);
-
-			_panels.sort([](Panel* a, Panel* b) -> bool { return a->settings.zIndex < b->settings.zIndex; });
-
-			for (auto& _span : _panels)
-				_span->ForwardRender(d);
-		}
-
-		d.PopMatrix();
-		d.PopClip();
-
-		if (scrollbar.x.State<Visible>())
-			scrollbar.x.ForwardRender(d);
-
-		if (scrollbar.y.State<Visible>())
-			scrollbar.y.ForwardRender(d);
 	}
 
 	/**
@@ -649,25 +654,46 @@ namespace GuiCode
 
 	void Panel::ConstrainSize()
 	{
+		Vec2<float> _maxSizes{ settings.padding.left + settings.padding.right, settings.padding.top + settings.padding.bottom };
+		Vec2<float> _minSizes{ settings.padding.left + settings.padding.right, settings.padding.top + settings.padding.bottom };
+		
+		// Only calculate if needed, since it is a relatively heavy calculation
+		if (settings.min.width == Auto || settings.min.height == Auto 
+			|| settings.max.width == Auto || settings.max.height == Auto)
+			for (auto& i : panels)
+			{
+				Vec4<float> _offsets = i.Offsets();
+				_maxSizes += i.size + Vec2<float>{ _offsets.left + _offsets.right, _offsets.top + _offsets.bottom },
+				_minSizes += i.size + Vec2<float>{ _offsets.left + _offsets.right, _offsets.top + _offsets.bottom };
+			}
+
 		if (settings.min.width >= 0)
 			min.width = settings.min.width;
 		else if (settings.min.width == Auto && component)
 			min.width = component->min.width;
+		else if (settings.min.width == Auto)
+			min.width = _minSizes.width;
 
 		if (settings.min.height >= 0)
 			min.height = settings.min.height;
 		else if (settings.min.height == Auto && component)
 			min.height = component->min.height;
+		else if (settings.min.height == Auto)
+			min.height = _minSizes.height;
 
 		if (settings.max.width >= 0)
 			max.width = settings.max.width;
 		else if (settings.max.width == Auto && component)
 			max.width = component->max.width;
+		else if (settings.max.width == Auto)
+			max.width = _maxSizes.width;
 
 		if (settings.max.height >= 0)
 			max.height = settings.max.height;
 		else if (settings.max.height == Auto && component)
 			max.height = component->max.height;
+		else if (settings.max.height == Auto)
+			max.height = _maxSizes.height;
 
 		if (min.width != -1 && width < min.width)
 			width = min.width;

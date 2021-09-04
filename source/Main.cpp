@@ -183,10 +183,10 @@ int main()
 					.background{ 0x74C69D }
 				},
 				{
-					{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ Auto, Auto }, .min{ 110, -1 }, .align=Align::Top    }, _comp4 },
-					{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ Auto, Auto }, .min{ 120, -1 }, .align=Align::Center }, _comp5 },
-					{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ Auto, Auto }, .min{ 150, -1 }, .align=Align::Top    }, _comp6 },
-					{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ Auto, Auto }, .min{ 190, -1 }, .align=Align::Bottom }, _comp8 },
+					{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ Auto, Auto }, .min{ 110, -1 } }, _comp4 },
+					{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ Auto, Auto }, .min{ 120, -1 } }, _comp5 },
+					{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ Auto, Auto }, .min{ 150, -1 } }, _comp6 },
+					{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ Auto, Auto }, .min{ 190, -1 } }, _comp8 },
 				}
 			},
 			{
