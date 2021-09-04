@@ -28,11 +28,17 @@ namespace GuiCode
 
 		virtual bool Forward(const Component&) const = 0;
 
+		void Handle() const { handled = true; }
+		bool Handled() const { return handled; }
+
 		/**
 		 * Is this event handled before or after the state handler?
 		 * default is true (before state handler)
 		 */
-		bool beforeStateHandler; 
+		bool beforeStateHandler;
+
+	private:
+		mutable bool handled = false;
 	};
 
 	/**

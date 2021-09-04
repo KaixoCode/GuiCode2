@@ -90,9 +90,8 @@ namespace GuiCode
         void Render() override;
 
     private:
-        glm::vec4 FlipY(const glm::vec4& v) { return { v.x, m_Size.height - v.y - v.w, v.z, v.w }; };
-        glm::vec4 FlipY2(const glm::vec4& v) { return { v.x, m_Size.height - v.y, v.z, m_Size.height - v.w }; };
-        glm::vec2 FlipY(const glm::vec2& v) { return { v.x, m_Size.height - v.y }; };
+        glm::vec4 FlipY(const glm::vec4& v) { return glm::round(glm::vec4{ v.x, m_Size.height - v.y - v.w, v.z, v.w }); };
+        glm::vec4 FlipY2(const glm::vec4& v) { return glm::vec4{ v.x, m_Size.height - v.y, v.z, m_Size.height - v.w }; };
 
         void Fill(const Color&) override;
         void Quad(const glm::vec4&, float) override;

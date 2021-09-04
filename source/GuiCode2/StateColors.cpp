@@ -22,8 +22,13 @@ namespace GuiCode
 
 	void StateColors::State(int state, Color color)
 	{
-		m_States.push_back(state);
-		m_ColorMap.emplace(state, color);
+		if (!m_ColorMap.contains(state))
+		{
+			m_States.push_back(state);
+			m_ColorMap.emplace(state, color);
+		}
+		else
+			m_ColorMap[state] = color;
 	}
 
 	void StateColors::Remove(int state)

@@ -27,7 +27,7 @@ namespace GuiCode
         Dimensions m_PrevDims{ 0, 0, 0, 0 };
         int m_PrevVisibility = 0;
 
-
+        bool WindowsLoop();
 
         void CursorPosCallback(int x, int y, int mod);
         void MouseButtonCallback(int button, bool press, int mod);

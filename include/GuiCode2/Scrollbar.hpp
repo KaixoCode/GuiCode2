@@ -19,6 +19,7 @@ namespace GuiCode
 		 * @return true when scrollbar is necessary (content overflows)
 		 */
 		bool Necessary() const;
+		void ConstrainValue();
 
 		float visibleRange; // Visible range on the screen, used to calculate bar width
 		float value = 0;    // value

@@ -13,10 +13,12 @@ namespace GuiCode
 
 			// Calculate things using axis
 			float _size = axis == Horizontal ? width : height;
+			float _otherSize = axis == Horizontal ? height : width;
 			float _pos = axis == Horizontal ? x : y;
 			float _mousePos = axis == Horizontal ? e.pos.x : e.pos.y;
 
 			float _barSize = _size * visibleRange / (range.end - range.start + visibleRange);
+			if (_barSize < _otherSize) _barSize = _otherSize;
 			float _relPos = _pos + (_size - _barSize) * (value - range.start) / (range.end - range.start);
 
 			// If hovering over the bar, set dragging to true
@@ -37,15 +39,22 @@ namespace GuiCode
 
 			// Calculate things using axis
 			float _size = axis == Horizontal ? width : height;
+			float _otherSize = axis == Horizontal ? height : width;
 			float _pos = axis == Horizontal ? x : y;
 			float _mousePos = axis == Horizontal ? e.pos.x : e.pos.y;
 			float _sourcePos = axis == Horizontal ? e.source.x : e.source.y;
 			float _barSize = _size * visibleRange / (range.end - range.start + visibleRange);
+			if (_barSize < _otherSize) _barSize = _otherSize;
 
 			// Calculate the value, and then constrain it
 			value = m_ValueWhenPressed + (_mousePos - _sourcePos) * (range.end - range.start) / (_size - _barSize);
 			value = constrain(value, range.start, range.end);
 		};
+	}
+
+	void Scrollbar::ConstrainValue()
+	{
+		value = constrain(value, range.start, range.end);
 	}
 
 	bool Scrollbar::Necessary() const
@@ -57,14 +66,16 @@ namespace GuiCode
 	void Scrollbar::Update()
 	{
 		// Always constrain the value
-		value = constrain(value, range.start, range.end);
+		ConstrainValue();
 	}
 
 	void Scrollbar::Render(CommandCollection& d) const
 	{
 		float _size = axis == Horizontal ? width : height;
+		float _otherSize = axis == Horizontal ? height : width;
 		float _pos = axis == Horizontal ? x : y;
 		float _barSize = _size * visibleRange / (range.end - range.start + visibleRange);
+		if (_barSize < _otherSize) _barSize = _otherSize;
 		float _relPos = _pos + (_size - _barSize) * (value - range.start) / (range.end - range.start);
 
 		d.Fill(background);
@@ -80,8 +91,10 @@ namespace GuiCode
 	bool Scrollbar::Hitbox(const Vec2<float>& pos) const
 	{
 		float _size = axis == Horizontal ? width : height;
+		float _otherSize = axis == Horizontal ? height : width;
 		float _pos = axis == Horizontal ? x : y;
 		float _barSize = _size * visibleRange / (range.end - range.start + visibleRange);
+		if (_barSize < _otherSize) _barSize = _otherSize;
 		float _relPos = _pos + (_size - _barSize) * (value - range.start) / (range.end - range.start);
 
 		if (axis == Horizontal)

@@ -173,7 +173,7 @@ namespace GuiCode
             case Line:       this->Line(FlipY2(std::get<Line>(a.data).points), std::get<Line>(a.data).thickness); break;
             case Ellipse:    this->Ellipse(FlipY(std::get<Ellipse>(a.data).dimensions), std::get<Ellipse>(a.data).angles); break;
             case Triangle:   this->Triangle(FlipY(std::get<Triangle>(a.data).dimensions), std::get<Triangle>(a.data).rotation); break;
-            case Clip:       this->Clip(std::get<Clip>(a.data).area); break;
+            case Clip:       this->Clip(FlipY(std::get<Clip>(a.data).area)); break;
             case PushClip:   this->PushClip(); break;
             case PopClip:    this->PopClip(); break;
             case Viewport:   this->Viewport(std::get<Viewport>(a.data).area); break;
@@ -208,7 +208,7 @@ namespace GuiCode
         };
         clip = clip.Overlap(m_Clip);
         m_Clip = clip;
-        glScissor(clip.x, m_Size.height - clip.y - clip.height, clip.width, clip.height);
+        glScissor(clip.x, clip.y, clip.width, clip.height);
     }
 
     void OpenGL::PopClip()
@@ -223,7 +223,7 @@ namespace GuiCode
             Vec4<float> clip2 = m_ClipStack.top();
             m_ClipStack.pop();
             m_Clip = clip2;
-            glScissor(clip2.x, m_Size.height - clip2.y - clip2.height, clip2.width, clip2.height);
+            glScissor(clip2.x, clip2.y, clip2.width, clip2.height);
         }
     }
 

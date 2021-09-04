@@ -61,6 +61,9 @@ public:
 		listener += [this](const MousePress& e)
 		{
 			press = e.pos;
+			if (e.pos.x > x + width - 10)
+				if (e.pos.y > y + height - 10)
+					dragging = true;
 			std::cout << "Press!" << id << std::endl;
 		};
 		
@@ -82,16 +85,16 @@ public:
 
 		listener += [this](const MouseDrag& e)
 		{
-			if (press.x > x + width - 10 && press.y > y + height - 10)
-			{
+			if (dragging)
 				size = e.pos - position;
-				press = e.pos;
-			}
-			else {
-				position += e.pos - press;
-				press = e.pos;
-				zIndex = 10;
-			}
+
+			
+
+			//else {
+			//	position += e.pos - press;
+			//	press = e.pos;
+			//	zIndex = 10;
+			//}
 			//std::cout << "Drag!" << id << std::endl;
 		};
 	}
@@ -118,6 +121,7 @@ public:
 
 	Vec2<float> press;
 	int id;
+	bool dragging = false;
 };
 
 int main()
@@ -156,11 +160,12 @@ int main()
 
 	Panel::Id _scrollpanel1;
 	Panel::Id _scrollpanel2;
+	Panel::Id _scrollpanel3;
 
 	window.panel = 
 	{
 		{
-			.layout = Layout::Column,
+			.layout = Layout::Row,
 			.overflow = Overflow::Hide,
 			.padding{ 8, 8, 8, 8 },
 			.margin{ 8, 8, 8, 8 },
@@ -178,59 +183,70 @@ int main()
 					.background{ 0x74C69D }
 				},
 				{
-					{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .min{ 110, -1 } }, _comp },
-					{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .min{ 150, -1 } }, _comp2 },
-					{ {.ratio = 2, .margin{ 4, 4, 4, 4 }, .min{ 180, -1 } }, _comp3 },
-					{ {.ratio = 3, .margin{ 4, 4, 4, 4 }, .min{ 110, -1 } }, _comp4 },
-					{ {.ratio = 3, .margin{ 4, 4, 4, 4 }, .min{ 120, -1 } }, _comp5 },
-					{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .min{ 150, -1 } }, _comp6 },
+					{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ Auto, Auto }, .min{ 110, -1 }, .align=Align::Top    }, _comp4 },
+					{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ Auto, Auto }, .min{ 120, -1 }, .align=Align::Center }, _comp5 },
+					{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ Auto, Auto }, .min{ 150, -1 }, .align=Align::Top    }, _comp6 },
+					{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ Auto, Auto }, .min{ 190, -1 }, .align=Align::Bottom }, _comp8 },
 				}
 			},
 			{
 				{
 					.id = _scrollpanel2,
-					.ratio = 2,
-					.layout = Layout::Row,
+					.ratio = 1,
+					.layout = Layout::Column,
 					.overflow = Overflow::Scroll,
 					.padding{ 8, 8, 8, 8 },
 					.margin{ 4, 4, 4, 4 },
 					.background{ 0x74C69D }
 				},
 				{
-					{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .min{ 120, -1 } }, _comp7 },
-					{ {.ratio = 3, .margin{ 4, 4, 4, 4 }, .min{ 190, -1 } }, _comp8 },
-					{ {.ratio = 2, .margin{ 4, 4, 4, 4 }, .min{ 180, -1 } }, _comp9 },
-					{ {.ratio = 2, .margin{ 4, 4, 4, 4 }, .min{ 120, -1 } }, _comp10 },
-					{ {.ratio = 1, .margin{ 4, 4, 4, 4 }, .min{ 150, -1 } }, _comp11 },
-					{ {.ratio = 5, .margin{ 4, 4, 4, 4 }, .min{ 110, -1 } }, _comp12 },
+					{
+						{
+							.id = _scrollpanel3,
+							.ratio = 5,
+							.layout = Layout::Column,
+							.overflow = Overflow::Scroll,
+							.padding{ 8, 8, 8, 8 },
+							.margin{ 4, 4, 4, 4 },
+							.border{ 4, 0x52B788 },
+							.min{ -1, 300 },
+							.background{ 0x74C69D }
+						},
+						{
+							{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ Auto, Auto }, .min{ -1, 110 }, .align = Align::Center  }, _comp },
+							{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ Auto, Auto }, .min{ -1, 150 }, .align = Align::Right }, _comp2 },
+							{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ Auto, Auto }, .min{ -1, 180 }, .align = Align::Left }, _comp3 },
+							{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ Auto, Auto }, .min{ -1, 120 }, .align = Align::Right }, _comp7 },
+						}
+					},
+					{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ Auto, Auto }, .min{ -1, 180 }, .align = Align::Left }, _comp9 },
+					{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ Auto, Auto }, .min{ -1, 120 }, .align = Align::Right }, _comp10 },
+					{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ Auto, Auto }, .min{ -1, 150 }, .align = Align::Center }, _comp11 },
+					{ {.ratio = 0, .margin{ 4, 4, 4, 4 }, .size{ Auto, Auto }, .min{ -1, 110 }, .align = Align::Right }, _comp12 },
 				}
 			},
 		}
 	};
 
 	Panel* _scroll1 = window.panel.Find(_scrollpanel1);
+	Panel* _scroll2 = window.panel.Find(_scrollpanel2);
+	Panel* _scroll3 = window.panel.Find(_scrollpanel3);
 
-	_scroll1->scrollbar.x.background = { 0x4ba67c };
+	_scroll1->scrollbar.x.background =
+	_scroll1->scrollbar.y.background =
+	_scroll2->scrollbar.x.background =
+	_scroll2->scrollbar.y.background =
+	_scroll3->scrollbar.x.background =
+	_scroll3->scrollbar.y.background = { 0x4ba67c };
 	_scroll1->scrollbar.x.bar.base = { 0x40916C };
 	_scroll1->scrollbar.x.bar.State<Pressed>(0x327356);
 	_scroll1->scrollbar.x.bar.State<Hovering>(0x3b8765);
+	_scroll1->scrollbar.y.bar = 
+	_scroll2->scrollbar.x.bar = 
+	_scroll2->scrollbar.y.bar = 
+	_scroll3->scrollbar.x.bar = 
+	_scroll3->scrollbar.y.bar = _scroll1->scrollbar.x.bar;
 
-	_scroll1->scrollbar.y.background = { 0x4ba67c };
-	_scroll1->scrollbar.y.bar.base = { 0x40916C };
-	_scroll1->scrollbar.y.bar.State<Pressed>(0x327356);
-	_scroll1->scrollbar.y.bar.State<Hovering>(0x3b8765);
-
-	Panel* _scroll2 = window.panel.Find(_scrollpanel2);
-
-	_scroll2->scrollbar.x.background = { 0x4ba67c };
-	_scroll2->scrollbar.x.bar.base = { 0x40916C };
-	_scroll2->scrollbar.x.bar.State<Pressed>(0x327356);
-	_scroll2->scrollbar.x.bar.State<Hovering>(0x3b8765);
-		   
-	_scroll2->scrollbar.y.background = { 0x4ba67c };
-	_scroll2->scrollbar.y.bar.base = { 0x40916C };
-	_scroll2->scrollbar.y.bar.State<Pressed>(0x327356);
-	_scroll2->scrollbar.y.bar.State<Hovering>(0x3b8765);
 
 	while (window.Loop())
 	{

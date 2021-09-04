@@ -90,6 +90,19 @@ namespace GuiCode
 
 		components.push_back(&scrollbar.x);
 		components.push_back(&scrollbar.y);
+		
+		listener += [this](const MouseWheel& e)
+		{
+			// If mousewheel already handled by sub-component, don't scroll
+			if (e.Handled())
+				return;
+
+			if (scrollbar.y.Necessary() && settings.overflow.y == Overflow::Scroll)
+			{
+				e.Handle(); // Notify we've handled the scrolling
+				scrollbar.y.value -= e.amount * 0.15, scrollbar.y.ConstrainValue();
+			}
+		};
 	}
 
 	Panel* Panel::Find(Id& id)
@@ -108,17 +121,13 @@ namespace GuiCode
 	{
 		if (component)
 		{
-			component->dimensions = dimensions;
-
-
-			//// Positioning
-			//if (settings.align & Align::Right) component->dimensions.x = settings.dimensions.x + settings.dimensions.width - component->dimensions.width;
-			//else if (settings.align & Align::XCenter) component->dimensions.x = settings.dimensions.x + settings.dimensions.width / 2 - component->dimensions.width / 2;
-			//else component->dimensions.x = settings.dimensions.x;
-
-			//if (settings.align & Align::Bottom) component->dimensions.y = settings.dimensions.y + settings.dimensions.height - component->dimensions.height;
-			//else if (settings.align & Align::YCenter) component->dimensions.y = settings.dimensions.y + settings.dimensions.height / 2 - component->dimensions.height / 2;
-			//else component->dimensions.y = settings.dimensions.y;
+			component->dimensions =
+			{
+				x + settings.padding.left,
+				y + settings.padding.top,
+				width - settings.padding.left - settings.padding.right,
+				height - settings.padding.top - settings.padding.bottom
+			};
 		}
 		else
 		{
@@ -128,234 +137,311 @@ namespace GuiCode
 			Vec2<float> _scrollTranslate{ 0, 0 };
 			Vec2<float> _scrollbarOffsets{ 0, 0 };
 
-			if (scrollbar.x.Necessary())
-				_scrollTranslate.x = -scrollbar.x.value,
-				_scrollbarOffsets.y = scrollbar.x.height;
+			if (settings.overflow.x == Overflow::Scroll)
+				if (scrollbar.x.Necessary())
+					_scrollTranslate.x = -scrollbar.x.value,
+					_scrollbarOffsets.y = scrollbar.x.height;
 
-			if (scrollbar.y.Necessary())
-				_scrollTranslate.y = -scrollbar.y.value,
-				_scrollbarOffsets.x = scrollbar.y.width;
+			if (settings.overflow.y == Overflow::Scroll)
+				if (scrollbar.y.Necessary())
+					_scrollTranslate.y = -scrollbar.y.value,
+					_scrollbarOffsets.x = scrollbar.y.width;
 
-			float _contentX = x + settings.padding.left + _scrollTranslate.x;
-			float _contentY = y + settings.padding.top + _scrollTranslate.y;
-			float _width = width - settings.padding.left - settings.padding.right - _scrollbarOffsets.x;
-			float _height = height - settings.padding.top - settings.padding.bottom - _scrollbarOffsets.y;
+			Vec4<float> _content;
+			_content.x = x + settings.padding.left + _scrollTranslate.x;
+			_content.y = y + settings.padding.top + _scrollTranslate.y;
+			_content.width = width - settings.padding.left - settings.padding.right - _scrollbarOffsets.x;
+			_content.height = height - settings.padding.top - settings.padding.bottom - _scrollbarOffsets.y;
 
 			// layouting
 			switch (settings.layout)
 			{
 			case Layout::Row:
 			{
-				m_Viewport.x = 0;
-				m_Viewport.y = 0;
-
-				// Calculate the sum of all the ratios
-				float _ratioSum = 0, _explicitWidthSum = 0, _biggestHeight = 0;
-				for (auto& _s : panels)
-				{
-					Vec2<float> _sizes = _s.SetDimensions({ -1, -1, -1, -1 });
-					if (_s.settings.ratio == 0) // If no ratio, check what width it will become
-						_explicitWidthSum += _sizes.width;
-					else // Otherwise add to ratio sum
-						_ratioSum += _s.settings.ratio;
-
-					// Get biggest height
-					if (_sizes.height > _biggestHeight)
-						_biggestHeight = _sizes.height;
-				}
-
-				// If no height can be determined, set height to biggest of sub-component
-				if (!component && settings.size.height == -1 && settings.ratio == 0)
-					height = _biggestHeight + settings.padding.top + settings.padding.bottom;
-
-				// Account for padding in the size, and 
-				float _x = _contentX;
-				float _y = _contentY;
-				float _ratioWidth = _width - _explicitWidthSum;
-
-				// Loop
-				for (auto& _s : panels)
-				{
-					Vec4<float> _newDims{ _x, _y, -1, -1 };
-
-					// When height not set, set to this height.
-					if (_s.settings.size.height == -1) _newDims.height = _height;
-
-					// Set the width if ratio is defined
-					if (_s.settings.ratio != 0)
-						_newDims.width = _ratioWidth * _s.settings.ratio / _ratioSum;
-
-					// Set the dimensions, taking into account margin etc. incr with width
-					float _addedWidth = _s.SetDimensions(_newDims).width;
-					_x += _addedWidth;
-
-					// If we didn't add everything to width, we've reached max. Account for
-					// that by acting like this component now has a fixed size (it's max size)
-					if (_s.settings.ratio != 0 && _addedWidth != _newDims.width)
-						_ratioWidth -= _addedWidth,     // By removing the width from ratio
-						_ratioSum -= _s.settings.ratio; // And removing ratio from sum.
-				}
-
-				// If there is remaining space due to the max size of some components,
-				// we'll loop here until that space is <= 1.
-				float _toFill = (_contentX + _width) - _x;
-				for (int tries = 0; tries < panels.size(); tries++)
-				{
-					// x + padding + width = goal for x to reach, difference needs to be filled
-					_toFill = (_contentX + _width) - _x;
-					if (_toFill < 1 && _toFill > -1)
-						break;
-					_x = _contentX; // Reset x
-					for (auto& _s : panels)
-					{
-						Vec4<float> _offsets = _s.Offsets();
-
-						// If the width != max width, we can add stuff
-						if (_s.settings.ratio != 0 && _s.width != _s.max.width && _s.width != _s.min.width)
-						{
-							Vec4<float> _newDims{ _x, _y, -1, -1 };
-
-							// When height not set, set to this height.
-							if (_s.settings.size.height == -1) _newDims.height = _height;
-
-							// using the offsets, calculate the new width by adding the ratio of
-							// toFill to the width.
-							_newDims.width = _offsets.left + _offsets.right + _s.width
-								+ _toFill * _s.settings.ratio / _ratioSum;
-
-							// Set the dimensions, taking into account margin etc. incr with width
-							float _addedWidth = _s.SetDimensions(_newDims).width;
-							_x += _addedWidth;
-
-							// If we didn't add everything to width, we've reached max. Account for
-							// that by acting like this component now has a fixed size (it's max size)
-							if (_newDims.width != -1 && _addedWidth != _newDims.width)
-								_ratioWidth -= _addedWidth,		// By removing the width from ratio
-								_ratioSum -= _s.settings.ratio;	// And removing ratio from sum.
-						}
-						// Otherwise just set the correct new x coord, and increment _x
-						else
-						{
-							_s.x = _x + _offsets.left;
-							_x += _s.width + _offsets.left + _offsets.right;
-						}
-					}
-				}
-
-				m_Viewport.width = (_x - _contentX) + settings.padding.right + settings.padding.left + _scrollbarOffsets.x;
-				m_Viewport.height = (_biggestHeight + settings.padding.top + settings.padding.bottom + _scrollbarOffsets.y);
-
+				RowLayout(_content);
 				break;
 			}
 			case Layout::Column:
 			{
-				m_Viewport.x = 0;
-				m_Viewport.y = 0;
-
-				// Calculate the sum of all the ratios
-				float _ratioSum = 0, _explicitHeightSum = 0, _biggestWidth = 0;
-				for (auto& _s : panels)
-				{
-					Vec2<float> _sizes = _s.SetDimensions({ -1, -1, -1, -1 });
-					if (_s.settings.ratio == 0) // If no ratio, check what height it will become
-						_explicitHeightSum += _sizes.height;
-					else // Otherwise add to ratio sum
-						_ratioSum += _s.settings.ratio;
-
-					// Get biggest width
-					if (_sizes.width > _biggestWidth)
-						_biggestWidth = _sizes.width;
-				}
-
-				// If no width can be determined, set width to biggest of sub-component
-				if (!component && settings.size.width == -1 && settings.ratio == 0)
-					width = _biggestWidth + settings.padding.left + settings.padding.right;
-
-				// Account for padding in the size, and 
-				float _x = _contentX;
-				float _y = _contentY;
-				float _ratioHeight = _height - _explicitHeightSum;
-				for (auto& _s : panels)
-				{
-					Vec4<float> _newDims{ _x, _y, -1, -1 };
-
-					// When width not set, set to this width.
-					if (_s.settings.size.width == -1) _newDims.width = _width;
-
-					// Set the height if ratio is defined
-					if (_s.settings.ratio != 0)
-						_newDims.height = _ratioHeight * _s.settings.ratio / _ratioSum;
-
-					// Set the dimensions, taking into account margin etc. incr with height
-					float _addedHeight = _s.SetDimensions(_newDims).height;
-					_y += _addedHeight;
-
-					// If we didn't add everything to height, we've reached max. Account for
-					// that by acting like this component now has a fixed size (it's max size)
-					if (_s.settings.ratio != 0 && _addedHeight != _newDims.height)
-						_ratioHeight -= _addedHeight,   // By removing the height from ratio
-						_ratioSum -= _s.settings.ratio; // And removing ratio from sum.
-				}
-
-				// If there is remaining space due to the max size of some components,
-				// we'll loop here until that space is <= 1.
-				float _toFill = (_contentY + _height) - _y;
-				for (int tries = 0; tries < panels.size() && _toFill > 1; tries++)
-				{
-					// y + padding + height = goal for x to reach, difference needs to be filled
-					_toFill = (_contentY + _height) - _y;
-					_y = _contentY; // Reset y
-					for (auto& _s : panels)
-					{
-						Vec4<float> _offsets = _s.Offsets();
-
-						// If the height != max height, we can add stuff
-						if (_s.settings.ratio != 0 && _s.height != _s.max.height)
-						{
-							Vec4<float> _newDims{ _x, _y, -1, -1 };
-
-							// When width not set, set to this width.
-							if (_s.settings.size.width == -1) _newDims.width = _width;
-
-							// using the offsets, calculate the new width by adding the ratio of
-							// toFill to the width.
-							_newDims.height = _offsets.top + _offsets.bottom + _s.height
-								+ _toFill * _s.settings.ratio / _ratioSum;
-
-							// Set the dimensions, taking into account margin etc. incr with width
-							float _addedHeight = _s.SetDimensions(_newDims).height;
-							_y += _addedHeight;
-
-							// If we didn't add everything to height, we've reached max. Account for
-							// that by acting like this component now has a fixed size (it's max size)
-							if (_s.settings.ratio != 0 && _addedHeight != _newDims.height)
-								_ratioHeight -= _addedHeight,		// By removing the width from ratio
-								_ratioSum -= _s.settings.ratio;	// And removing ratio from sum.
-						}
-						// Otherwise just set the correct new x coord, and increment _x
-						else
-						{
-							_s.y = _y + _offsets.top;
-							_y += _s.height + _offsets.top + _offsets.bottom;
-						}
-					}
-				}
-
-				m_Viewport.width = (_biggestWidth + settings.padding.right + settings.padding.left + _scrollbarOffsets.x);
-				m_Viewport.height = (_y - _contentY) + settings.padding.top + settings.padding.bottom + _scrollbarOffsets.y;
-
+				ColumnLayout(_content);
 				break;
 			}
 			}
 		}
 	}
 
-	void Panel::ForwardUpdate()
+	void Panel::RowLayout(const Vec4<float>& content)
+	{
+		m_Viewport.x = 0;
+		m_Viewport.y = 0;
+
+		// Calculate the sum of all the ratios
+		float _ratioSum = 0, _explicitWidthSum = 0, _biggestHeight = 0;
+		for (auto& _s : panels)
+		{
+			Vec2<float> _sizes = _s.SetDimensions({ -1, -1, -1, -1 });
+			if (_s.settings.ratio == 0) // If no ratio, check what width it will become
+				_explicitWidthSum += _sizes.width;
+			else // Otherwise add to ratio sum
+				_ratioSum += _s.settings.ratio;
+
+			// Get biggest height
+			if (_sizes.height > _biggestHeight)
+				_biggestHeight = _sizes.height;
+		}
+
+		// If no height can be determined, set height to biggest of sub-component
+		if (!component && settings.size.height < 0 && settings.ratio == 0)
+			height = _biggestHeight + settings.padding.top + settings.padding.bottom;
+
+		// Account for padding in the size, and 
+		float _x = content.x;
+		float _y = content.y;
+		float _ratioWidth = content.width - _explicitWidthSum;
+
+		// Loop
+		for (auto& _s : panels)
+		{
+			Vec4<float> _newDims{ _x, _y, Auto, Auto };
+
+			// When height not set, set to this height.
+			if (_s.settings.size.height == Inherit) _newDims.height = content.height;
+
+			// Set the width if ratio is defined
+			if (_s.settings.ratio != 0)
+				_newDims.width = _ratioWidth * _s.settings.ratio / _ratioSum;
+
+			// Set the dimensions, taking into account margin etc. incr with width
+			Vec2<float> _actual = _s.SetDimensions(_newDims);
+			_x += _actual.width;
+
+			// Alignment only if not full height
+			if (_s.settings.size.height != Inherit)
+				if (_s.settings.align & Align::CenterY)
+				{
+					_s.y = content.y + content.height / 2 - _s.height / 2;
+					Vec4<float> _offsets = _s.Offsets();
+					if (_s.y - _offsets.top - content.y < m_Viewport.y)
+						m_Viewport.y = _s.y - _offsets.top - content.y;
+				}
+				else if (_s.settings.align & Align::Bottom)
+				{
+					_s.y = content.y + content.height - _s.height;
+					Vec4<float> _offsets = _s.Offsets();
+					if (_s.y - _offsets.top - content.y < m_Viewport.y)
+						m_Viewport.y = _s.y - _offsets.top - content.y;
+				}
+
+			// If we didn't add everything to width, we've reached max. Account for
+			// that by acting like this component now has a fixed size (it's max size)
+			if (_s.settings.ratio != 0 && _actual.width != _newDims.width)
+				_ratioWidth -= _actual.width,   // By removing the width from ratio
+				_ratioSum -= _s.settings.ratio; // And removing ratio from sum.
+		}
+
+		// If there is remaining space due to the max size of some components,
+		// we'll loop here until that space is <= 1.
+		float _toFill = (content.x + content.width) - _x;
+		for (int tries = 0; tries < panels.size(); tries++)
+		{
+			// x + padding + width = goal for x to reach, difference needs to be filled
+			_toFill = (content.x + content.width) - _x;
+			if (_toFill < 1 && _toFill > -1)
+				break;
+			_x = content.x; // Reset x
+			for (auto& _s : panels)
+			{
+				Vec4<float> _offsets = _s.Offsets();
+
+				// If the width != max width, we can add stuff
+				if (_s.settings.ratio != 0 && _s.width != _s.max.width && _s.width != _s.min.width)
+				{
+					Vec4<float> _newDims{ _x, _y, Auto, Auto };
+
+					// When height not set, set to this height.
+					if (_s.settings.size.height == Inherit) _newDims.height = content.height;
+
+					// using the offsets, calculate the new width by adding the ratio of
+					// toFill to the width.
+					_newDims.width = _offsets.left + _offsets.right + _s.width
+						+ _toFill * _s.settings.ratio / _ratioSum;
+
+					// Set the dimensions, taking into account margin etc. incr with width
+					Vec2<float> _actual = _s.SetDimensions(_newDims);
+					_x += _actual.width;
+
+					// Alignment only if not full height
+					if (_s.settings.size.height != Inherit)
+						if (_s.settings.align & Align::CenterY)
+						{
+							_s.y = content.y + content.height / 2 - _s.height / 2;
+							if (_s.y - _offsets.top - content.y < m_Viewport.y)
+								m_Viewport.y = _s.y - _offsets.top - content.y;
+						}
+						else if (_s.settings.align & Align::Bottom)
+						{
+							_s.y = content.y + content.height - _s.height;
+							if (_s.y - _offsets.top - content.y < m_Viewport.y)
+								m_Viewport.y = _s.y - _offsets.top - content.y;
+						}
+
+					// If we didn't add everything to width, we've reached max. Account for
+					// that by acting like this component now has a fixed size (it's max size)
+					if (_newDims.width != -1 && _actual.width != _newDims.width)
+						_ratioWidth -= _actual.width,   // By removing the width from ratio
+						_ratioSum -= _s.settings.ratio;	// And removing ratio from sum.
+				}
+				// Otherwise just set the correct new x coord, and increment _x
+				else
+				{
+					_s.x = _x + _offsets.left;
+					_x += _s.width + _offsets.left + _offsets.right;
+				}
+			}
+		}
+
+		m_Viewport.width = _x - content.x - content.width + width;
+		m_Viewport.height = _biggestHeight - content.height + height;
+	}
+
+	void Panel::ColumnLayout(const Vec4<float>& content)
+	{
+		m_Viewport.x = 0;
+		m_Viewport.y = 0;
+
+		// Calculate the sum of all the ratios
+		float _ratioSum = 0, _explicitHeightSum = 0, _biggestWidth = 0;
+		for (auto& _s : panels)
+		{
+			Vec2<float> _sizes = _s.SetDimensions({ -1, -1, -1, -1 });
+			if (_s.settings.ratio == 0) // If no ratio, check what height it will become
+				_explicitHeightSum += _sizes.height;
+			else // Otherwise add to ratio sum
+				_ratioSum += _s.settings.ratio;
+
+			// Get biggest width
+			if (_sizes.width > _biggestWidth)
+				_biggestWidth = _sizes.width;
+		}
+
+		// If no width can be determined, set width to biggest of sub-component
+		if (!component && settings.size.width < 0 && settings.ratio == 0)
+			width = _biggestWidth + settings.padding.left + settings.padding.right;
+
+		// Account for padding in the size, and 
+		float _x = content.x;
+		float _y = content.y;
+		float _ratioHeight = content.height - _explicitHeightSum;
+		for (auto& _s : panels)
+		{
+			Vec4<float> _newDims{ _x, _y, Auto, Auto };
+
+			// When width not set, set to this width.
+			if (_s.settings.size.width == Inherit) _newDims.width = content.width;
+
+			// Set the height if ratio is defined
+			if (_s.settings.ratio != 0)
+				_newDims.height = _ratioHeight * _s.settings.ratio / _ratioSum;
+
+			// Set the dimensions, taking into account margin etc. incr with height
+			Vec2<float> _actual = _s.SetDimensions(_newDims);
+			_y += _actual.height;
+
+			// Alignment only if not full width
+			if (_s.settings.size.width != Inherit)
+				if (_s.settings.align & Align::CenterX)
+				{
+					_s.x = content.x + content.width / 2 - _s.width / 2;							
+					Vec4<float> _offsets = _s.Offsets();
+					if (_s.x - _offsets.right - content.x < m_Viewport.x)
+						m_Viewport.x = _s.x - _offsets.right - content.x;
+				}
+				else if (_s.settings.align & Align::Right)
+				{
+					_s.x = content.x + content.width - _s.width;
+					Vec4<float> _offsets = _s.Offsets();
+					if (_s.x - _offsets.right - content.x < m_Viewport.x)
+						m_Viewport.x = _s.x - _offsets.right - content.x;
+				}
+
+			// If we didn't add everything to height, we've reached max. Account for
+			// that by acting like this component now has a fixed size (it's max size)
+			if (_s.settings.ratio != 0 && _actual.height != _newDims.height)
+				_ratioHeight -= _actual.height,   // By removing the height from ratio
+				_ratioSum -= _s.settings.ratio; // And removing ratio from sum.
+		}
+
+		// If there is remaining space due to the max size of some components,
+		// we'll loop here until that space is <= 1.
+		float _toFill = (content.y + content.height) - _y;
+		for (int tries = 0; tries < panels.size() && _toFill > 1; tries++)
+		{
+			// y + padding + height = goal for x to reach, difference needs to be filled
+			_toFill = (content.y + content.height) - _y;
+			_y = content.y; // Reset y
+			for (auto& _s : panels)
+			{
+				Vec4<float> _offsets = _s.Offsets();
+
+				// If the height != max height, we can add stuff
+				if (_s.settings.ratio != 0 && _s.height != _s.max.height)
+				{
+					Vec4<float> _newDims{ _x, _y, Auto, Auto };
+
+					// When width not set, set to this width.
+					if (_s.settings.size.width == Inherit) _newDims.width = content.width;
+
+					// using the offsets, calculate the new width by adding the ratio of
+					// toFill to the width.
+					_newDims.height = _offsets.top + _offsets.bottom + _s.height
+						+ _toFill * _s.settings.ratio / _ratioSum;
+
+					// Set the dimensions, taking into account margin etc. incr with height
+					Vec2<float> _actual = _s.SetDimensions(_newDims);
+					_y += _actual.height;
+
+					// Alignment only if not full width
+					if (_s.settings.size.width != Inherit)
+						if (_s.settings.align & Align::CenterX)
+						{
+							_s.x = content.x + content.width / 2 - _s.width / 2;
+							if (_s.x - _offsets.right - content.x < m_Viewport.x)
+								m_Viewport.x = _s.x - _offsets.right - content.x;
+						}
+						else if (_s.settings.align & Align::Right)
+						{
+							_s.x = content.x + content.width - _s.width;
+							if (_s.x - _offsets.right - content.x < m_Viewport.x)
+								m_Viewport.x = _s.x - _offsets.right - content.x;
+						}
+
+					// If we didn't add everything to height, we've reached max. Account for
+					// that by acting like this component now has a fixed size (it's max size)
+					if (_s.settings.ratio != 0 && _actual.height != _newDims.height)
+						_ratioHeight -= _actual.height,		// By removing the width from ratio
+						_ratioSum -= _s.settings.ratio;	// And removing ratio from sum.
+				}
+				// Otherwise just set the correct new x coord, and increment _x
+				else
+				{
+					_s.y = _y + _offsets.top;
+					_y += _s.height + _offsets.top + _offsets.bottom;
+				}
+			}
+		}
+
+		m_Viewport.width = _biggestWidth - content.width + width;
+		m_Viewport.height = _y - content.y - content.height + height;
+	}
+
+	void Panel::RefreshScrollbars()
 	{
 		Vec2<float> _scrollbarOffsets{ 0, 0 };
 
-		if (scrollbar.y.Necessary()) _scrollbarOffsets.x = scrollbar.y.width;
-		if (scrollbar.x.Necessary()) _scrollbarOffsets.y = scrollbar.x.height;
+		if (scrollbar.y.Necessary() && settings.overflow.y == Overflow::Scroll)
+			_scrollbarOffsets.x = scrollbar.y.width;
+		if (scrollbar.x.Necessary() && settings.overflow.x == Overflow::Scroll)
+			_scrollbarOffsets.y = scrollbar.x.height;
 
 		scrollbar.x.range.start = m_Viewport.x;
 		scrollbar.x.range.end = m_Viewport.x + m_Viewport.width - width;
@@ -370,11 +456,16 @@ namespace GuiCode
 		scrollbar.y.position = { x + width - scrollbar.y.width, y };
 		scrollbar.y.height = height - _scrollbarOffsets.y;
 		scrollbar.y.axis = Scrollbar::Vertical;
+	}
+
+	void Panel::ForwardUpdate()
+	{
+		RefreshScrollbars();
 
 		RefreshLayout();
 
-		scrollbar.x.State<Visible>(scrollbar.x.Necessary());
-		scrollbar.y.State<Visible>(scrollbar.y.Necessary());
+		scrollbar.x.State<Visible>(scrollbar.x.Necessary() && settings.overflow.x == Overflow::Scroll);
+		scrollbar.y.State<Visible>(scrollbar.y.Necessary() && settings.overflow.y == Overflow::Scroll);
 		scrollbar.x.ForwardUpdate();
 		scrollbar.y.ForwardUpdate();
 
@@ -394,10 +485,68 @@ namespace GuiCode
 		d.Fill(settings.background);
 		d.Quad(dimensions);
 
-		// Fill borders
+		Vec4<float> _widths{ 0, 0, 0, 0 };
+		Vec4<Color> _colors{ {}, {}, {}, {} };
 
-		if (settings.overflow != Overflow::Show)
-			d.Clip({ x, y, width - scrollbar.y.Necessary() * 16, height - scrollbar.x.Necessary() * 16 });
+		_widths.left = settings.border.width;
+		_widths.top = settings.border.width;
+		_widths.right = settings.border.width;
+		_widths.bottom = settings.border.width;
+
+		_colors.left = settings.border.color;
+		_colors.top = settings.border.color;
+		_colors.right = settings.border.color;
+		_colors.bottom = settings.border.color;
+
+		if (settings.border.left.width > 0)
+			_widths.left = settings.border.left.width, _colors.left = settings.border.left.color;
+		if (settings.border.top.width > 0)
+			_widths.top = settings.border.top.width, _colors.top = settings.border.top.color;
+		if (settings.border.right.width > 0)
+			_widths.right = settings.border.right.width, _colors.right = settings.border.right.color;
+		if (settings.border.bottom.width > 0)
+			_widths.bottom = settings.border.bottom.width, _colors.bottom = settings.border.bottom.color;
+
+		if (_widths.left)
+		{
+			d.Fill(_colors.left);
+			d.Quad({ x - _widths.left, y, _widths.left, height });
+		}
+
+		if (_widths.top)
+		{
+			d.Fill(_colors.top);
+			d.Quad({ x - _widths.left, y - _widths.top, width + _widths.left + _widths.right, _widths.top });
+		}
+
+		if (_widths.right)
+		{
+			d.Fill(_colors.right);
+			d.Quad({ x + width, y, _widths.right, height });
+		}
+
+		if (_widths.bottom)
+		{
+			d.Fill(_colors.bottom);
+			d.Quad({ x - _widths.left, y + height, width + _widths.left + _widths.right, _widths.bottom });
+		}
+
+		if (settings.overflow.x != Overflow::Show || settings.overflow.y != Overflow::Show)
+		{
+			Vec2<float> _scrollbarOffsets{ 0, 0 };
+
+			if (scrollbar.y.Necessary() && settings.overflow.y == Overflow::Scroll) 
+				_scrollbarOffsets.x = scrollbar.y.width;
+			if (scrollbar.x.Necessary() && settings.overflow.x == Overflow::Scroll) 
+				_scrollbarOffsets.y = scrollbar.x.height;
+
+			d.Clip({ 
+				x, 
+				y, 
+				width - _scrollbarOffsets.x,
+				height - _scrollbarOffsets.y
+			});
+		}
 
 		if (component)
 			component->ForwardRender(d);
@@ -437,9 +586,9 @@ namespace GuiCode
 
 		// If newDims was set to -1, it means use the size in our settings.
 		// This is done over here because we then know not to adjust with offsets.
-		if (newDims.width == -1)
+		if (newDims.width < 0)
 		{
-			if (settings.size.width != -1)
+			if (settings.size.width >= 0)
 				width = settings.size.width;
 			else if (component)
 				width = component->width;
@@ -447,9 +596,9 @@ namespace GuiCode
 		else
 			width = newDims.width - _offsets.left - _offsets.right;
 
-		if (newDims.height == -1)
+		if (newDims.height < 0)
 		{
-			if (settings.size.height != -1)
+			if (settings.size.height >= 0)
 				height = settings.size.height;
 			else if (component)
 				height = component->height;
@@ -487,24 +636,24 @@ namespace GuiCode
 
 	void Panel::ConstrainSize()
 	{
-		if (settings.min.width != -1)
+		if (settings.min.width >= 0)
 			min.width = settings.min.width;
-		else if (component)
+		else if (settings.min.width == Auto && component)
 			min.width = component->min.width;
 
-		if (settings.min.height != -1)
+		if (settings.min.height >= 0)
 			min.height = settings.min.height;
-		else if (component)
+		else if (settings.min.height == Auto && component)
 			min.height = component->min.height;
 
-		if (settings.max.width != -1)
+		if (settings.max.width >= 0)
 			max.width = settings.max.width;
-		else if (component)
+		else if (settings.max.width == Auto && component)
 			max.width = component->max.width;
 
-		if (settings.max.height != -1)
+		if (settings.max.height >= 0)
 			max.height = settings.max.height;
-		else if (component)
+		else if (settings.max.height == Auto && component)
 			max.height = component->max.height;
 
 		if (min.width != -1 && width < min.width)

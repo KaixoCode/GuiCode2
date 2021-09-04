@@ -15,7 +15,7 @@ namespace GuiCode
 		Dimensions(Dimensions&& other) { *this = other; }
 		Dimensions(const Dimensions& other) { *this = other; }
 
-		Vec2<float> min{ -1, -1 }; // Minimum size, -1 = no minimum
+		Vec2<float> min{  5,  5 }; // Minimum size, -1 = no minimum
 		Vec2<float> max{ -1, -1 }; // Maximum size, -1 = no maximum
 
 		union

@@ -46,8 +46,8 @@ namespace GuiCode
 
 		// Pressed also has limit of 1, and is handled simply by the MousePress and MouseRelease
 		(listener.State<Pressed>({ .limit = 1 })
-			+= [](const MousePress& e, const Component& c, int) -> int { return c.State<Hovering>(); })
-			+= [](const MouseRelease& e, const Component& c, int) -> int { return false; };
+			+= [](const MousePress& e, const Component& c, int) -> int { return c.State<Hovering>() ? c.State<Pressed>() | e.button : 0; })
+			+= [](const MouseRelease& e, const Component& c, int) -> int { return c.State<Pressed>() & ~e.button; };
 	}
 
 	void Component::CalculateOrder()

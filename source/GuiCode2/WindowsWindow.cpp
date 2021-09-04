@@ -112,6 +112,13 @@ namespace GuiCode
 
     bool WindowsWindow::Loop()
     {
+        bool _ret = WindowsLoop();
+        glfwPollEvents();
+        return _ret;
+    }
+
+    bool WindowsWindow::WindowsLoop() 
+    {
         static int _currentId = -1;
 
         // If the dimensions changed, update the window size
@@ -168,7 +175,7 @@ namespace GuiCode
             //CurrentWindow(windowId);
             //Graphics::Scaling(m_Scale);
             //WindowFocused(GetForegroundWindow() == GetWin32Handle());
-            
+
             ForwardUpdate();
         }
 
@@ -194,7 +201,7 @@ namespace GuiCode
                     m_EventQueue.pop();
             }
         }
-        glfwPollEvents();
+
         return true;
     }
 
@@ -493,5 +500,7 @@ namespace GuiCode
         m_PrevDims = { (float)x, (float)y, (float)width, (float)height };
 
         graphics->SetProjection(glm::ortho(0.0f, (float)std::max(width, 5), 0.0f, (float)std::max(height, 5)));
+        
+        WindowsLoop();
     }
 }
