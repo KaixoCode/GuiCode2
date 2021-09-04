@@ -243,9 +243,13 @@ namespace GuiCode
 
     void OpenGL::Line(const glm::vec4& dim, float width)
     {
-        
+        static const char* dims = "dim";
+        static const char* realdim = "realdim";
+        static const char* widths = "width";
+        static const char* color = "color";
         static Shader _shader
         {
+            { dims, realdim, widths, color },
             // Vertex shader
             "#version 330 core \n "
             "layout(location = 0) in vec2 aPos; "
@@ -350,10 +354,10 @@ namespace GuiCode
         _rdim.y += dy * width * 0.25;
         _rdim.w -= dy * width * 0.25;
 
-        _shader.SetVec4("dim", _dim);
-        _shader.SetVec4("realdim", _rdim);
-        _shader.SetFloat("width", width * 0.5f);
-        _shader.SetVec4("color", m_Fill);
+        _shader.SetVec4(dims, _dim);
+        _shader.SetVec4(realdim, _rdim);
+        _shader.SetFloat(widths, width * 0.5f);
+        _shader.SetVec4(color, m_Fill);
 
         glLineWidth(width);
         glBindVertexArray(_VAO);
@@ -362,8 +366,11 @@ namespace GuiCode
 
     void OpenGL::Quad(const glm::vec4& dim, float rotation)
     {
+        static const char* mvp = "mvp";
+        static const char* color = "color";
         static Shader _shader
         {
+            { mvp, color },
             // Vertex shader
             "#version 450 core \n "
             "layout(location = 0) in vec2 aPos; "
@@ -381,9 +388,10 @@ namespace GuiCode
             "} "
 
         };
-
+        static const char* dims = "dim";
         static Shader _shader2
         {
+            { dims, color },
             // Vertex shader
             "#version 330 core \n "
             "layout(location = 0) in vec2 aPos; "
@@ -448,8 +456,8 @@ namespace GuiCode
             _model = glm::rotate(_model, (float)glm::radians(rotation), glm::vec3{ 0, 0, 1 });
             _model = glm::translate(_model, glm::vec3{ -dim.z / 2, -dim.w / 2, 0 });
             _model = glm::scale(_model, glm::vec3{ dim.z, dim.w, 1 });
-            _shader.SetMat4("mvp", m_ViewProj * _model);
-            _shader.SetVec4("color", m_Fill);
+            _shader.SetMat4(mvp, m_ViewProj * _model);
+            _shader.SetVec4(color, m_Fill);
         }
         else
         {
@@ -463,8 +471,8 @@ namespace GuiCode
             _dim.z = dim.z * m_Projection[0][0];
             _dim.w = dim.w * m_Projection[1][1];
 
-            _shader2.SetVec4("dim", _dim);
-            _shader2.SetVec4("color", m_Fill);
+            _shader2.SetVec4(dims, _dim);
+            _shader2.SetVec4(color, m_Fill);
         }
 
         glBindVertexArray(_VAO);
@@ -473,8 +481,13 @@ namespace GuiCode
 
     void OpenGL::Ellipse(const glm::vec4& dim, const glm::vec2& a)
     {
+        static const char* mvp = "mvp";
+        static const char* color = "color";
+        static const char* angles = "angles";
+        static const char* dimensions = "dimensions";
         static Shader _shader
         {
+            { mvp, color, angles, dimensions },
             "#version 330 core \n "
 
             "layout(location = 0) in vec2 aPos; "
@@ -552,16 +565,16 @@ namespace GuiCode
         _model = glm::translate(_model, glm::vec3{ dim.x, dim.y, 0 });
         _model = glm::scale(_model, glm::vec3{ dim.z, dim.w, 1 });
 
-        _shader.SetMat4("mvp", m_ViewProj * _model);
-        _shader.SetVec4("color", m_Fill);
+        _shader.SetMat4(mvp, m_ViewProj * _model);
+        _shader.SetVec4(color, m_Fill);
 
         if (a.x == 0 && a.y == 0)
-            _shader.SetVec2("angles", { 0, M_PI * 2 });
+            _shader.SetVec2(angles, { 0, M_PI * 2 });
         else
-            _shader.SetVec2("angles", { std::fmod(a.y + 4.0 * M_PI, 2.0 * M_PI), std::fmod(a.x + 4.0 * M_PI, 2.0 * M_PI) });
+            _shader.SetVec2(angles, { std::fmod(a.y + 4.0 * M_PI, 2.0 * M_PI), std::fmod(a.x + 4.0 * M_PI, 2.0 * M_PI) });
 
         glm::vec4 _dim{ (dim.x + m_Matrix[3][0]) / m_Scaling, (dim.y + m_Matrix[3][1]) / m_Scaling, dim.z / m_Scaling, dim.w / m_Scaling };
-        _shader.SetVec4("dimensions", _dim);
+        _shader.SetVec4(dimensions, _dim);
 
         glBindVertexArray(_VAO);
         glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -569,8 +582,13 @@ namespace GuiCode
 
     void OpenGL::Triangle(const glm::vec4& dim, float rotation)
     {
+        static const char* model = "model";
+        static const char* view = "view";
+        static const char* projection = "projection";
+        static const char* color = "color";
         static Shader _shader
         {
+            { model, view, projection, color },
             "#version 330 core \n layout(location = 0) in vec2 aPos; uniform mat4 projection; uniform mat4 view; uniform mat4 model; void main() { gl_Position = projection * view * model * vec4(aPos, 0.0, 1.0); }",
             "#version 330 core \n out vec4 FragColor; uniform vec4 color; void main() { FragColor = color; } "
         };
@@ -614,10 +632,10 @@ namespace GuiCode
             _model = glm::rotate(_model, glm::radians(rotation), glm::vec3{ 0, 0, 1 });
         }
 
-        _shader.SetMat4("model", _model);
-        _shader.SetMat4("view", m_Matrix);
-        _shader.SetMat4("projection", m_Projection);
-        _shader.SetVec4("color", m_Fill);
+        _shader.SetMat4(model, _model);
+        _shader.SetMat4(view, m_Matrix);
+        _shader.SetMat4(projection, m_Projection);
+        _shader.SetVec4(color, m_Fill);
 
         glBindVertexArray(_VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
