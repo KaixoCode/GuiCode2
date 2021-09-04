@@ -250,7 +250,7 @@ int main()
 
 	while (window.Loop())
 	{
-		//LIMIT_FPS(60);
-		MEASURE_FPS;
+		LIMIT_FPS(60);
+		//MEASURE_FPS;
 	}
 }
