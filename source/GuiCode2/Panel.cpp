@@ -599,8 +599,8 @@ namespace GuiCode
 	{
 		Vec4<float> _offsets = Offsets(); // get offsets
 
-		x = newDims.x + _offsets.left; // Positions + offsets
-		y = newDims.y + _offsets.top;
+		x = std::round(newDims.x + _offsets.left); // Positions + offsets
+		y = std::round(newDims.y + _offsets.top);
 
 		// If newDims was set to -1, it means use the size in our settings.
 		// This is done over here because we then know not to adjust with offsets.
@@ -612,7 +612,7 @@ namespace GuiCode
 				width = component->width;
 		}
 		else
-			width = newDims.width - _offsets.left - _offsets.right;
+			width = std::round(newDims.width - _offsets.left - _offsets.right);
 
 		if (newDims.height < 0)
 		{
@@ -622,7 +622,7 @@ namespace GuiCode
 				height = component->height;
 		}
 		else
-			height = newDims.height - _offsets.top - _offsets.bottom;
+			height = std::round(newDims.height - _offsets.top - _offsets.bottom);
 
 		ConstrainSize();
 
