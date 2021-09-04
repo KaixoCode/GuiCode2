@@ -47,6 +47,7 @@ namespace GuiCode
 		 * @return true when within hitbox
 		 */
 		virtual bool Hitbox(const Vec2<float>& pos) const { return pos.Inside(dimensions); }
+		virtual Vec4<float> BoundingBox() const { return dimensions; }
 
 		/**
 		 * Calculates the z ordering of the components using their z-index.

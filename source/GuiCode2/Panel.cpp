@@ -172,6 +172,12 @@ namespace GuiCode
 
 	void Panel::RowLayout(const Vec4<float>& content)
 	{
+		// Calculate Row layout in 3 steps
+		//  1: Determine sum of ratios and explicit sizes if no ratio was given
+		//  2: Go through panels and set their sizes, retrieve actual size and increment x with width
+		//  3: If there's some leftover space, loop for sub-panels.size() time to fill that space.
+		// Also calculate the biggest and smallest y and x to set the viewport
+
 		m_Viewport.x = 0;
 		m_Viewport.y = 0;
 
@@ -305,7 +311,13 @@ namespace GuiCode
 	}
 
 	void Panel::ColumnLayout(const Vec4<float>& content)
-	{
+	{		
+		// Calculate Column layout in 3 steps
+		//  1: Determine sum of ratios and explicit sizes if no ratio was given
+		//  2: Go through panels and set their sizes, retrieve actual size and increment y with height
+		//  3: If there's some leftover space, loop for sub-panels.size() time to fill that space.
+		// Also calculate the biggest and smallest x and y to set the viewport
+
 		m_Viewport.x = 0;
 		m_Viewport.y = 0;
 
@@ -554,7 +566,8 @@ namespace GuiCode
 		{
 			std::list<Panel*> _panels;
 			for (auto& _span : panels)
-				_panels.push_back(&_span);
+				if (_span.BoundingBox().Overlaps(BoundingBox()))
+					_panels.push_back(&_span);
 
 			_panels.sort([](Panel* a, Panel* b) -> bool { return a->settings.zIndex < b->settings.zIndex; });
 

@@ -62,8 +62,9 @@ namespace GuiCode
 		Render(d);
 		CalculateOrder();
 		for (auto i = components.rbegin(); i != components.rend(); ++i)
-			if ((*i)->State<Visible>())
-				(*i)->ForwardRender(d);
+			if ((*i)->State<Visible>()) // If visible, and within bounding box, render
+				if ((*i)->BoundingBox().Overlaps(BoundingBox()))
+					(*i)->ForwardRender(d);
 		d.PopMatrix();
 		d.PopClip();
 	}

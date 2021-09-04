@@ -51,6 +51,8 @@ namespace GuiCode
 		int windowId;
 		std::unique_ptr<GraphicsBase> graphics;
 
+		Vec4<float> BoundingBox() const override { return { 0, 0, width, height }; }
+
 	protected:
 		virtual bool BorderHitbox(const Vec2<float>&) const { return false; }
 
