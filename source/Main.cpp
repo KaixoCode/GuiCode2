@@ -109,9 +109,8 @@ public:
 			d.Fill({ 0xD8F3DC });
 		else
 			d.Fill({ 0xB7E4C7 });
-
+		
 		d.Quad(dimensions);
-
 	}
 
 	void Update() override
@@ -123,9 +122,11 @@ public:
 	int id;
 	bool dragging = false;
 };
+#include <ranges>
 
 int main()
 {
+	constexpr int siez = sizeof Command;
 
 	Frame window{ {
 		.name = "Hello", 

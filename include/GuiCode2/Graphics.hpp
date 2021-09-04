@@ -6,44 +6,47 @@ namespace GuiCode
 {
     struct Command
     {
-        struct Fill { Color color; };
-        struct Clip { Vec4<float> area; };
-        struct PushClip { };
-        struct PopClip { };
-        struct ClearClip { };
-        struct Translate { Vec2<float> amount; };
-        struct PushMatrix { };
-        struct PopMatrix { };
-        struct Viewport { Vec4<float> area; };
-        struct Line { Vec4<float> points; float thickness; };
-        struct Quad { Vec4<float> dimensions; float rotation; };
-        struct Ellipse { Vec4<float> dimensions; Vec2<float> angles; };
-        struct Triangle { Vec4<float> dimensions; float rotation; };
-        std::variant<Fill, Clip, PushClip, PopClip, ClearClip, Translate, PushMatrix, 
-            PopMatrix, Viewport, Line, Quad, Ellipse, Triangle> data;
+        union
+        {
+            Color color;
+            Vec4<float> a;
+            struct { Vec2<float> a; Vec2<float> b; } as;
+        };
+
+        union
+        {
+            Vec2<float> b;
+            struct { float a; float b; } bs;
+        };
+
+        enum Type : char {
+            Fill = 0, Clip, PushClip, PopClip, ClearClip, Translate, PushMatrix,
+            PopMatrix, Viewport, Line, Quad, Ellipse, Triangle
+        } type;
+
     };
 
     struct CommandCollection
     {
-        std::vector<Command>& Get() { return m_Commands; }
+        std::queue<Command>& Get() { return m_Commands; }
 
-        void Fill(const Color& a) { m_Commands.emplace_back(Command::Fill{ a }); };
-        void Clip(const Vec4<float>& a) { m_Commands.emplace_back(Command::Clip{ a }); };
-        void PushClip() { m_Commands.emplace_back(Command::PushClip{ }); };
-        void PopClip() { m_Commands.emplace_back(Command::PopClip{ }); };
-        void ClearClip() { m_Commands.emplace_back(Command::ClearClip{ }); };
-        void Translate(const Vec2<float>& a) { m_Commands.emplace_back(Command::Translate{ a }); };
-        void PushMatrix() { m_Commands.emplace_back(Command::PushMatrix{}); };
-        void PopMatrix() { m_Commands.emplace_back(Command::PopMatrix{ }); };
-        void Viewport(const Vec4<float>& a) { m_Commands.emplace_back(Command::Viewport{ a }); };
-        void Line(const Vec4<float>& a, float thickness) { m_Commands.emplace_back(Command::Line{ a, thickness }); };
-        void Quad(const Vec4<float>& a, float b = 0) { m_Commands.emplace_back(Command::Quad{ a, b }); };
-        void Ellipse(const Vec4<float>& a, const Vec2<float>& b) { m_Commands.emplace_back(Command::Ellipse{ a, b }); };
-        void Triangle(const Vec4<float>& a, float b = 0) { m_Commands.emplace_back(Command::Triangle{ a, b }); };
-        void Clear() { m_Commands.clear(); }
+        void Fill(const Color& a) { m_Commands.push(Command{ .color = a, .type = Command::Fill }); };
+        void Clip(const Vec4<float>& a) { m_Commands.push(Command{.a = a, .type = Command::Clip }); };
+        void PushClip() { m_Commands.push(Command{ .type = Command::PushClip }); };
+        void PopClip() { m_Commands.push(Command{ .type = Command::PopClip }); };
+        void ClearClip() { m_Commands.push(Command{ .type = Command::ClearClip }); };
+        void Translate(const Vec2<float>& a) { m_Commands.push(Command{ .as = {.a = a }, .type = Command::Translate }); };
+        void PushMatrix() { m_Commands.push(Command{ .type = Command::PushMatrix }); };
+        void PopMatrix() { m_Commands.push(Command{ .type = Command::PopMatrix }); };
+        void Viewport(const Vec4<float>& a) { m_Commands.push(Command{.a = a, .type = Command::Viewport }); };
+        void Line(const Vec4<float>& a, float thickness) { m_Commands.push(Command{.a = a, .bs = {.a = thickness }, .type = Command::Line }); };
+        void Quad(const Vec4<float>& a, float b = 0) { m_Commands.push(Command{ .a = a, .bs = {.a = b }, .type = Command::Quad }); };
+        void Ellipse(const Vec4<float>& a, const Vec2<float>& b) { m_Commands.push(Command{ .a = a, .b = b, .type = Command::Ellipse }); };
+        void Triangle(const Vec4<float>& a, float b = 0) { m_Commands.push(Command{ .a = a, .bs{.a = b }, .type = Command::Triangle }); };
+        void Clear() {  }
 
     private:
-        std::vector<Command> m_Commands;
+        std::queue<Command> m_Commands;
     };
 
     class GraphicsBase
@@ -87,16 +90,21 @@ namespace GuiCode
     class OpenGL : public GraphicsBase
     {
     public:
+        OpenGL();
         void Render() override;
 
     private:
-        glm::vec4 FlipY(const glm::vec4& v) { return glm::round(glm::vec4{ v.x, m_Size.height - v.y - v.w, v.z, v.w }); };
-        glm::vec4 FlipY2(const glm::vec4& v) { return glm::vec4{ v.x, m_Size.height - v.y, v.z, m_Size.height - v.w }; };
+        glm::vec4 FlipY(const glm::vec4& v) { return { v.x, m_Size.height - v.y - v.w, v.z, v.w }; };
+        glm::vec4 FlipY2(const glm::vec4& v) { return { v.x, m_Size.height - v.y, v.z, m_Size.height - v.w }; };
 
         void Fill(const Color&) override;
+        void CreateQuadBuffers();
         void Quad(const glm::vec4&, float) override;
+        void CreateLineBuffers();
         void Line(const glm::vec4&, float) override;
+        void CreateEllipseBuffers();
         void Ellipse(const glm::vec4&, const glm::vec2&) override;
+        void CreateTriangleBuffers();
         void Triangle(const glm::vec4&, float) override;
         void Clip(const glm::vec4&) override;
         void PushClip() override;
@@ -106,5 +114,10 @@ namespace GuiCode
 
         int m_PreviousShader = -1;
         Color m_Fill{ 1, 1, 1, 1 };
+
+        struct { unsigned int vao, vbo; } quad;
+        struct { unsigned int vao, vbo; } line;
+        struct { unsigned int vao, vbo; } ellipse;
+        struct { unsigned int vao, vbo; } triangle;
     };
 }

@@ -149,13 +149,17 @@ namespace GuiCode
         m_Size.height = 2 / m_Projection[1][1];
     }
 
+    OpenGL::OpenGL()
+        : GraphicsBase()
+    {
+        CreateQuadBuffers();
+        CreateLineBuffers();
+        CreateTriangleBuffers();
+        CreateEllipseBuffers();
+    }
+
     void OpenGL::Render()
     {
-        enum Type {
-            Fill = 0, Clip, PushClip, PopClip, ClearClip, Translate, PushMatrix,
-            PopMatrix, Viewport, Line, Quad, Ellipse, Triangle
-        };
-
         glClear(GL_COLOR_BUFFER_BIT);
         glClearColor(0, 0, 0, 0);
 
@@ -163,25 +167,27 @@ namespace GuiCode
         m_Clip = { -1, -1, m_Size.width + 2, m_Size.height + 2 };
         this->Clip(m_Clip);
 
-        for (int i = 0; i < collection.Get().size(); i++)
-        {
-            Command& a = collection.Get()[i];
+        auto& _commands = collection.Get();
 
-            switch (a.data.index()) {
-            case Fill:       this->Fill(std::get<Fill>(a.data).color); break;
-            case Quad:       this->Quad(FlipY(std::get<Quad>(a.data).dimensions), std::get<Quad>(a.data).rotation); break;
-            case Line:       this->Line(FlipY2(std::get<Line>(a.data).points), std::get<Line>(a.data).thickness); break;
-            case Ellipse:    this->Ellipse(FlipY(std::get<Ellipse>(a.data).dimensions), std::get<Ellipse>(a.data).angles); break;
-            case Triangle:   this->Triangle(FlipY(std::get<Triangle>(a.data).dimensions), std::get<Triangle>(a.data).rotation); break;
-            case Clip:       this->Clip(FlipY(std::get<Clip>(a.data).area)); break;
-            case PushClip:   this->PushClip(); break;
-            case PopClip:    this->PopClip(); break;
-            case Viewport:   this->Viewport(std::get<Viewport>(a.data).area); break;
-            case ClearClip:  this->ClearClip(); break;
-            case Translate:  this->Translate(std::get<Translate>(a.data).amount); break;
-            case PushMatrix: this->PushMatrix(); break;
-            case PopMatrix:  this->PopMatrix(); break;
+        while(!_commands.empty())
+        {
+            Command& a = _commands.front();
+            switch (a.type) {
+            case Command::Fill:       this->Fill(a.color); break;
+            case Command::Quad:       this->Quad(FlipY(a.a), a.bs.a); break;
+            case Command::Line:       this->Line(FlipY2(a.a), a.bs.a); break;
+            case Command::Ellipse:    this->Ellipse(FlipY(a.a), a.b); break;
+            case Command::Triangle:   this->Triangle(FlipY(a.a), a.bs.a); break;
+            case Command::Clip:       this->Clip(FlipY(a.a)); break;
+            case Command::PushClip:   this->PushClip(); break;
+            case Command::PopClip:    this->PopClip(); break;
+            case Command::Viewport:   this->Viewport(a.a); break;
+            case Command::ClearClip:  this->ClearClip(); break;
+            case Command::Translate:  this->Translate(a.as.a); break;
+            case Command::PushMatrix: this->PushMatrix(); break;
+            case Command::PopMatrix:  this->PopMatrix(); break;
             }
+            _commands.pop();
         }
 
         m_PreviousShader = -1;
@@ -241,15 +247,29 @@ namespace GuiCode
             std::floor(a.w / m_Scaling));
     }
 
+    void OpenGL::CreateLineBuffers()
+    {
+        float _vertices[] = {
+            0.0f, 0.0f,
+            1.0f, 1.0f,
+        };
+
+        glGenVertexArrays(1, &line.vao);
+        glGenBuffers(1, &line.vbo);
+
+        glBindVertexArray(line.vao);
+
+        glBindBuffer(GL_ARRAY_BUFFER, line.vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(_vertices), _vertices, GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
+    }
+
     void OpenGL::Line(const glm::vec4& dim, float width)
     {
-        static const char* dims = "dim";
-        static const char* realdim = "realdim";
-        static const char* widths = "width";
-        static const char* color = "color";
         static Shader _shader
         {
-            { dims, realdim, widths, color },
             // Vertex shader
             "#version 330 core \n "
             "layout(location = 0) in vec2 aPos; "
@@ -281,38 +301,11 @@ namespace GuiCode
             "    if (dist / width > 0.5) FragColor = vec4(color.rgb, 2 * (1 - (dist / width)) * color.a); \n"
             "    else FragColor = color; \n"
             "} \n"
-
         };
-
-        if (m_GraphicsId == -1)
-            return;
-
-        static std::unordered_map<int, unsigned int> _VAOs;
-        std::unordered_map<int, unsigned int>::iterator _it;
-        static unsigned int _VAO, _VBO, _EBO;
-        if ((_it = _VAOs.find(m_GraphicsId)) != _VAOs.end())
-            _VAO = std::get<1>(*_it);
-
-        else
-        {
-            float _vertices[] = {
-                0.0f, 0.0f,
-                1.0f, 1.0f,
-            };
-
-            glGenVertexArrays(1, &_VAO);
-            glGenBuffers(1, &_VBO);
-
-            glBindVertexArray(_VAO);
-
-            glBindBuffer(GL_ARRAY_BUFFER, _VBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(_vertices), _vertices, GL_STATIC_DRAW);
-
-            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-            glEnableVertexAttribArray(0);
-
-            _VAO = std::get<1>(_VAOs.emplace(m_GraphicsId, _VAO));
-        }
+        static GLint dims = glGetUniformLocation(_shader.ID, "dim");
+        static GLint realdim = glGetUniformLocation(_shader.ID, "realdim");
+        static GLint widths = glGetUniformLocation(_shader.ID, "width");
+        static GLint color = glGetUniformLocation(_shader.ID, "color");
 
         if (m_PreviousShader != 7)
             _shader.Use();
@@ -332,17 +325,16 @@ namespace GuiCode
         _tdim.w += dy * width * 0.25;
 
         glm::vec4 _dim;
-        _dim.x = (_tdim.x + m_Matrix[3][0]) * m_Projection[0][0] + m_Projection[3][0];
-        _dim.y = (_tdim.y + m_Matrix[3][1]) * m_Projection[1][1] + m_Projection[3][1];
-        _dim.z = (_tdim.z + m_Matrix[3][0]) * m_Projection[0][0] + m_Projection[3][0] - _dim.x;
-        _dim.w = (_tdim.w + m_Matrix[3][1]) * m_Projection[1][1] + m_Projection[3][1] - _dim.y;
-
+        _dim.x = (_tdim.x + m_Matrix[3].x) * m_Projection[0].x + m_Projection[3].x;
+        _dim.y = (_tdim.y + m_Matrix[3].y) * m_Projection[1].y + m_Projection[3].y;
+        _dim.z = (_tdim.z + m_Matrix[3].x) * m_Projection[0].x + m_Projection[3].x - _dim.x;
+        _dim.w = (_tdim.w + m_Matrix[3].y) * m_Projection[1].y + m_Projection[3].y - _dim.y;
 
         glm::vec4 _rdim{
-            (dim.x + m_Matrix[3][0]) / m_Scaling,
-            (dim.y + m_Matrix[3][1]) / m_Scaling,
-            (dim.z + m_Matrix[3][0]) / m_Scaling,
-            (dim.w + m_Matrix[3][1]) / m_Scaling };
+            (dim.x + m_Matrix[3].x) / m_Scaling,
+            (dim.y + m_Matrix[3].y) / m_Scaling,
+            (dim.z + m_Matrix[3].x) / m_Scaling,
+            (dim.w + m_Matrix[3].y) / m_Scaling };
 
         delta_x = _rdim.z - _rdim.x;
         delta_y = _rdim.w - _rdim.y;
@@ -360,17 +352,37 @@ namespace GuiCode
         _shader.SetVec4(color, m_Fill);
 
         glLineWidth(width);
-        glBindVertexArray(_VAO);
+        glBindVertexArray(line.vbo);
         glDrawArrays(GL_LINES, 0, 2);
+    }
+
+    void OpenGL::CreateQuadBuffers()
+    {
+        float _vertices[] = {
+            0.0f, 0.0f,
+            1.0f, 0.0f,
+            0.0f, 1.0f,
+            1.0f, 0.0f,
+            1.0f, 1.0f,
+            0.0f, 1.0f
+        };
+
+        glGenVertexArrays(1, &quad.vao);
+        glGenBuffers(1, &quad.vbo);
+
+        glBindVertexArray(quad.vao);
+
+        glBindBuffer(GL_ARRAY_BUFFER, quad.vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(_vertices), _vertices, GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
     }
 
     void OpenGL::Quad(const glm::vec4& dim, float rotation)
     {
-        static const char* mvp = "mvp";
-        static const char* color = "color";
         static Shader _shader
         {
-            { mvp, color },
             // Vertex shader
             "#version 450 core \n "
             "layout(location = 0) in vec2 aPos; "
@@ -388,10 +400,10 @@ namespace GuiCode
             "} "
 
         };
-        static const char* dims = "dim";
+        static GLint mvp = glGetUniformLocation(_shader.ID, "mvp");
+        static GLint color = glGetUniformLocation(_shader.ID, "color");
         static Shader _shader2
         {
-            { dims, color },
             // Vertex shader
             "#version 330 core \n "
             "layout(location = 0) in vec2 aPos; "
@@ -407,42 +419,9 @@ namespace GuiCode
             "void main() { "
             "    FragColor = color; "
             "} "
-
         };
-
-        if (m_GraphicsId == -1)
-            return;
-
-        static std::unordered_map<int, unsigned int> _VAOs;
-        std::unordered_map<int, unsigned int>::iterator _it;
-        static unsigned int _VAO, _VBO, _EBO;
-        if ((_it = _VAOs.find(m_GraphicsId)) != _VAOs.end())
-            _VAO = std::get<1>(*_it);
-
-        else
-        {
-            float _vertices[] = {
-                0.0f, 0.0f,
-                1.0f, 0.0f,
-                0.0f, 1.0f,
-                1.0f, 0.0f,
-                1.0f, 1.0f,
-                0.0f, 1.0f
-            };
-
-            glGenVertexArrays(1, &_VAO);
-            glGenBuffers(1, &_VBO);
-
-            glBindVertexArray(_VAO);
-
-            glBindBuffer(GL_ARRAY_BUFFER, _VBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(_vertices), _vertices, GL_STATIC_DRAW);
-
-            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-            glEnableVertexAttribArray(0);
-
-            _VAO = std::get<1>(_VAOs.emplace(m_GraphicsId, _VAO));
-        }
+        static GLint dims2 = glGetUniformLocation(_shader2.ID, "dim");
+        static GLint color2 = glGetUniformLocation(_shader2.ID, "color");
 
         if (rotation != 0)
         {
@@ -466,28 +445,46 @@ namespace GuiCode
             m_PreviousShader = 5;
 
             glm::vec4 _dim;
-            _dim.x = (dim.x + m_Matrix[3][0]) * m_Projection[0][0] + m_Projection[3][0];
-            _dim.y = (dim.y + m_Matrix[3][1]) * m_Projection[1][1] + m_Projection[3][1];
-            _dim.z = dim.z * m_Projection[0][0];
-            _dim.w = dim.w * m_Projection[1][1];
+            _dim.x = (dim.x + m_Matrix[3].x) * m_Projection[0].x + m_Projection[3].x;
+            _dim.y = (dim.y + m_Matrix[3].y) * m_Projection[1].y + m_Projection[3].y;
+            _dim.z = dim.z * m_Projection[0].x;
+            _dim.w = dim.w * m_Projection[1].y;
 
-            _shader2.SetVec4(dims, _dim);
-            _shader2.SetVec4(color, m_Fill);
+            _shader2.SetVec4(dims2, _dim);
+            _shader2.SetVec4(color2, m_Fill);
         }
 
-        glBindVertexArray(_VAO);
+        glBindVertexArray(quad.vao);
         glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+
+    void OpenGL::CreateEllipseBuffers()
+    {
+        float _vertices[] = {
+            -.5f, -.5f,
+            .5f, -.5f,
+            -.5f, .5f,
+            .5f, -.5f,
+            .5f, .5f,
+            -.5f, .5f
+        };
+
+        glGenVertexArrays(1, &ellipse.vao);
+        glGenBuffers(1, &ellipse.vbo);
+
+        glBindVertexArray(ellipse.vao);
+
+        glBindBuffer(GL_ARRAY_BUFFER, ellipse.vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(_vertices), _vertices, GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
     }
 
     void OpenGL::Ellipse(const glm::vec4& dim, const glm::vec2& a)
     {
-        static const char* mvp = "mvp";
-        static const char* color = "color";
-        static const char* angles = "angles";
-        static const char* dimensions = "dimensions";
         static Shader _shader
         {
-            { mvp, color, angles, dimensions },
             "#version 330 core \n "
 
             "layout(location = 0) in vec2 aPos; "
@@ -522,40 +519,10 @@ namespace GuiCode
             "    else { FragColor = color; } "
             "} "
         };
-
-        if (m_GraphicsId == -1)
-            return;
-
-        static std::unordered_map<int, unsigned int> _VAOs;
-        std::unordered_map<int, unsigned int>::iterator _it;
-        static unsigned int _VAO, _VBO, _EBO;
-        if ((_it = _VAOs.find(m_GraphicsId)) != _VAOs.end())
-            _VAO = std::get<1>(*_it);
-
-        else
-        {
-            float _vertices[] = {
-                -.5f, -.5f,
-                .5f, -.5f,
-                -.5f, .5f,
-                .5f, -.5f,
-                .5f, .5f,
-                -.5f, .5f
-            };
-
-            glGenVertexArrays(1, &_VAO);
-            glGenBuffers(1, &_VBO);
-
-            glBindVertexArray(_VAO);
-
-            glBindBuffer(GL_ARRAY_BUFFER, _VBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(_vertices), _vertices, GL_STATIC_DRAW);
-
-            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-            glEnableVertexAttribArray(0);
-
-            _VAO = std::get<1>(_VAOs.emplace(m_GraphicsId, _VAO));
-        }
+        static GLint mvp = glGetUniformLocation(_shader.ID, "mvp");
+        static GLint color = glGetUniformLocation(_shader.ID, "color");
+        static GLint angles = glGetUniformLocation(_shader.ID, "angles");
+        static GLint dimensions = glGetUniformLocation(_shader.ID, "dimensions");
 
         if (m_PreviousShader != 3)
             _shader.Use();
@@ -573,52 +540,40 @@ namespace GuiCode
         else
             _shader.SetVec2(angles, { std::fmod(a.y + 4.0 * M_PI, 2.0 * M_PI), std::fmod(a.x + 4.0 * M_PI, 2.0 * M_PI) });
 
-        glm::vec4 _dim{ (dim.x + m_Matrix[3][0]) / m_Scaling, (dim.y + m_Matrix[3][1]) / m_Scaling, dim.z / m_Scaling, dim.w / m_Scaling };
+        glm::vec4 _dim{ (dim.x + m_Matrix[3].x) / m_Scaling, (dim.y + m_Matrix[3].y) / m_Scaling, dim.z / m_Scaling, dim.w / m_Scaling };
         _shader.SetVec4(dimensions, _dim);
 
-        glBindVertexArray(_VAO);
+        glBindVertexArray(ellipse.vbo);
         glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+
+    void OpenGL::CreateTriangleBuffers()
+    {
+        float _vertices[] = { -0.5f, -0.5f, 0.5f, 0.0f, -0.5f, 0.5f };
+
+        glGenVertexArrays(1, &triangle.vao);
+        glGenBuffers(1, &triangle.vbo);
+
+        glBindVertexArray(triangle.vao);
+
+        glBindBuffer(GL_ARRAY_BUFFER, triangle.vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(_vertices), _vertices, GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
     }
 
     void OpenGL::Triangle(const glm::vec4& dim, float rotation)
     {
-        static const char* model = "model";
-        static const char* view = "view";
-        static const char* projection = "projection";
-        static const char* color = "color";
         static Shader _shader
         {
-            { model, view, projection, color },
             "#version 330 core \n layout(location = 0) in vec2 aPos; uniform mat4 projection; uniform mat4 view; uniform mat4 model; void main() { gl_Position = projection * view * model * vec4(aPos, 0.0, 1.0); }",
             "#version 330 core \n out vec4 FragColor; uniform vec4 color; void main() { FragColor = color; } "
         };
-
-        if (m_GraphicsId == -1)
-            return;
-
-        static std::unordered_map<int, unsigned int> _VAOs;
-        std::unordered_map<int, unsigned int>::iterator _it;
-        static unsigned int _VAO, _VBO, _EBO;
-        if ((_it = _VAOs.find(m_GraphicsId)) != _VAOs.end())
-            _VAO = std::get<1>(*_it);
-
-        else
-        {
-            float _vertices[] = { -0.5f, -0.5f, 0.5f, 0.0f, -0.5f, 0.5f };
-
-            glGenVertexArrays(1, &_VAO);
-            glGenBuffers(1, &_VBO);
-
-            glBindVertexArray(_VAO);
-
-            glBindBuffer(GL_ARRAY_BUFFER, _VBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(_vertices), _vertices, GL_STATIC_DRAW);
-
-            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-            glEnableVertexAttribArray(0);
-
-            _VAO = std::get<1>(_VAOs.emplace(m_GraphicsId, _VAO));
-        }
+        static GLint model = glGetUniformLocation(_shader.ID, "model");
+        static GLint view = glGetUniformLocation(_shader.ID, "view");
+        static GLint projection = glGetUniformLocation(_shader.ID, "projection");
+        static GLint color = glGetUniformLocation(_shader.ID, "color");
 
         if (m_PreviousShader != 2)
             _shader.Use();
@@ -637,7 +592,7 @@ namespace GuiCode
         _shader.SetMat4(projection, m_Projection);
         _shader.SetVec4(color, m_Fill);
 
-        glBindVertexArray(_VAO);
+        glBindVertexArray(triangle.vbo);
         glDrawArrays(GL_TRIANGLES, 0, 3);
     }
 }

@@ -50,7 +50,7 @@ namespace GuiCode
         }
     }
 
-    Shader::Shader(std::vector<const char*>&& uniforms, const std::string& vertex, const std::string& frag, const std::string& geo)
+    Shader::Shader(const std::string& vertex, const std::string& frag, const std::string& geo)
     {
         ID = glCreateProgram();
 
@@ -89,8 +89,5 @@ namespace GuiCode
         glDeleteShader(_fragment);
         if (!geo.empty())
             glDeleteShader(_geometry);
-
-        for (auto i : uniforms)
-            m_Uniforms[i] = glGetUniformLocation(ID, i);
     }
 }

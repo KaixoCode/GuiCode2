@@ -45,7 +45,6 @@ namespace GuiCode
         : WindowBase(data)
     {
         info.hideOnClose = data.hideOnClose;
-        graphics = std::make_unique<OpenGL>();
         dimensions = data.dimensions.dimensions;
         
         if (m_WindowCount == 0 && !glfwInit())
@@ -96,6 +95,9 @@ namespace GuiCode
         //glEnable(GL_MULTISAMPLE);
         glEnable(GL_SCISSOR_TEST);
         glfwSwapInterval(0);
+
+        // Create the graphics after the OpenGL context has been created
+        graphics = std::make_unique<OpenGL>();
 
         m_WindowCount++;
 
