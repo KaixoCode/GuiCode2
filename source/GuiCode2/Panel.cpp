@@ -66,8 +66,8 @@ namespace GuiCode
 		if (component)
 			components.push_back(component);
 
-		scrollbar.x.zIndex = std::numeric_limits<int>::max();
-		scrollbar.y.zIndex = std::numeric_limits<int>::max();
+		scrollbar.x.zIndex = std::numeric_limits<float>::max();
+		scrollbar.y.zIndex = std::numeric_limits<float>::max();
 
 		for (auto& i : panels)
 			components.push_back(&i);
@@ -85,8 +85,8 @@ namespace GuiCode
 		for (auto& i : panels)
 			components.push_back(&i);
 
-		scrollbar.x.zIndex = std::numeric_limits<int>::max();
-		scrollbar.y.zIndex = std::numeric_limits<int>::max();
+		scrollbar.x.zIndex = std::numeric_limits<float>::max();
+		scrollbar.y.zIndex = std::numeric_limits<float>::max();
 
 		components.push_back(&scrollbar.x);
 		components.push_back(&scrollbar.y);
@@ -209,6 +209,7 @@ namespace GuiCode
 		for (auto& _s : panels)
 		{
 			Vec4<float> _newDims{ _x, _y, Auto, Auto };
+			Vec4<float> _offsets = _s.Offsets();
 
 			// When height not set, set to this height.
 			if (_s.settings.size.height == Inherit) _newDims.height = content.height;
@@ -226,14 +227,12 @@ namespace GuiCode
 				if (_s.settings.align & Align::CenterY)
 				{
 					_s.y = content.y + content.height / 2 - _s.height / 2;
-					Vec4<float> _offsets = _s.Offsets();
 					if (_s.y - _offsets.top - content.y < m_Viewport.y)
 						m_Viewport.y = _s.y - _offsets.top - content.y;
 				}
 				else if (_s.settings.align & Align::Bottom)
 				{
 					_s.y = content.y + content.height - _s.height;
-					Vec4<float> _offsets = _s.Offsets();
 					if (_s.y - _offsets.top - content.y < m_Viewport.y)
 						m_Viewport.y = _s.y - _offsets.top - content.y;
 				}
@@ -347,6 +346,7 @@ namespace GuiCode
 		for (auto& _s : panels)
 		{
 			Vec4<float> _newDims{ _x, _y, Auto, Auto };
+			Vec4<float> _offsets = _s.Offsets();
 
 			// When width not set, set to this width.
 			if (_s.settings.size.width == Inherit) _newDims.width = content.width;
@@ -363,15 +363,13 @@ namespace GuiCode
 			if (_s.settings.size.width != Inherit)
 				if (_s.settings.align & Align::CenterX)
 				{
-					_s.x = content.x + content.width / 2 - _s.width / 2;							
-					Vec4<float> _offsets = _s.Offsets();
+					_s.x = content.x + content.width / 2 - _s.width / 2;	
 					if (_s.x - _offsets.right - content.x < m_Viewport.x)
 						m_Viewport.x = _s.x - _offsets.right - content.x;
 				}
 				else if (_s.settings.align & Align::Right)
 				{
 					_s.x = content.x + content.width - _s.width;
-					Vec4<float> _offsets = _s.Offsets();
 					if (_s.x - _offsets.right - content.x < m_Viewport.x)
 						m_Viewport.x = _s.x - _offsets.right - content.x;
 				}

@@ -111,11 +111,6 @@ namespace GuiCode
 			}
 		};
 
-		titlebar.maximize.listener += [](const MouseExit& e)
-		{
-			std::cout << "eifsone f aef ae a" << std::endl;
-		};
-
 		components.push_back(&titlebar);
 		components.push_back(&panel);
 	}

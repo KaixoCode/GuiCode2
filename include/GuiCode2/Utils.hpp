@@ -95,6 +95,19 @@ namespace GuiCode
             else if constexpr (I == 3) return a;
         }
     };
+
+    struct Align
+    {
+        enum {
+            Left = 0x0000,    // aligned to left on x-axis
+            Right = 0x0001,   // aligned to right on x-axis
+            CenterX = 0x0002, // aligned to center on x-axis
+            Top = 0x0000,     // aligned to top on y-axis
+            Bottom = 0x0010,  // aligned to bottom on y-axis
+            CenterY = 0x0020, // aligned to center on y-axis
+            Center = 0x0022   // aligned to center on both axis
+        };
+    };
 }
 
 namespace std

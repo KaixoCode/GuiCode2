@@ -4,7 +4,8 @@
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 #include <ft2build.h>
-#include FT_FREETYPE_H  
+#include FT_FREETYPE_H
+#include FT_OUTLINE_H
 
 #include <glm/glm/glm.hpp>
 #include <glm/glm/gtc/matrix_transform.hpp>
@@ -25,6 +26,7 @@
 #include <memory>
 #include <mutex>
 #include <queue>
+#include <regex>
 #include <set>
 #include <sstream>
 #include <stack>

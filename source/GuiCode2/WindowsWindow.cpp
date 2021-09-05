@@ -183,12 +183,11 @@ namespace GuiCode
 
         if (_visible)
         {
-            graphics->collection.Clear();
+            glfwSwapBuffers(m_Window);
             graphics->collection.Clip({ -1, -1, width + 2, height + 2 });
             graphics->collection.Viewport({ 0, 0, width, height });
             ForwardRender(graphics->collection);
             graphics->Render();
-            glfwSwapBuffers(m_Window);
 
             // Go through the even queue
             while (!m_EventQueue.empty())

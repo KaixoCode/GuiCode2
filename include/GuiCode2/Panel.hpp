@@ -6,19 +6,6 @@
 
 namespace GuiCode
 {
-	struct Align
-	{
-		enum {
-			Left = 0x0000,    // aligned to left on x-axis
-			Right = 0x0001,   // aligned to right on x-axis
-			CenterX = 0x0002, // aligned to center on x-axis
-			Top = 0x0000,     // aligned to top on y-axis
-			Bottom = 0x0010,  // aligned to bottom on y-axis
-			CenterY = 0x0020, // aligned to center on y-axis
-			Center = 0x0022   // aligned to center on both axis
-		};
-	};
-
 	enum class Layout
 	{
 		Free,         // not aligned
@@ -40,7 +27,7 @@ namespace GuiCode
 	{
 		None = -1,   // No min/max, can't be used with normal size.
 		Auto = -2,   // Automatically size to the content. Min/max will be taken from content
-		Inherit = -3 // Give parent full control over the size. No min/max size
+		Inherit = -3 // Give parent full control over the size. Min/max will be parent size
 	};
 
 	/**
@@ -102,8 +89,8 @@ namespace GuiCode
 			} border{};
 			float zIndex = 0;				      // zIndex for this Panel in parent Panel.
 			Vec2<float> size{ Inherit, Inherit }; // prefered size, will be constrained to min/max
-			Vec2<float> min{ Inherit, Inherit };  // minimum size for this Panel
-			Vec2<float> max{ Inherit, Inherit };  // maximum size for this Panel
+			Vec2<float> min{ Inherit, Inherit };        // minimum size for this Panel
+			Vec2<float> max{ Inherit, Inherit };        // maximum size for this Panel
 			int align = Align::Top | Align::Left; // alignment of panel in area given by parent
 			Color background{ 0, 0, 0, 0 };	      // background color of panel
 		};

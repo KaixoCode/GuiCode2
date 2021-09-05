@@ -1,6 +1,7 @@
 #pragma once
 #include "GuiCode2/pch.hpp"
 #include "GuiCode2/Shader.hpp"
+#include "GuiCode2/Font.hpp"
 
 namespace GuiCode
 {
@@ -11,6 +12,9 @@ namespace GuiCode
             Color color;
             Vec4<float> a;
             struct { Vec2<float> a; Vec2<float> b; } as;
+            struct { float a; float b; float c; float d; } as2;
+            struct { int a; int b; int c; int d; } as3;
+            std::string_view view;
         };
 
         union
@@ -19,11 +23,10 @@ namespace GuiCode
             struct { float a; float b; } bs;
         };
 
-        enum Type : char {
+        const enum Type : char {
             Fill = 0, Clip, PushClip, PopClip, ClearClip, Translate, PushMatrix,
-            PopMatrix, Viewport, Line, Quad, Ellipse, Triangle
+            PopMatrix, Viewport, Line, Quad, Ellipse, Triangle, Text, TextSize, Font, TextAlign
         } type;
-
     };
 
     struct CommandCollection
@@ -43,7 +46,10 @@ namespace GuiCode
         void Quad(const Vec4<float>& a, float b = 0) { m_Commands.push(Command{ .a = a, .bs = {.a = b }, .type = Command::Quad }); };
         void Ellipse(const Vec4<float>& a, const Vec2<float>& b) { m_Commands.push(Command{ .a = a, .b = b, .type = Command::Ellipse }); };
         void Triangle(const Vec4<float>& a, float b = 0) { m_Commands.push(Command{ .a = a, .bs{.a = b }, .type = Command::Triangle }); };
-        void Clear() {  }
+        void Text(std::string_view str, const Vec2<float>& b) { m_Commands.push(Command{.view = str, .b = b, .type = Command::Text }); };
+        void Font(std::string_view str) { m_Commands.push(Command{.view = str, .type = Command::Font }); };
+        void TextAlign(int align) { m_Commands.push(Command{ .as3 = {.a = align }, .type = Command::TextAlign }); };
+        void TextSize(float size) { m_Commands.push(Command{ .as2 = {.a = size }, .type = Command::TextSize }); };
 
     private:
         std::queue<Command> m_Commands;
@@ -52,11 +58,34 @@ namespace GuiCode
     class GraphicsBase
     {
         static inline int m_GraphicsIdCounter = 0;
+    protected:
+        static inline std::map<std::string_view, GuiCode::Font> m_Fonts;
     public:
 
         virtual void Render() = 0;
         virtual void SetProjection(const glm::mat4& proj);
-    
+        virtual void LoadFont(const std::string& path, std::string_view name) = 0;
+
+        static inline float CharWidth(const char c, const std::string_view& font, float size)
+        {
+            if (!m_Fonts.contains(font))
+                return 0;
+
+            return m_Fonts.at(font).Size(size).Char(c).advance >> 6;
+        }
+
+        static inline float StringWidth(const std::string_view& c, const std::string_view& font, float size)
+        {
+            if (!m_Fonts.contains(font))
+                return 0;
+
+            float _width = 0;
+            auto& _font = m_Fonts.at(font).Size(size);
+            for (auto& _c : c)
+                _width += _font.Char(_c).advance >> 6;
+            return _width;
+        }
+
         CommandCollection collection;
 
     protected:
@@ -69,6 +98,10 @@ namespace GuiCode
         virtual void Line(const glm::vec4&, float) = 0;
         virtual void Ellipse(const glm::vec4&, const glm::vec2&) = 0;
         virtual void Triangle(const glm::vec4&, float) = 0;
+        virtual void Text(std::string_view, const glm::vec2&) = 0;
+        virtual void Font(std::string_view) = 0;
+        virtual void TextAlign(int) = 0;
+        virtual void TextSize(float) = 0;
         virtual void Clip(const glm::vec4&) = 0;
         virtual void PushClip() = 0;
         virtual void PopClip() = 0;
@@ -93,6 +126,8 @@ namespace GuiCode
         OpenGL();
         void Render() override;
 
+        void LoadFont(const std::string& path, std::string_view name) override;
+
     private:
         glm::vec4 FlipY(const glm::vec4& v) { return { v.x, m_Size.height - v.y - v.w, v.z, v.w }; };
         glm::vec4 FlipY2(const glm::vec4& v) { return { v.x, m_Size.height - v.y, v.z, m_Size.height - v.w }; };
@@ -106,6 +141,11 @@ namespace GuiCode
         void Ellipse(const glm::vec4&, const glm::vec2&) override;
         void CreateTriangleBuffers();
         void Triangle(const glm::vec4&, float) override;
+        void CreateTextBuffers();
+        void Text(std::string_view, const glm::vec2&) override;
+        void Font(std::string_view) override;
+        void TextAlign(int) override;
+        void TextSize(float) override;
         void Clip(const glm::vec4&) override;
         void PushClip() override;
         void PopClip() override;
@@ -114,10 +154,15 @@ namespace GuiCode
 
         int m_PreviousShader = -1;
         Color m_Fill{ 1, 1, 1, 1 };
+        float m_TextSize = 16;
+        int m_TextAlign = Align::Left | Align::Bottom;
+
+        GuiCode::Font* m_CurrentFont = nullptr;
 
         struct { unsigned int vao, vbo; } quad;
         struct { unsigned int vao, vbo; } line;
         struct { unsigned int vao, vbo; } ellipse;
         struct { unsigned int vao, vbo; } triangle;
+        struct { unsigned int vao, vbo; } text;
     };
 }

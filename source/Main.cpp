@@ -4,6 +4,8 @@
 #include "GuiCode2/BasicEvents.hpp"
 #include "GuiCode2/Panel.hpp"
 #include "GuiCode2/Frame.hpp"
+#include "GuiCode2/Font.hpp"
+#include "GuiCode2/TextDisplayer.hpp"
 
 using namespace GuiCode;
 
@@ -32,6 +34,85 @@ using namespace GuiCode;
  * 
  */
 
+class MyComponent : public Component
+{
+
+public:
+	MyComponent(int align)
+		: align(align)
+	{}
+
+	void Render(CommandCollection& d) const override
+	{
+		d.Font("gidole");
+		d.Fill({ 255, 255, 255 });
+		d.TextSize(24);
+		d.TextAlign(align);
+		d.Text("Hello", { x + width / 2, y + height / 2 });
+	}
+	int align;
+};
+
+#define GIDOLE "C:\\Users\\Jeroen\\source\\repos\\GuiCode2\\assets\\fonts\\Gidole\\Gidole-Regular.otf"
+
+struct TextArea : public Panel
+{
+	TextArea()
+		: Panel
+	{
+		{ .ratio = 1, .layout = Layout::Row, .overflow = Overflow::Scroll, },
+		{}
+	}
+	{
+		panels.push_back({ {.ratio = 1, .background{ 0, 0, 0, 255 } }, displayer });
+		components.emplace_back(&displayer);
+	}
+
+	TextDisplayer displayer;
+};
+
+
+int main()
+{
+
+	constexpr int siez = sizeof Command;
+
+	Frame window{ {
+		.name = "Hello",
+		.dimensions{ 500, 100, 500, 500 },
+		.state = Show
+	} };
+
+	window.graphics->LoadFont(GIDOLE, "gidole");
+
+	TextArea _text{};
+	_text.displayer.font = "gidole";
+	_text.displayer.fontSize = 32;
+	_text.displayer.lineHeight = 32;
+	_text.displayer.textColor = { 255, 255, 255 };
+	_text.displayer.wrap = Wrap::Word;
+	
+	window.panel = {
+		{
+			.padding{ 4, 4, 4, 4 },
+			.margin{ 8, 8, 8, 8 },
+			.background{ 0x52B788 }
+		},
+		_text
+	};
+
+
+	window.graphics->LoadFont(GIDOLE, "gidole");
+
+	while (window.Loop())
+	{
+		LIMIT_FPS(60);
+		//MEASURE_FPS;
+	}
+}
+
+
+/*
 class Apple : public Component
 {
 public:
@@ -66,7 +147,7 @@ public:
 					dragging = true;
 			std::cout << "Press!" << id << std::endl;
 		};
-		
+
 		listener += [this](const MouseClick& e)
 		{
 			std::cout << "Click!" << id << std::endl;
@@ -88,7 +169,7 @@ public:
 			if (dragging)
 				size = e.pos - position;
 
-			
+
 
 			//else {
 			//	position += e.pos - press;
@@ -109,7 +190,7 @@ public:
 			d.Fill({ 0xD8F3DC });
 		else
 			d.Fill({ 0xB7E4C7 });
-		
+
 		d.Quad(dimensions);
 	}
 
@@ -122,17 +203,7 @@ public:
 	int id;
 	bool dragging = false;
 };
-#include <ranges>
 
-int main()
-{
-	constexpr int siez = sizeof Command;
-
-	Frame window{ {
-		.name = "Hello", 
-		.dimensions{ 500, 100, 500, 500 }, 
-		.state = Show
-	} };
 
 	Apple _comp{1};
 	Apple _comp2{2};
@@ -147,7 +218,7 @@ int main()
 	Apple _comp11{11};
 	Apple _comp12{12};
 
-	_comp12.size = _comp11.size = _comp10.size = _comp9.size = _comp8.size = _comp7.size = _comp6.size = 
+	_comp12.size = _comp11.size = _comp10.size = _comp9.size = _comp8.size = _comp7.size = _comp6.size =
 		_comp5.size = _comp4.size = _comp3.size = _comp2.size = _comp.size = { 50, 50 };
 
 	window.titlebar.close.hover = { 0xed5b51 };
@@ -163,7 +234,7 @@ int main()
 	Panel::Id _scrollpanel2;
 	Panel::Id _scrollpanel3;
 
-	window.panel = 
+	window.panel =
 	{
 		{
 			.layout = Layout::Row,
@@ -242,16 +313,9 @@ int main()
 	_scroll1->scrollbar.x.bar.base = { 0x40916C };
 	_scroll1->scrollbar.x.bar.State<Pressed>(0x327356);
 	_scroll1->scrollbar.x.bar.State<Hovering>(0x3b8765);
-	_scroll1->scrollbar.y.bar = 
-	_scroll2->scrollbar.x.bar = 
-	_scroll2->scrollbar.y.bar = 
-	_scroll3->scrollbar.x.bar = 
+	_scroll1->scrollbar.y.bar =
+	_scroll2->scrollbar.x.bar =
+	_scroll2->scrollbar.y.bar =
+	_scroll3->scrollbar.x.bar =
 	_scroll3->scrollbar.y.bar = _scroll1->scrollbar.x.bar;
-
-
-	while (window.Loop())
-	{
-		LIMIT_FPS(60);
-		//MEASURE_FPS;
-	}
-}
+*/

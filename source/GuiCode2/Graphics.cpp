@@ -1,5 +1,5 @@
 #include "GuiCode2/Graphics.hpp"
-
+#include "GuiCode2/Font.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image/stb_image.h>
 
@@ -178,6 +178,10 @@ namespace GuiCode
             case Command::Line:       this->Line(FlipY2(a.a), a.bs.a); break;
             case Command::Ellipse:    this->Ellipse(FlipY(a.a), a.b); break;
             case Command::Triangle:   this->Triangle(FlipY(a.a), a.bs.a); break;
+            case Command::Text:       this->Text(a.view, a.b); break;
+            case Command::Font:       this->Font(a.view); break;
+            case Command::TextSize:   this->TextSize(a.as2.a); break;
+            case Command::TextAlign:  this->TextAlign(a.as3.a); break;
             case Command::Clip:       this->Clip(FlipY(a.a)); break;
             case Command::PushClip:   this->PushClip(); break;
             case Command::PopClip:    this->PopClip(); break;
@@ -191,6 +195,16 @@ namespace GuiCode
         }
 
         m_PreviousShader = -1;
+    }
+
+    void OpenGL::LoadFont(const std::string& path, std::string_view name)
+    {
+        m_Fonts.emplace(name, GuiCode::Font{ path });
+    }
+
+    void OpenGL::TextSize(float size)
+    {
+        m_TextSize = size;
     }
 
     void OpenGL::Fill(const Color& color)
@@ -308,7 +322,10 @@ namespace GuiCode
         static GLint color = glGetUniformLocation(_shader.ID, "color");
 
         if (m_PreviousShader != 7)
+        {
             _shader.Use();
+            glBindVertexArray(line.vbo);
+        }
         m_PreviousShader = 7;
 
         width /= m_Scaling;
@@ -352,7 +369,6 @@ namespace GuiCode
         _shader.SetVec4(color, m_Fill);
 
         glLineWidth(width);
-        glBindVertexArray(line.vbo);
         glDrawArrays(GL_LINES, 0, 2);
     }
 
@@ -426,7 +442,10 @@ namespace GuiCode
         if (rotation != 0)
         {
             if (m_PreviousShader != 6)
+            {
                 _shader.Use();
+                glBindVertexArray(quad.vao);
+            }
             m_PreviousShader = 6;
 
             glm::mat4 _model{ 1.0f };
@@ -441,7 +460,10 @@ namespace GuiCode
         else
         {
             if (m_PreviousShader != 5)
+            {
                 _shader2.Use();
+                glBindVertexArray(quad.vao);
+            }
             m_PreviousShader = 5;
 
             glm::vec4 _dim;
@@ -454,7 +476,6 @@ namespace GuiCode
             _shader2.SetVec4(color2, m_Fill);
         }
 
-        glBindVertexArray(quad.vao);
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
 
@@ -525,7 +546,10 @@ namespace GuiCode
         static GLint dimensions = glGetUniformLocation(_shader.ID, "dimensions");
 
         if (m_PreviousShader != 3)
+        {
             _shader.Use();
+            glBindVertexArray(ellipse.vbo);    
+        }
         m_PreviousShader = 3;
 
         glm::mat4 _model{ 1.0f };
@@ -543,7 +567,6 @@ namespace GuiCode
         glm::vec4 _dim{ (dim.x + m_Matrix[3].x) / m_Scaling, (dim.y + m_Matrix[3].y) / m_Scaling, dim.z / m_Scaling, dim.w / m_Scaling };
         _shader.SetVec4(dimensions, _dim);
 
-        glBindVertexArray(ellipse.vbo);
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
 
@@ -576,24 +599,169 @@ namespace GuiCode
         static GLint color = glGetUniformLocation(_shader.ID, "color");
 
         if (m_PreviousShader != 2)
+        {
             _shader.Use();
+            glBindVertexArray(triangle.vbo);
+        }
         m_PreviousShader = 2;
 
         glm::mat4 _model{ 1.0f };
         _model = glm::translate(_model, glm::vec3{ dim.x, dim.y, 0 });
         _model = glm::scale(_model, glm::vec3{ dim.z, dim.w, 1 });
-        if (rotation != 0)
-        {
+        if (rotation != 0) // Rotate only if necessary
             _model = glm::rotate(_model, glm::radians(rotation), glm::vec3{ 0, 0, 1 });
-        }
 
         _shader.SetMat4(model, _model);
         _shader.SetMat4(view, m_Matrix);
         _shader.SetMat4(projection, m_Projection);
         _shader.SetVec4(color, m_Fill);
 
-        glBindVertexArray(triangle.vbo);
         glDrawArrays(GL_TRIANGLES, 0, 3);
+    }
+
+    void OpenGL::CreateTextBuffers()
+    {
+        float _vertices[] = {
+             1.0f,  1.0f,
+             1.0f,  0.0f,
+             0.0f,  1.0f,
+             1.0f,  0.0f,
+             0.0f,  0.0f,
+             0.0f,  1.0f,
+        };
+
+        glGenVertexArrays(1, &text.vao);
+        glGenBuffers(1, &text.vbo);
+
+        glBindVertexArray(text.vao);
+
+        glBindBuffer(GL_ARRAY_BUFFER, text.vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(_vertices), _vertices, GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
+    }
+
+    void OpenGL::Text(std::string_view str, const glm::vec2& pos)
+    {
+        static Shader _shader
+        {
+            // Vertex shader
+            "#version 330 core \n "
+            "layout(location = 0) in vec2 aPos; "
+            "uniform vec4 dim; "
+            "out vec2 texpos; "
+            "void main() { "
+            "    gl_Position = vec4(dim.x + aPos.x * dim.z, dim.y + aPos.y * dim.w, 0.0, 1.0); "
+            "    texpos = vec2(aPos.x, 1-aPos.y); "
+            "}",
+
+            // Fragment shader
+            "#version 330 core                                                                                      \n"
+            "                                                                                                       \n"
+            "out vec4 col;                                                                                          \n"
+            "                                                                                                       \n"
+            "uniform vec4 color;                                                                                    \n"
+            "uniform sampler2DArray Texture;                                                                        \n"
+            "                                                                                                       \n"
+            "uniform int theTexture;                                                                                \n"
+            "in vec2 texpos;                                                                                        \n"
+            "                                                                                                       \n"
+            "void main() {                                                                                          \n"
+            "    float sampled = texture(Texture, vec3(texpos, theTexture)).r;                                      \n"
+            "    col.rgb = color.rgb; col.a = color.a * sampled;                                                    \n"
+            "}",
+        };
+
+        static GLint color = glGetUniformLocation(_shader.ID, "color");
+        static GLint texture = glGetUniformLocation(_shader.ID, "Texture");
+        static GLint dims = glGetUniformLocation(_shader.ID, "dim");
+        static GLint theTexture = glGetUniformLocation(_shader.ID, "theTexture");
+
+        // If no charmap is loaded, return
+        if (!m_CurrentFont)
+            return;
+
+        if (m_PreviousShader != 1)
+        {
+            glBindVertexArray(text.vao);
+            _shader.Use();
+        }
+        m_PreviousShader = 1;
+
+        // Load the charmap for the current text size
+        GuiCode::Font::CharMap* _charMap = &m_CurrentFont->Size(std::round(m_TextSize));
+
+        // Calculate the total width if we need it.
+        float _totalWidth = 0;
+        if (m_TextAlign & Align::Right || m_TextAlign & Align::CenterX)
+            for (int i = 0; i < str.size(); i++)
+                _totalWidth += _charMap->Char(str[i]).advance >> 6;
+
+        // Bind the 3d texture for this charmap
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, _charMap->texture);
+        _shader.SetVec4(color, m_Fill);
+        _shader.SetInt(texture, 0); // We need to set the texture like this
+
+        float _scale = m_TextSize / std::round(m_TextSize);
+
+        float x = pos.x;
+        float y = m_Size.height - pos.y;
+
+        // Alignment
+        if (m_TextAlign & Align::CenterY)
+            y -= 0.5 * _charMap->Height();
+        else if ((m_TextAlign & 0x10) == 0)
+            y -= _charMap->Height();
+
+        if (m_TextAlign & Align::CenterX)
+            x -= 0.5 * _totalWidth * _scale;
+        else if (m_TextAlign & Align::Right)
+            x -= _totalWidth * _scale;
+
+        for (int i = 0; i < str.size(); i++)
+        {
+            char _c = str[i];
+
+            if (_c == '\n') // Don't display newlines
+                continue;
+
+            Font::CharMap::Character& _ch = _charMap->Char(_c);
+
+            if (_c != ' ')
+            {
+                float _xpos = x * m_Matrix[0][0] + _ch.bearing.x * _scale;
+                float _ypos = y - (_ch.size.y - _ch.bearing.y) * _scale;
+
+                _ypos = std::round(_ypos),
+                _xpos = std::round(_xpos);
+
+                glm::vec4 _dim;
+                _dim.x = (_xpos + m_Matrix[3].x) * m_Projection[0].x + m_Projection[3].x;
+                _dim.y = (_ypos + m_Matrix[3].y) * m_Projection[1].y + m_Projection[3].y;
+                _dim.z = m_TextSize * m_Projection[0].x;
+                _dim.w = m_TextSize * m_Projection[1].y;
+
+                _shader.SetVec4(dims, _dim);
+                _shader.SetInt(theTexture, _c);
+
+                glDrawArrays(GL_TRIANGLES, 0, 6);
+            }
+            x += (_ch.advance >> 6) * _scale;
+        }
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
+    void OpenGL::Font(std::string_view font)
+    {
+        m_CurrentFont = &m_Fonts.at(font);
+    }
+
+    void OpenGL::TextAlign(int align)
+    {
+        m_TextAlign = align;
     }
 }
 
