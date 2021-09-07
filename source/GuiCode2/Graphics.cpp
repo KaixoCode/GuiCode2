@@ -750,7 +750,7 @@ namespace GuiCode
 
             Font::CharMap::Character& _ch = _charMap->Char(_c);
 
-            if (_c != ' ' && _c != '\f' && _c != '\r' && _c != '\t' && _c != '\v')
+            if (_c != ' ' && _c != '\f' && _c != '\r' && _c != '\t' && _c != '\v' && _c != '\n')
             {
                 float _xpos = x * m_Matrix[0][0] + _ch.bearing.x * _scale;
                 float _ypos = y - (_ch.size.y - _ch.bearing.y) * _scale;
