@@ -29,6 +29,45 @@ namespace GuiCode
     template<typename _Fx>
     using LambdaSignatureT = typename LambdaSignature<_Fx>::type;
 
+    template<typename T, typename ...Ts>
+    concept Contains = (std::is_same_v<Ts, T> || ...);
+
+    template <typename> struct tag { };
+
+    template <typename T, typename V>
+    struct GetIndex 
+    {
+        constexpr static bool failed = true;
+    };
+
+    template <typename T, typename ...Ts> requires Contains<T, Ts...>
+    struct GetIndex<T, std::variant<Ts...>> 
+    {
+        constexpr static bool failed = false;
+        constexpr static size_t value = std::variant<tag<Ts>...>(tag<T>()).index();
+    };
+
+    static inline std::vector<std::string> split(const std::string& strv, std::string_view delims = " ")
+    {
+        std::vector<std::string> output;
+        size_t first = 0;
+
+        while (first < strv.size())
+        {
+            const auto second = strv.find_first_of(delims, first);
+
+            if (first != second)
+                output.emplace_back(strv.substr(first, second - first));
+
+            if (second == std::string_view::npos)
+                break;
+
+            first = second + 1;
+        }
+
+        return output;
+    }
+
     struct Color
     {
         constexpr Color()
@@ -50,23 +89,37 @@ namespace GuiCode
             : r((hex & 0x00FF0000) >> 16), g((hex & 0x0000FF00) >> 8), b(hex & 0x000000FF), a(255)
         {}
 
-        Color operator -() const { return { -r, -g, -b, -a }; }
-        Color operator -(const Color& other) const { return { x - other.x, y - other.y, z - other.z, w - other.w }; }
+        Color operator -() const { return { -x, -y, -z, -w }; }
         Color operator +(const Color& other) const { return { x + other.x, y + other.y, z + other.z, w + other.w }; }
+        Color operator -(const Color& other) const { return { x - other.x, y - other.y, z - other.z, w - other.w }; }
         Color operator *(const Color& other) const { return { x * other.x, y * other.y, z * other.z, w * other.w }; }
+        Color operator /(const Color& other) const { return { x / other.x, y / other.y, z / other.z, w / other.w }; }
+        Color operator +(float other) const { return { x + other, y + other, z + other, w + other }; }
+        Color operator -(float other) const { return { x - other, y - other, z - other, w - other }; }
         Color operator *(float other) const { return { x * other, y * other, z * other, w * other }; }
         Color operator /(float other) const { return { x / other, y / other, z / other, w / other }; }
-        Color operator +(float other) const { return { x + other, y + other, z + other, w + other }; }
-        Color operator -(float other) const { return { x + other, y + other, z - 2 * other, w - 2 * other }; }
-        Color& operator =(const Color& other) { x = other.x, y = other.y; z = other.z; w = other.w; return *this; }
         Color& operator+=(const Color& other) { x += other.x; y += other.y; z += other.z; w += other.w; return *this; }
         Color& operator-=(const Color& other) { x -= other.x; y -= other.y; z -= other.z; w -= other.w; return *this; }
+        Color& operator*=(const Color& other) { x *= other.x; y *= other.y; z *= other.z; w *= other.w; return *this; }
+        Color& operator/=(const Color& other) { x /= other.x; y /= other.y; z /= other.z; w /= other.w; return *this; }
+        Color& operator=(const Color& other) { x = other.x, y = other.y, z = other.z, w = other.w; return *this; }
         bool operator==(const Color& other) const { return x == other.x && y == other.y && z == other.z && w == other.w; }
+        bool operator!=(const Color& other) const { return x != other.x || y != other.y || z != other.z || w != other.w; }
 
         union{ float x = 0; float r; float h; };
         union{ float y = 0; float g; float s; };
         union{ float z = 0; float b; float v; };
         union{ float w = 0; float a; };
+
+        Color Lerp(const Color& other, float percent) const
+        {
+            Color _new;
+            _new.r = r * (1 - percent) + other.r * percent;
+            _new.g = g * (1 - percent) + other.g * percent;
+            _new.b = b * (1 - percent) + other.b * percent;
+            _new.a = a * (1 - percent) + other.a * percent;
+            return _new;
+        }
 
         template <size_t I>
         auto& get()&
@@ -105,7 +158,13 @@ namespace GuiCode
             Top = 0x0000,     // aligned to top on y-axis
             Bottom = 0x0010,  // aligned to bottom on y-axis
             CenterY = 0x0020, // aligned to center on y-axis
-            Center = 0x0022   // aligned to center on both axis
+            Center = 0x0022,  // aligned to center on both axis
+
+            // For text
+            TextTop = Top,
+            TextBottom = Bottom,
+            Baseline = 0x0040,
+            Middle = CenterY,
         };
     };
 }

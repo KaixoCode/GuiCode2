@@ -63,12 +63,12 @@ namespace GuiCode
 		ConstrainSelection();
 	}
 
-	int TextContainer::CtrlLeft()
+	int TextContainer::CtrlLeft() const
 	{
 		return CtrlLeft(selection.start);
 	}
 
-	int TextContainer::CtrlLeft(int start)
+	int TextContainer::CtrlLeft(int start) const
 	{
 		if (start > Length())
 			return Length();
@@ -102,12 +102,12 @@ namespace GuiCode
 		return 0;
 	}
 
-	int TextContainer::CtrlRight()
+	int TextContainer::CtrlRight() const
 	{
 		return CtrlRight(selection.start);
 	}
 
-	int TextContainer::CtrlRight(int start)
+	int TextContainer::CtrlRight(int start) const
 	{
 		if (start > Length())
 			return Length();

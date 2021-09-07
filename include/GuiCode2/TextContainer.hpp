@@ -3,9 +3,6 @@
 
 namespace GuiCode
 {
-	/**
-	 * Simple selection class, marks the start and end of a selection.
-	 */
 	struct Selection
 	{
 		int start = 0;
@@ -18,9 +15,6 @@ namespace GuiCode
 		Selection& operator=(int a) { start = end = a; return *this; }
 	};
 
-	/**
-	 * 
-	 */
 	class TextContainer
 	{
 	public:
@@ -30,19 +24,17 @@ namespace GuiCode
 
 		void Insert(const std::string& add);
 		void Insert(const char& add);
-
 		void Delete();
 		void Backspace();
-
 		void RemoveSelection();
 		void Remove(const Selection& s);
 
-		int CtrlLeft();
-		int CtrlLeft(int start);
-		int CtrlRight();
-		int CtrlRight(int start);
+		int CtrlLeft() const;
+		int CtrlLeft(int start) const;
+		int CtrlRight() const;
+		int CtrlRight(int start) const;
 
-		int Length() { return content.length(); }
+		int Length() const { return content.length(); }
 
 		bool editable = true;
 		std::string content;

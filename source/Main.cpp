@@ -6,6 +6,9 @@
 #include "GuiCode2/Frame.hpp"
 #include "GuiCode2/Font.hpp"
 #include "GuiCode2/TextDisplayer.hpp"
+#include "GuiCode2/Key.hpp"
+#include "GuiCode2/TextArea.hpp"
+#include "GuiCode2/TextBox.hpp"
 
 using namespace GuiCode;
 
@@ -46,63 +49,215 @@ public:
 	{
 		d.Font("gidole");
 		d.Fill({ 255, 255, 255 });
-		d.TextSize(24);
+		d.FontSize(36);
 		d.TextAlign(align);
-		d.Text("Hello", { x + width / 2, y + height / 2 });
+		d.Text("abcdefghijklmnopqrstuvw", { x + width / 2, y + height / 2 });
+		d.Fill({ 0, 0, 0 });
+		d.Quad({ x, y + (int)height / 2, width, 1 });
 	}
 	int align;
 };
 
 #define GIDOLE "C:\\Users\\Jeroen\\source\\repos\\GuiCode2\\assets\\fonts\\Gidole\\Gidole-Regular.otf"
+#define SEGOEUI "C:\\Users\\Jeroen\\source\\repos\\GuiCode2\\assets\\fonts\\segoeui.ttf"
 
-struct TextArea : public Panel
+
+class TagParser
 {
-	TextArea()
-		: Panel
+public:
+
+	using AttributeType = std::variant<float, std::string>;
+	
+	class AttributeBase
 	{
-		{ .ratio = 1, .layout = Layout::Row, .overflow = Overflow::Scroll, },
+	public:
+		AttributeBase(const std::string& name)
+			: name(name)
 		{}
-	}
+
+		virtual void Set(void*, const AttributeType&) = 0;
+		virtual void Set(Component&, const AttributeType&) = 0;
+		virtual void* Get(void* c) = 0;
+		virtual void* Get(Component& c) = 0;
+		std::string name;
+	};
+
+	template<typename T, typename A>
+	class AttributeTyped : public AttributeBase
 	{
-		panels.push_back({ {.ratio = 1, .background{ 0, 0, 0, 255 } }, displayer });
-		components.emplace_back(&displayer);
+	public:
+		AttributeTyped(const std::string& name, A T::*member)
+			: member(member), AttributeBase(name)
+		{}
+
+		void Set(Component& c, const AttributeType& a) override
+		{
+			T* _t = dynamic_cast<T*>(&c);
+
+			// If correct types
+			if constexpr (GetIndex<A, AttributeType>::failed)
+				return;
+			else
+				if (_t != nullptr && a.index() == GetIndex<A, AttributeType>::value)
+					(_t->*member) = std::get<GetIndex<A, AttributeType>::value>(a);
+		}
+
+		void Set(void* c, const AttributeType& a) override
+		{
+			if (c == nullptr)
+				return;
+
+			T* _t = reinterpret_cast<T*>(c);
+
+			// If correct types
+			if constexpr (GetIndex<A, AttributeType>::failed)
+				return;
+			else
+				if (_t != nullptr && a.index() == GetIndex<A, AttributeType>::value)
+					(_t->*member) = std::get<GetIndex<A, AttributeType>::value>(a);
+		}
+
+		void* Get(void* c) override 
+		{
+			if (c == nullptr)
+				return nullptr;
+
+			T* _t = reinterpret_cast<T*>(c);
+			return &(_t->*member);
+		}
+
+		void* Get(Component& c) override
+		{
+			T* _t = dynamic_cast<T*>(&c);
+			if (_t == nullptr)
+				return nullptr;
+
+			return &(_t->*member);
+		}
+
+		A T::* member;
+	};
+
+	struct Settings
+	{
+		std::string name;
+	};
+
+	TagParser(const Settings& s)
+		: settings(s)
+	{}
+
+	template<typename T, typename A>
+	void Attribute(const std::string& name, A T::* member)
+	{
+		auto _res = split(name, ".");
+		auto _final = _res[_res.size() - 1];
+		attributes.emplace(_final, std::make_unique<AttributeTyped<T, A>>(name, member));
 	}
 
-	TextDisplayer displayer;
+	void Set(Component& c, const std::string& name, const AttributeType& value)
+	{
+		auto _res = split(name, ".");
+		if (_res.size() == 0)
+			return;
+
+		if (_res.size() == 1)
+		{
+			attributes[_res[0]]->Set(c, value);
+			return;
+		}
+
+		void* _ptr = attributes[_res[0]]->Get(c);
+		for (int i = 1; i < _res.size() - 1; i++)
+			_ptr = attributes[_res[1]]->Get(_ptr);
+
+		attributes[_res[_res.size() - 1]]->Set(_ptr, value);
+	}
+
+	virtual Component& Create() = 0;
+
+	Settings settings;
+	std::map<std::string, std::unique_ptr<AttributeBase>> attributes;
 };
+
+class PanelParser : public TagParser
+{
+public:
+	PanelParser()
+		: TagParser({.name = "panel"})
+	{
+		Attribute("width", &Panel::width);
+		Attribute("settings", &Panel::settings);
+		Attribute("settings.ratio", &Panel::Settings::ratio);
+		Attribute("settings.padding", &Panel::Settings::padding);
+		Attribute("settings.padding.left", &Vec4<float>::left);
+		Attribute("settings.padding.right", &Vec4<float>::right);
+		Attribute("settings.padding.top", &Vec4<float>::top);
+		Attribute("settings.padding.bottom", &Vec4<float>::bottom);
+	}
+
+	Component& Create() override 
+	{
+		return *new Panel;
+	};
+};
+
+class Parser
+{
+	
+
+
+};
+
 
 
 int main()
 {
-
 	constexpr int siez = sizeof Command;
 
 	Frame window{ {
-		.name = "Hello",
+		.name = "A really epic window",
 		.dimensions{ 500, 100, 500, 500 },
 		.state = Show
 	} };
 
 	window.graphics->LoadFont(GIDOLE, "gidole");
+	window.graphics->LoadFont(SEGOEUI, "segoeui");
+
+	window.titlebar.font = "segoeui";
+	window.titlebar.background = 0x39805f;
+	window.titlebar.close.color.base = 0x39805f;
+	window.titlebar.minimize.color.base = 0x39805f;
+	window.titlebar.maximize.color.base = 0x39805f;
+	window.titlebar.close.color.State<Hovering>(0xcc5c5c);
+	window.titlebar.minimize.color.State<Hovering>(0x52B788);
+	window.titlebar.maximize.color.State<Hovering>(0x52B788);
+	window.titlebar.close.color.State<Pressed>(0x803939);
+	window.titlebar.minimize.color.State<Pressed>(0x469c74);
+	window.titlebar.maximize.color.State<Pressed>(0x469c74);
+	window.background = 0x39805f;
 
 	TextArea _text{};
-	_text.displayer.font = "gidole";
-	_text.displayer.fontSize = 32;
-	_text.displayer.lineHeight = 32;
-	_text.displayer.textColor = { 255, 255, 255 };
-	_text.displayer.wrap = Wrap::Word;
-	
+	_text.font = "segoeui";
+	_text.lineHeight = 14;
+	_text.fontSize = 14;
+	_text.wrap = Wrap::Word;
+	_text.container.content = "apple juice";
+	_text.textColor = { 255, 255, 255 };
+	_text.scrollbar.x.background = 0x469c74;
+	_text.scrollbar.y.background = 0x469c74;
+	_text.scrollbar.x.bar.base = 0x67e6ab;
+	_text.scrollbar.y.bar.base = 0x67e6ab;
+
 	window.panel = {
 		{
-			.padding{ 4, 4, 4, 4 },
+			.padding{ 8, 8, 8, 8 },
 			.margin{ 8, 8, 8, 8 },
+			.border{ 4, 0x469c74 },
 			.background{ 0x52B788 }
 		},
 		_text
 	};
-
-
-	window.graphics->LoadFont(GIDOLE, "gidole");
 
 	while (window.Loop())
 	{

@@ -180,7 +180,7 @@ namespace GuiCode
             case Command::Triangle:   this->Triangle(FlipY(a.a), a.bs.a); break;
             case Command::Text:       this->Text(a.view, a.b); break;
             case Command::Font:       this->Font(a.view); break;
-            case Command::TextSize:   this->TextSize(a.as2.a); break;
+            case Command::FontSize:   this->FontSize(a.as2.a); break;
             case Command::TextAlign:  this->TextAlign(a.as3.a); break;
             case Command::Clip:       this->Clip(FlipY(a.a)); break;
             case Command::PushClip:   this->PushClip(); break;
@@ -202,9 +202,14 @@ namespace GuiCode
         m_Fonts.emplace(name, GuiCode::Font{ path });
     }
 
-    void OpenGL::TextSize(float size)
+    void OpenGL::FontSize(float size)
     {
-        m_TextSize = size;
+        m_FontSize = size;
+    }
+
+    void OpenGL::LineHeight(float size)
+    {
+        m_LineHeight = size;
     }
 
     void OpenGL::Fill(const Color& color)
@@ -690,64 +695,81 @@ namespace GuiCode
         m_PreviousShader = 1;
 
         // Load the charmap for the current text size
-        GuiCode::Font::CharMap* _charMap = &m_CurrentFont->Size(std::round(m_TextSize));
+        GuiCode::Font::CharMap* _charMap = &m_CurrentFont->Size(std::round(m_FontSize));
 
         // Calculate the total width if we need it.
-        float _totalWidth = 0;
+        std::vector<float> _totalWidth{ 0.f };
+        int _index = 0;
         if (m_TextAlign & Align::Right || m_TextAlign & Align::CenterX)
             for (int i = 0; i < str.size(); i++)
-                _totalWidth += _charMap->Char(str[i]).advance >> 6;
-
+            {
+                if (str[i] == '\n')
+                    _index++, _totalWidth.push_back(0.f);
+                else
+                    _totalWidth[_index] += _charMap->Char(str[i]).advance >> 6;
+            }
         // Bind the 3d texture for this charmap
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D_ARRAY, _charMap->texture);
         _shader.SetVec4(color, m_Fill);
         _shader.SetInt(texture, 0); // We need to set the texture like this
 
-        float _scale = m_TextSize / std::round(m_TextSize);
+        float _scale = m_FontSize / std::round(m_FontSize);
 
         float x = pos.x;
         float y = m_Size.height - pos.y;
 
-        // Alignment
-        if (m_TextAlign & Align::CenterY)
-            y -= 0.5 * _charMap->Height();
-        else if ((m_TextAlign & 0x10) == 0)
-            y -= _charMap->Height();
-
-        if (m_TextAlign & Align::CenterX)
-            x -= 0.5 * _totalWidth * _scale;
-        else if (m_TextAlign & Align::Right)
-            x -= _totalWidth * _scale;
-
+        _index = 0;
         for (int i = 0; i < str.size(); i++)
         {
             char _c = str[i];
 
-            if (_c == '\n') // Don't display newlines
-                continue;
+            if (_c == '\n' || i == 0) 
+            {
+                x = pos.x;
+
+                // Alignment
+                if (m_TextAlign & Align::Middle)
+                    y -= -_charMap->Descender();
+                else if (m_TextAlign & Align::TextBottom)
+                    y -= _charMap->Descender();
+                else if (m_TextAlign & Align::Baseline)
+                    y;
+                else
+                    y -= _charMap->Ascender() + _charMap->Descender();
+
+                if (m_TextAlign & Align::CenterX)
+                    x -= 0.5 * _totalWidth[_index] * _scale;
+                else if (m_TextAlign & Align::Right)
+                    x -= _totalWidth[_index] * _scale;
+
+                _index++;
+                if (x == '\n')
+                    y += m_LineHeight * m_FontSize;
+            }
 
             Font::CharMap::Character& _ch = _charMap->Char(_c);
 
-            if (_c != ' ')
+            if (_c != ' ' && _c != '\f' && _c != '\r' && _c != '\t' && _c != '\v')
             {
                 float _xpos = x * m_Matrix[0][0] + _ch.bearing.x * _scale;
                 float _ypos = y - (_ch.size.y - _ch.bearing.y) * _scale;
 
-                _ypos = std::round(_ypos),
-                _xpos = std::round(_xpos);
+                _ypos =(int)_ypos,
+                _xpos = (int)_xpos;
 
                 glm::vec4 _dim;
                 _dim.x = (_xpos + m_Matrix[3].x) * m_Projection[0].x + m_Projection[3].x;
                 _dim.y = (_ypos + m_Matrix[3].y) * m_Projection[1].y + m_Projection[3].y;
-                _dim.z = m_TextSize * m_Projection[0].x;
-                _dim.w = m_TextSize * m_Projection[1].y;
+                _dim.z = m_FontSize * m_Projection[0].x;
+                _dim.w = m_FontSize * m_Projection[1].y;
 
                 _shader.SetVec4(dims, _dim);
                 _shader.SetInt(theTexture, _c);
 
                 glDrawArrays(GL_TRIANGLES, 0, 6);
             }
+
             x += (_ch.advance >> 6) * _scale;
         }
 

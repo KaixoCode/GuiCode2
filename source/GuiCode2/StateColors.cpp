@@ -35,16 +35,42 @@ namespace GuiCode
 	{
 		if (m_ColorMap.contains(state))
 		{
+			if (m_Goal == state)
+				m_Goal = NoValue;
+
 			m_States.remove(state);
 			m_ColorMap.erase(state);
 		}
 	}
 
-	const Color& StateColors::Current() const
+	Color StateColors::Current() const
 	{
+		// Get current state
+		int _state = NoValue;
 		for (auto& i : m_States)
 			if (m_Link.State(i))
-				return m_ColorMap.at(i);
-		return base;
+			{
+				_state = i;
+				break;
+			}
+
+		// Calculate lerp percent
+		auto _now = std::chrono::steady_clock::now();
+		auto _duration = std::chrono::duration_cast<std::chrono::milliseconds>(_now - m_ChangeTime).count();
+		float _percent = constrain(_duration / transition, 0, 1);
+
+		// Get the color
+		const Color& c = m_Goal == NoValue ? base : m_ColorMap.at(m_Goal);
+
+		// If change
+		if (_state != m_Goal)
+		{
+			m_Goal = _state; // set new goal
+			m_Current = m_Current.Lerp(c, _percent); // set current to current lerp percentage
+			m_ChangeTime = std::chrono::steady_clock::now(); // Get changetime
+			return m_Current;
+		}
+
+		return m_Current.Lerp(c, _percent);
 	}
 }

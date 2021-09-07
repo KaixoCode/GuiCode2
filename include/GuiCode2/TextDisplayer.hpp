@@ -4,7 +4,7 @@
 #include "GuiCode2/TextContainer.hpp"
 #include "GuiCode2/Graphics.hpp"
 #include "GuiCode2/BasicEvents.hpp"
-//#include "GuiCode2/ui/Clipboard.hpp"
+#include "GuiCode2/Clipboard.hpp"
 
 namespace GuiCode
 {
@@ -15,6 +15,10 @@ namespace GuiCode
 
 	class TextDisplayer : public Component
 	{
+		struct StringView
+		{
+			size_t start, end;
+		};
 	public:
 		TextDisplayer();
 
@@ -39,22 +43,21 @@ namespace GuiCode
 	protected:
 		float m_BiggestX = 0;
 		float m_TypeX = 0;
-
 		float m_Click = 0;
 		float m_Timer = 60;
-
-		bool m_Shift = false;
 		bool m_Dragging = false;
 
 		Vec2<float> m_PressPos{ 0, 0 };
 		Vec2<float> m_PrevSize{ 0, 0 };
 
 		std::vector<std::string_view> m_Lines;
-		std::vector<int> m_LineWidths;
+		std::vector<std::pair<StringView, int>> m_Words;
+		std::vector<float> m_LineWidths;
 
 		void CalcLinesWordWrap();
 		void CalcLinesCharWrap();
 		void CalcLinesNoWrap();
+		void CalcWords();
 
 		void KeyTypeActions(const KeyType& e);
 		void CtrlTypeActions(const KeyType& e);

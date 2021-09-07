@@ -8,7 +8,7 @@
 //{
 //	Content(t);
 //	Font(f, fsize);
-//	AlignLines(Align::LEFT);
+//	AlignLines(Align::Left);
 //	TextColor({ 255, 255, 255, 255 });
 //	Editable(false);
 //	Width(Graphics::StringWidth(t, f, fsize) + 6);

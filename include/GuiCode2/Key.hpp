@@ -7,119 +7,87 @@ namespace GuiCode
     class Key
     {
     public:
-        /**
-         * Type of key combo
-         */
+
         enum Combo
         {
             NONE = 0,
-            CTRL_A = ('A' << 8) | EventMods::Control,
-            CTRL_B = ('B' << 8) | EventMods::Control,
-            CTRL_C = ('C' << 8) | EventMods::Control,
-            CTRL_D = ('D' << 8) | EventMods::Control,
-            CTRL_E = ('E' << 8) | EventMods::Control,
-            CTRL_F = ('F' << 8) | EventMods::Control,
-            CTRL_G = ('G' << 8) | EventMods::Control,
-            CTRL_H = ('H' << 8) | EventMods::Control,
-            CTRL_I = ('I' << 8) | EventMods::Control,
-            CTRL_J = ('J' << 8) | EventMods::Control,
-            CTRL_K = ('K' << 8) | EventMods::Control,
-            CTRL_L = ('L' << 8) | EventMods::Control,
-            CTRL_M = ('M' << 8) | EventMods::Control,
-            CTRL_N = ('N' << 8) | EventMods::Control,
-            CTRL_O = ('O' << 8) | EventMods::Control,
-            CTRL_P = ('P' << 8) | EventMods::Control,
-            CTRL_Q = ('Q' << 8) | EventMods::Control,
-            CTRL_R = ('R' << 8) | EventMods::Control,
-            CTRL_S = ('S' << 8) | EventMods::Control,
-            CTRL_T = ('T' << 8) | EventMods::Control,
-            CTRL_U = ('U' << 8) | EventMods::Control,
-            CTRL_V = ('V' << 8) | EventMods::Control,
-            CTRL_W = ('W' << 8) | EventMods::Control,
-            CTRL_X = ('X' << 8) | EventMods::Control,
-            CTRL_Y = ('Y' << 8) | EventMods::Control,
-            CTRL_Z = ('Z' << 8) | EventMods::Control,
-            CTRL_SPACE = (' ' << 8) | EventMods::Control,
-            CTRL_COMMA = (188 << 8) | EventMods::Control, // TODO: This one doesnt work
-            CTRL_SHIFT_S = ('S' << 8) | EventMods::Control | EventMods::Shift,
-            CTRL_SHIFT_E = ('E' << 8) | EventMods::Control | EventMods::Shift,
-            CTRL_SHIFT_W = ('W' << 8) | EventMods::Control | EventMods::Shift,
-            ALT_F4 = (0x73 << 8) | EventMods::Alt,
-            CTRL_F4 = (0x73 << 8) | EventMods::Control,
-            SHIFT_TAB = (0x9 << 8) | EventMods::Shift,
-            F11 = (0x7A << 8)
+            CTRL_A = ('A' << 16) | EventMods::Control, CTRL_SHIFT_A = ('A' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_A = ('A' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_B = ('B' << 16) | EventMods::Control, CTRL_SHIFT_B = ('B' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_B = ('B' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_C = ('C' << 16) | EventMods::Control, CTRL_SHIFT_C = ('C' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_C = ('C' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_D = ('D' << 16) | EventMods::Control, CTRL_SHIFT_D = ('D' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_D = ('D' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_E = ('E' << 16) | EventMods::Control, CTRL_SHIFT_E = ('E' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_E = ('E' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_F = ('F' << 16) | EventMods::Control, CTRL_SHIFT_F = ('F' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_F = ('F' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_G = ('G' << 16) | EventMods::Control, CTRL_SHIFT_G = ('G' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_G = ('G' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_H = ('H' << 16) | EventMods::Control, CTRL_SHIFT_H = ('H' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_H = ('H' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_I = ('I' << 16) | EventMods::Control, CTRL_SHIFT_I = ('I' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_I = ('I' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_J = ('J' << 16) | EventMods::Control, CTRL_SHIFT_J = ('J' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_J = ('J' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_K = ('K' << 16) | EventMods::Control, CTRL_SHIFT_K = ('K' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_K = ('K' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_L = ('L' << 16) | EventMods::Control, CTRL_SHIFT_L = ('L' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_L = ('L' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_M = ('M' << 16) | EventMods::Control, CTRL_SHIFT_M = ('M' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_M = ('M' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_N = ('N' << 16) | EventMods::Control, CTRL_SHIFT_N = ('N' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_N = ('N' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_O = ('O' << 16) | EventMods::Control, CTRL_SHIFT_O = ('O' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_O = ('O' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_P = ('P' << 16) | EventMods::Control, CTRL_SHIFT_P = ('P' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_P = ('P' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_Q = ('Q' << 16) | EventMods::Control, CTRL_SHIFT_Q = ('Q' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_Q = ('Q' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_R = ('R' << 16) | EventMods::Control, CTRL_SHIFT_R = ('R' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_R = ('R' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_S = ('S' << 16) | EventMods::Control, CTRL_SHIFT_S = ('S' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_S = ('S' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_T = ('T' << 16) | EventMods::Control, CTRL_SHIFT_T = ('T' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_T = ('T' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_U = ('U' << 16) | EventMods::Control, CTRL_SHIFT_U = ('U' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_U = ('U' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_V = ('V' << 16) | EventMods::Control, CTRL_SHIFT_V = ('V' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_V = ('V' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_W = ('W' << 16) | EventMods::Control, CTRL_SHIFT_W = ('W' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_W = ('W' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_X = ('X' << 16) | EventMods::Control, CTRL_SHIFT_X = ('X' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_X = ('X' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_Y = ('Y' << 16) | EventMods::Control, CTRL_SHIFT_Y = ('Y' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_Y = ('Y' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_Z = ('Z' << 16) | EventMods::Control, CTRL_SHIFT_Z = ('Z' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_Z = ('Z' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_SPACE = (' ' << 16) | EventMods::Control,
+            CTRL_COMMA = (188 << 16) | EventMods::Control,
+            ALT_F4 = (0x73 << 16) | EventMods::Alt,
+            CTRL_F4 = (0x73 << 16) | EventMods::Control,
+            SHIFT_TAB = (0x9 << 16) | EventMods::Shift,
+            F11 = (0x7A << 16)
         };
 
         enum Value
         {
-            BACKSPACE = 0x8,
-            ESC = 0x1B,
-            TAB = 0x9,
-            DEL = 0x2e,
-            ENTER = 0xd,
-            LEFT = 0x25,
-            RIGHT = 0x27,
-            UP = 0x26,
-            DOWN = 0x28,
-            SHIFT = 0x10,
-            CONTROL = 0x11,
-            ALT = 0x12
+            Backspace = 0x8,
+            Escape = 0x1B,
+            Tab = 0x9,
+            Delete = 0x2e,
+            Enter = 0xd,
+            Left = 0x25,
+            Right = 0x27,
+            Up = 0x26,
+            Down = 0x28,
+            Shift = 0x10,
+            Control = 0x11,
+            Alt = 0x12
         };
 
-        /**
-         * Constructor
-         */
         Key()
         {};
-
-        /**
-         * Constructor
-         * @param v value
-         */
-        Key(Key::Combo v)
-            : m_Value(v)
-        {}
 
         Key(int v)
             : m_Value(v)
         {}
 
-        /**
-         * Constructor
-         * v keytyped event, automatically converted to a key combo
-         */
-        Key(KeyType v)
-            : m_Value((v.key << 8) | v.mod)
+        Key(const KeyType& v)
+            : m_Value((v.key << 16) | v.mod)
         {}
 
-        /**
-         * Constructor
-         * v keypressed event, automatically converted to a key combo
-         */
-        Key(KeyPress v)
-            : m_Value((v.keycode << 8) | v.mod)
+        Key(const KeyPress& v)
+            : m_Value((v.keycode << 16) | v.mod)
         {}
 
-        /**
-         * Constructor
-         * v keyreleased event, automatically converted to a key combo
-         */
-        Key(KeyRelease v)
-            : m_Value((v.keycode << 8) | v.mod)
+        Key(const KeyRelease& v)
+            : m_Value((v.keycode << 16) | v.mod)
         {}
 
         bool operator==(Key::Combo a) const { return m_Value == a; }
         bool operator!=(Key::Combo a) const { return m_Value != a; }
-        bool operator<(Key::Combo a)  const { return m_Value < a; }
-        bool operator>(Key::Combo a)  const { return m_Value > a; }
+        bool operator <(Key::Combo a) const { return m_Value < a; }
+        bool operator >(Key::Combo a) const { return m_Value > a; }
         bool operator<=(Key::Combo a) const { return m_Value <= a; }
         bool operator>=(Key::Combo a) const { return m_Value >= a; }
         operator int()       const { return static_cast<int>(m_Value); }
-        //operator Combo()              const { return m_Value; }
 
-        /**
-         * Convert the key combo to a string.
-         */
         inline const std::string& ToString()
         {
             static std::string _ctrl = "Ctrl+";
@@ -135,7 +103,7 @@ namespace GuiCode
                 bool _c = _value & EventMods::Control;
                 bool _s = _value & EventMods::Shift;
                 bool _a = _value & EventMods::Alt;
-                int _l = (_value & 0xffffff00) >> 8;
+                int _l = (_value & 0xffffff00) >> 16;
                 bool _f = _l >= 0x70 && _l <= 0x7B;
 
                 std::string _str;
@@ -162,4 +130,17 @@ namespace GuiCode
     private:
         int m_Value;
     };
+
+    static inline bool operator ==(const KeyPress& a, const Key b) { return (a.keycode == (b >> 16)) && ((a.mod & 0xFF) == (b & 0xFF)); }
+    static inline bool operator ==(const KeyPress&& a, const Key b) { return (a.keycode == (b >> 16)) && ((a.mod & 0xFF) == (b & 0xFF)); }
+    static inline bool operator ==(const KeyRelease& a, const Key b) { return (a.keycode == (b >> 16)) && ((a.mod & 0xFF) == (b & 0xFF)); }
+    static inline bool operator ==(const KeyRelease&& a, const Key b) { return (a.keycode == (b >> 16)) && ((a.mod & 0xFF) == (b & 0xFF)); }
+    static inline bool operator ==(const KeyType& a, const Key b) { return (a.key == (b >> 16)) && ((a.mod & 0xFF) == (b & 0xFF)); }
+    static inline bool operator ==(const KeyType&& a, const Key b) { return (a.key == (b >> 16)) && ((a.mod & 0xFF) == (b & 0xFF)); }
+    static inline bool operator ==(const Key b, const KeyPress& a) { return (a.keycode == (b >> 16)) && ((a.mod & 0xFF) == (b & 0xFF)); }
+    static inline bool operator ==(const Key b, const KeyPress&& a) { return (a.keycode == (b >> 16)) && ((a.mod & 0xFF) == (b & 0xFF)); }
+    static inline bool operator ==(const Key b, const KeyRelease& a) { return (a.keycode == (b >> 16)) && ((a.mod & 0xFF) == (b & 0xFF)); }
+    static inline bool operator ==(const Key b, const KeyRelease&& a) { return (a.keycode == (b >> 16)) && ((a.mod & 0xFF) == (b & 0xFF)); }
+    static inline bool operator ==(const Key b, const KeyType& a) { return (a.key == (b >> 16)) && ((a.mod & 0xFF) == (b & 0xFF)); }
+    static inline bool operator ==(const Key b, const KeyType&& a) { return (a.key == (b >> 16)) && ((a.mod & 0xFF) == (b & 0xFF)); }
 }

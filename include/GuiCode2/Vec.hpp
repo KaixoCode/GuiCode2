@@ -12,17 +12,19 @@ namespace GuiCode
         union { T height; T y; T g; T s; T end; };
 
         Vec2 operator -() const { return { -x, -y }; }
-        Vec2 operator -(const Vec2& other) const { return { x - other.x, y - other.y }; }
         Vec2 operator +(const Vec2& other) const { return { x + other.x, y + other.y }; }
+        Vec2 operator -(const Vec2& other) const { return { x - other.x, y - other.y }; }
         Vec2 operator *(const Vec2& other) const { return { x * other.x, y * other.y }; }
         Vec2 operator /(const Vec2& other) const { return { x / other.x, y / other.y }; }
-        Vec2 operator *(T other) const { return { x * other, y * other }; }
-        Vec2 operator /(T other) const { return { x / other, y / other }; }
         Vec2 operator +(T other) const { return { x + other, y + other }; }
         Vec2 operator -(T other) const { return { x - other, y - other }; }
-        Vec2& operator =(const Vec2& other) { x = other.x, y = other.y; return *this; }
+        Vec2 operator *(T other) const { return { x * other, y * other }; }
+        Vec2 operator /(T other) const { return { x / other, y / other }; }
         Vec2& operator+=(const Vec2& other) { x += other.x; y += other.y; return *this; }
         Vec2& operator-=(const Vec2& other) { x -= other.x; y -= other.y; return *this; }
+        Vec2& operator*=(const Vec2& other) { x *= other.x; y *= other.y; return *this; }
+        Vec2& operator/=(const Vec2& other) { x /= other.x; y /= other.y; return *this; }
+        Vec2& operator=(const Vec2& other) { x = other.x, y = other.y; return *this; }
         bool operator==(const Vec2& other) const { return x == other.x && y == other.y; }
         bool operator!=(const Vec2& other) const { return x != other.x || y != other.y; }
 
@@ -62,15 +64,22 @@ namespace GuiCode
         union { T height, y, g, s; };
         union { T depth, z, b, v; };
 
-        Vec3 operator -() { return { -x, -y, -z }; }
-        Vec3 operator -(const Vec3& other) { return { x - other.x, y - other.y, z - other.z }; }
-        Vec3 operator +(const Vec3& other) { return { x + other.x, y + other.y, z + other.z }; }
-        Vec3 operator *(const Vec3& other) { return { x * other.x, y * other.y, z * other.z }; }
-        Vec3 operator *(T other) { return { x * other, y * other, z * other }; }
-        Vec3& operator =(const Vec3& other) { x = other.x, y = other.y; z = other.z; return *this; }
+        Vec3 operator -() const { return { -x, -y, -z }; }
+        Vec3 operator +(const Vec3& other) const { return { x + other.x, y + other.y, z + other.z }; }
+        Vec3 operator -(const Vec3& other) const { return { x - other.x, y - other.y, z - other.z }; }
+        Vec3 operator *(const Vec3& other) const { return { x * other.x, y * other.y, z * other.z }; }
+        Vec3 operator /(const Vec3& other) const { return { x / other.x, y / other.y, z / other.z }; }
+        Vec3 operator +(T other) const { return { x + other, y + other, z + other }; }
+        Vec3 operator -(T other) const { return { x - other, y - other, z - other }; }
+        Vec3 operator *(T other) const { return { x * other, y * other, z * other }; }
+        Vec3 operator /(T other) const { return { x / other, y / other, z / other }; }
         Vec3& operator+=(const Vec3& other) { x += other.x; y += other.y; z += other.z; return *this; }
         Vec3& operator-=(const Vec3& other) { x -= other.x; y -= other.y; z -= other.z; return *this; }
+        Vec3& operator*=(const Vec3& other) { x *= other.x; y *= other.y; z *= other.z; return *this; }
+        Vec3& operator/=(const Vec3& other) { x /= other.x; y /= other.y; z /= other.z; return *this; }
+        Vec3& operator=(const Vec3& other) { x = other.x, y = other.y, z = other.z; return *this; }
         bool operator==(const Vec3& other) const { return x == other.x && y == other.y && z == other.z; }
+        bool operator!=(const Vec3& other) const { return x != other.x || y != other.y || z != other.z; }
 
         operator glm::vec3() const { return { x, y, z }; }
 
@@ -107,18 +116,22 @@ namespace GuiCode
         union { T z; T b; T v; T width; T right; };
         union { T w; T a; T height; T bottom; };
 
-        Vec4 operator -() const { return { -x, -y, -z }; }
-        Vec4 operator -(const Vec4& other) const { return { x - other.x, y - other.y, z - other.z, w - other.w }; }
+        Vec4 operator -() const { return { -x, -y, -z, -w }; }
         Vec4 operator +(const Vec4& other) const { return { x + other.x, y + other.y, z + other.z, w + other.w }; }
+        Vec4 operator -(const Vec4& other) const { return { x - other.x, y - other.y, z - other.z, w - other.w }; }
         Vec4 operator *(const Vec4& other) const { return { x * other.x, y * other.y, z * other.z, w * other.w }; }
+        Vec4 operator /(const Vec4& other) const { return { x / other.x, y / other.y, z / other.z, w / other.w }; }
+        Vec4 operator +(T other) const { return { x + other, y + other, z + other, w + other }; }
+        Vec4 operator -(T other) const { return { x - other, y - other, z - other, w - other }; }
         Vec4 operator *(T other) const { return { x * other, y * other, z * other, w * other }; }
         Vec4 operator /(T other) const { return { x / other, y / other, z / other, w / other }; }
-        Vec4 operator +(T other) const { return { x + other, y + other, z + other, w + other }; }
-        Vec4 operator -(T other) const { return { x + other, y + other, z - 2 * other, w - 2 * other }; }
-        Vec4& operator =(const Vec4& other) { x = other.x, y = other.y; z = other.z; w = other.w; return *this; }
         Vec4& operator+=(const Vec4& other) { x += other.x; y += other.y; z += other.z; w += other.w; return *this; }
         Vec4& operator-=(const Vec4& other) { x -= other.x; y -= other.y; z -= other.z; w -= other.w; return *this; }
+        Vec4& operator*=(const Vec4& other) { x *= other.x; y *= other.y; z *= other.z; w *= other.w; return *this; }
+        Vec4& operator/=(const Vec4& other) { x /= other.x; y /= other.y; z /= other.z; w /= other.w; return *this; }
+        Vec4& operator=(const Vec4& other) { x = other.x, y = other.y, z = other.z, w = other.w; return *this; }
         bool operator==(const Vec4& other) const { return x == other.x && y == other.y && z == other.z && w == other.w; }
+        bool operator!=(const Vec4& other) const { return x != other.x || y != other.y || z != other.z || w != other.w; }
 
         Vec4 Overlap(const Vec4& o) const
         {

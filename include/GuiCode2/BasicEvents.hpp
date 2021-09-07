@@ -7,16 +7,16 @@ namespace GuiCode
 	{
 		enum {
 			Control      = 0x0001,
-			RightControl = 0x0002,
-			LeftControl  = 0x0004,
-			Shift        = 0x0008, 
-			RightShift   = 0x0010, 
-			LeftShift    = 0x0020, 
-			Alt          = 0x0100, 
-			LeftAlt      = 0x0200, 
-			RightAlt     = 0x0400, 
-			NumLock      = 0x0800, 
-			CapsLock     = 0x1000
+			RightControl = 0x0100,
+			LeftControl  = 0x0200,
+			Shift        = 0x0002, 
+			RightShift   = 0x0400, 
+			LeftShift    = 0x0800, 
+			Alt          = 0x0004, 
+			LeftAlt      = 0x1000, 
+			RightAlt     = 0x2000, 
+			NumLock      = 0x0008, 
+			CapsLock     = 0x0010
 		};
 	};
 

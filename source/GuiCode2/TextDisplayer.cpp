@@ -6,12 +6,6 @@ namespace GuiCode
 	TextDisplayer::TextDisplayer()
 		: container()
 	{
-		listener += [this](const KeyRelease& e)
-		{
-			if (e.keycode == Key::SHIFT)
-				m_Shift = false;
-		};
-
 		listener += [this](const KeyPress& e)
 		{
 			if (!State<Focused>())
@@ -19,14 +13,12 @@ namespace GuiCode
 
 			m_Timer = 60;
 
-			if (e.keycode == Key::SHIFT)
-				m_Shift = true;
+			if (e.keycode == Key::Delete)
+				container.Delete(), e.Handle();
 
-			if (e.keycode == Key::DEL)
-				container.Delete();
+			if (e.keycode == Key::Left || e.keycode == Key::Right || e.keycode == Key::Up || e.keycode == Key::Down)
+				ChangeIndexActions(e), e.Handle();
 
-			if (e.keycode == Key::LEFT || e.keycode == Key::RIGHT || e.keycode == Key::UP || e.keycode == Key::DOWN)
-				ChangeIndexActions(e);
 			RecalculateLines();
 		};
 
@@ -37,19 +29,20 @@ namespace GuiCode
 
 			m_Timer = 60;
 
-			if (e.key == Key::TAB)
+			if (e.key == Key::Escape)
 				return;
 
 			if (e.mod & EventMods::Control)
-				CtrlTypeActions(e);
+				CtrlTypeActions(e), e.Handle();
 			else if (container.editable)
-				KeyTypeActions(e);
+				KeyTypeActions(e), e.Handle();
+
 			RecalculateLines();
 		};
 
 		listener += [this](const MouseClick& e)
 		{
-			if (e.button != MouseButton::Left || m_Shift)
+			if (e.button != MouseButton::Left || (e.mod & EventMods::Shift))
 				return;
 
 			if (m_Click > 0 && m_PressPos == Vec2<float>{ e.pos.x, e.pos.y })
@@ -67,7 +60,7 @@ namespace GuiCode
 
 			m_Timer = 60;
 
-			if (m_Shift)
+			if (e.mod & EventMods::Shift)
 				container.selection = { PositionToIndex({ e.pos.x, e.pos.y }), container.selection.end };
 			else
 				container.selection = PositionToIndex({ e.pos.x, e.pos.y });
@@ -100,7 +93,7 @@ namespace GuiCode
 
 		listener += [this](const Unfocus& e)
 		{
-			container.selection = container.selection.start;
+			//container.selection = container.selection.start;
 		};
 
 		listener += [this](const Focus& e)
@@ -136,15 +129,16 @@ namespace GuiCode
 
 		if (wrap == Wrap::None)
 			width = std::max(m_BiggestX, min.width);
+		ConstrainSize();
 	}
 
 	void TextDisplayer::Render(CommandCollection& d) const
 	{
 		if (font == "")
 			return;
-		d.TextAlign(Align::Left | Align::CenterY);
+		d.TextAlign(Align::Left | Align::Middle);
 		d.Font(font);
-		d.TextSize(fontSize);
+		d.FontSize(fontSize);
 		int ypos = 0;
 		int beginindex = 0;
 		auto sel = container.selection;
@@ -153,9 +147,9 @@ namespace GuiCode
 		if (m_Lines.size() == 1 && m_Lines[0].length() == 0 && !State<Focused>())
 		{
 			int nx = 0;
-			if (align == Align::CenterX)
+			if (align & Align::CenterX)
 				nx = width / 2 - m_LineWidths[index] / 2;
-			else if (align == Align::Right)
+			else if (align & Align::Right)
 				nx = width - m_LineWidths[index];
 
 			d.Fill(Color{ textColor.r, textColor.g, textColor.b, (float)(textColor.a * 0.5) });
@@ -164,13 +158,13 @@ namespace GuiCode
 
 		for (auto& i : m_Lines)
 		{
-			//if (y + Y() + lineheight < m_Viewport.y || y + Y() > m_Viewport.y + m_Viewport.height)
-			//{
-			//	y -= lineheight;
-			//	beginindex += i.length();
-			//	index++;
-			//	continue;
-			//}
+			if (ypos + y + lineHeight < d.viewport.y || ypos + y > d.viewport.y + d.viewport.height)
+			{
+				ypos += lineHeight;
+				beginindex += i.length();
+				index++;
+				continue;
+			}
 			bool low = sel.Lowest() <= beginindex + i.length() && sel.Lowest() > beginindex - 1;
 			bool high = sel.Highest() <= beginindex + i.length() && sel.Highest() > beginindex - 1;
 			bool between = beginindex > sel.Lowest() && beginindex + i.length() < sel.Highest();
@@ -179,9 +173,9 @@ namespace GuiCode
 					index == m_Lines.size() - 1 && sel.start == container.content.size());
 
 			int nx = 0;
-			if (align == Align::CenterX)
+			if (align & Align::CenterX)
 				nx = width / 2 - m_LineWidths[index] / 2;
-			else if (align == Align::Right)
+			else if (align & Align::Right)
 				nx = width - m_LineWidths[index];
 
 			/* Selection highlight */
@@ -231,10 +225,31 @@ namespace GuiCode
 				d.Fill(textColor);
 				d.Quad({ x + nx + w1, y + ypos, 1, lineHeight });
 			}
+			ypos += lineHeight;
+			beginindex += i.length();
+			index++;
+		}
+
+		ypos = 0;
+		index = 0;
+		d.Fill(textColor);
+		for (auto& i : m_Lines)
+		{
+			if (ypos + y + lineHeight < d.viewport.y || ypos + y > d.viewport.y + d.viewport.height)
+			{
+				ypos += lineHeight;
+				index++;
+				continue;
+			}
+
+			int nx = 0;
+			if (align & Align::CenterX)
+				nx = width / 2 - m_LineWidths[index] / 2;
+			else if (align & Align::Right)
+				nx = width - m_LineWidths[index];
 
 			d.Text(i, { x + nx, y + ypos + lineHeight / 2 });
 			ypos += lineHeight;
-			beginindex += i.length();
 			index++;
 		}
 	}
@@ -242,13 +257,13 @@ namespace GuiCode
 
 	int TextDisplayer::PositionToIndex(const Vec2<float>& pos)
 	{
-		// Get the line index by dividing the y position minus the padding by the text
-		// height. Also contrain the index to make sure no IndexOutOfBounds is thrown
+		// Get the line _index by dividing the y position minus the padding by the text
+		// height. Also contrain the _index to make sure no IndexOutOfBounds is thrown
 		float textheight = lineHeight;
 		int line = (pos.y - y) / textheight;
 		line = constrain(line, 0, m_Lines.size() - 1);
 
-		// Increment the index up to the found line, do +1 because we split it on "\n"
+		// Increment the _index up to the found line, do +1 because we split it on "\n"
 		// so that isn't part of the lines anymore.
 		float index = 0;
 		for (int i = 0; i < line; i++)
@@ -261,7 +276,7 @@ namespace GuiCode
 		else if (align & Align::Right)
 			nx = width - m_LineWidths[line];
 
-		// Now calculate the index in the line by checking each character's x-position
+		// Now calculate the _index in the line by checking each character's x-position
 		// until we passes the given x-position.
 		auto thisLine = m_Lines[line];
 		for (int i = 0; i < thisLine.length(); i++)
@@ -270,7 +285,7 @@ namespace GuiCode
 			float w = GraphicsBase::CharWidth(thisLine[i], font, fontSize);
 
 			// If the current width of the line + half the width of the current character +
-			// paddingX is bigger than the x, we've found our index.
+			// paddingX is bigger than the x, we've found our _index.
 			if (nx + w / 2 > pos.x - x)
 				return index + i;
 
@@ -300,7 +315,7 @@ namespace GuiCode
 		line--;
 		in += m_Lines[line].length();
 
-		// Calculate the position using the index and the font metrics
+		// Calculate the position using the _index and the font metrics
 		float ex = GraphicsBase::StringWidth(m_Lines[line].substr(0, in), font, fontSize);
 		float ey = line * textheight;
 		if (align & Align::CenterX)
@@ -316,79 +331,58 @@ namespace GuiCode
 		{
 		case Wrap::None: CalcLinesNoWrap(); break;
 		case Wrap::Character: CalcLinesNoWrap(); CalcLinesCharWrap(); break;
-		case Wrap::Word: CalcLinesNoWrap(); CalcLinesWordWrap(); break;
+		case Wrap::Word: CalcWords(); CalcLinesWordWrap(); break;
 		}
 	}
 
 	void TextDisplayer::CalcLinesWordWrap()
 	{
-		// Big magic, good luck.
+		enum Type { None, Alnum, Whitespace, Character, Newline };
 
-		int size = m_Lines.size();
-		int index = 0;
-		for (int i = 0; i < size; i++)
+		m_Lines.clear(), m_LineWidths.clear();
+
+		std::string_view _content = container.content;
+		StringView _currentLine = { 0, 0 };
+		float _currentWidth = 0;
+		for (int i = 0; i < m_Words.size(); i++)
 		{
-			float w = 0;
-			int lineindex = index;
-			int camt = m_Lines[i].size();
-			while (index - lineindex < camt)
+			auto& [_word, _type] = m_Words[i];
+			float _wordWidth = GraphicsBase::StringWidth(_content.substr(_word.start, _word.end - _word.start), font, fontSize);
+
+			switch (_type)
 			{
-				int ctrl = container.CtrlRight(index);
-				int j = index - lineindex;
-				int len = ctrl - lineindex - j;
-
-				if (j + len > m_Lines[i].length() || j < 0 || j > m_Lines[i].length())
-					break;
-
-				float _width = GraphicsBase::StringWidth(m_Lines[i].substr(j, len), font, fontSize);
-				if (_width > width)
+			case Character:
+			case Alnum:
+				if (_wordWidth + _currentWidth > width)
 				{
-					int b = j;
-					for (int k = j; k < camt; k++)
-					{
-						float nw = GraphicsBase::CharWidth(m_Lines[i][k], font, fontSize);
-						w += nw;
-						if (w > width)
-						{
-							auto left = m_Lines[i].substr(0, k);
-							auto right = m_Lines[i].substr(k);
-							m_Lines[i] = left;
-							m_Lines.emplace(m_Lines.begin() + i + 1, right);
-							m_LineWidths[i] = w - nw;
-							m_LineWidths.emplace(m_LineWidths.begin() + i + 1, GraphicsBase::StringWidth(m_Lines[i + 1], font, fontSize));
-							size++;
-							b = k;
-							break;
-						}
-						index++;
-					}
-					//if (index == b)
-					//	index++;
-					//else
-					//	index = b;
+					m_Lines.push_back({ _content.begin() + _currentLine.start, _content.begin() + _currentLine.end });
+					m_LineWidths.push_back(_currentWidth);
 
-					break;
+					_currentLine.start = _currentLine.end, _currentWidth = 0;
 				}
+			case Whitespace:
+				_currentLine.end = _word.end, _currentWidth += _wordWidth;
+				break;
+			case Newline:
+				m_Lines.push_back({ _content.begin() + _currentLine.start, _content.begin() + _word.end });
+				m_LineWidths.push_back(_currentWidth);
 
-				w += _width;
-				if (w > width)
-				{
-					auto left = m_Lines[i].substr(0, j);
-					auto right = m_Lines[i].substr(j);
-					m_Lines[i] = left;
-					m_Lines.emplace(m_Lines.begin() + i + 1, right);
-					m_LineWidths[i] = w - _width;
-					m_LineWidths.emplace(m_LineWidths.begin() + i + 1, GraphicsBase::StringWidth(m_Lines[i + 1], font, fontSize));
-					size++;
-					break;
-				}
-
-				if (index == ctrl)
-					index++;
-				else
-					index = ctrl;
+				_currentLine = { _word.end, _word.end }, _currentWidth = 0;
+				break;
 			}
 		}
+
+		if (_currentLine.end != _currentLine.start)
+		{
+			m_Lines.push_back({ _content.begin() + _currentLine.start, _content.begin() + _currentLine.end });
+			m_LineWidths.push_back(_currentWidth);
+		}
+
+		if (m_Lines.size() == 0)
+			m_Lines.push_back(_content), m_LineWidths.push_back(0);
+
+		if (_content.size() > 0 && *(_content.end() - 1) == '\n')
+			m_Lines.push_back("\n"), m_LineWidths.push_back(0);
 	}
 
 	void TextDisplayer::CalcLinesCharWrap()
@@ -456,15 +450,73 @@ namespace GuiCode
 			m_Lines.emplace_back("\n");
 			m_LineWidths.push_back(0);
 		}
+		m_BiggestX += 2;
+	}
+
+	void TextDisplayer::CalcWords()
+	{
+		m_Words.clear();
+		std::string_view _view = container.content;
+		enum Type { None, Alnum, Whitespace, Character, Newline } type = None;
+		size_t _prev = 0;
+		for (size_t i = 0; i < _view.size() + 1; i++)
+		{
+			char c = '\0';
+			if (i < _view.size())
+				c = _view[i];
+			
+			if (std::isalnum(c, std::locale()))
+			{
+				if (type == Whitespace)
+					m_Words.push_back({ { _prev, i }, type });
+
+				if (type != Alnum)
+					_prev = i;
+
+				type = Alnum;
+			}
+			else if (c == '\n')
+			{
+				if (type != Character && type != None && type != Newline)
+					m_Words.push_back({ { _prev, i }, type });
+
+				if (c != 0)
+					m_Words.push_back({ { i, i + 1} , Newline });
+
+				_prev = i;
+				type = Newline;
+			}
+			else if (std::isspace(c, std::locale()))
+			{
+				if (type == Alnum)
+					m_Words.push_back({ { _prev, i }, type });
+
+				if (type != Whitespace)
+					_prev = i;
+				
+				type = Whitespace;
+			} 
+			else 
+			{
+				if (type != Character && type != None && type != Newline)
+					m_Words.push_back({ { _prev, i }, type });
+
+				if (c != 0)
+					m_Words.push_back({ { i, i + 1} , Character });
+
+				_prev = i;
+				type = Character;
+			}
+		}
 	}
 
 	void TextDisplayer::KeyTypeActions(const KeyType& e)
 	{
 		switch (e.key)
 		{
-		case Key::BACKSPACE: container.Backspace(); break;
-		case Key::TAB: container.Insert("    "); break;
-		case Key::ENTER: container.Insert("\n"); break;
+		case Key::Backspace: container.Backspace(); break;
+		case Key::Tab: container.Insert("    "); break;
+		case Key::Enter: container.Insert("\n"); break;
 		default: container.Insert(e.key);
 		}
 		container.ConstrainSelection();
@@ -490,17 +542,16 @@ namespace GuiCode
 		}
 		else if ((int)key == 3)
 		{
-			//Clipboard::Get().Copy(std::string(container.SelectionString()));
+			Clipboard::Get().Copy(std::string(container.SelectionString()));
 		}
 		else if ((int)key == 24 && container.editable)
 		{
-			//Clipboard::Get().Copy(std::string(container.SelectionString()));
-
+			Clipboard::Get().Copy(std::string(container.SelectionString()));
 			container.RemoveSelection();
 		}
 		else if ((int)key == 22 && container.editable)
 		{
-			//container.Insert(Clipboard::Get().Paste());
+			container.Insert(Clipboard::Get().Paste());
 		}
 		container.ConstrainSelection();
 	}
@@ -513,42 +564,42 @@ namespace GuiCode
 		// selection depending on the key.
 		if (container.selection.Selected() && !(e.mod & EventMods::Shift))
 		{
-			if (e.keycode == Key::LEFT)
+			if (e.keycode == Key::Left)
 				container.selection = container.selection.Lowest();
-			else if (e.keycode == Key::RIGHT)
+			else if (e.keycode == Key::Right)
 				container.selection = container.selection.Highest();
-			else if (e.keycode == Key::UP)
+			else if (e.keycode == Key::Up)
 				container.selection = PositionToIndex({ m_TypeX, -lineHeight + IndexToPosition(container.selection.Lowest()).y });
-			else if (e.keycode == Key::DOWN)
+			else if (e.keycode == Key::Down)
 				container.selection = PositionToIndex({ m_TypeX, lineHeight + IndexToPosition(container.selection.Highest()).y });
 			
 			container.ConstrainSelection();
 			return;
 		}
 
-		// If ctrl is down move the index an entire 'word'
+		// If _ctrlRightIndex is down move the _index an entire 'word'
 		if (e.mod & EventMods::Control)
 		{
-			if (e.keycode == Key::LEFT)
+			if (e.keycode == Key::Left)
 				index = container.CtrlLeft();
-			else if (e.keycode == Key::RIGHT)
+			else if (e.keycode == Key::Right)
 				index = container.CtrlRight();
-			else if (e.keycode == Key::UP)
+			else if (e.keycode == Key::Up)
 				index = PositionToIndex({ m_TypeX, -lineHeight + IndexToPosition(container.selection.start).y });
-			else if (e.keycode == Key::DOWN)
+			else if (e.keycode == Key::Down)
 				index = PositionToIndex({ m_TypeX, lineHeight + IndexToPosition(container.selection.start).y });
 		}
 
-		// Otherwise just normal index adjusting
+		// Otherwise just normal _index adjusting
 		else
 		{
-			if (e.keycode == Key::LEFT)
+			if (e.keycode == Key::Left)
 				index--;
-			else if (e.keycode == Key::RIGHT)
+			else if (e.keycode == Key::Right)
 				index++;
-			else if (e.keycode == Key::UP)
+			else if (e.keycode == Key::Up)
 				index = PositionToIndex({ m_TypeX, -lineHeight + IndexToPosition(container.selection.start).y });
-			else if (e.keycode == Key::DOWN)
+			else if (e.keycode == Key::Down)
 				index = PositionToIndex({ m_TypeX, lineHeight + IndexToPosition(container.selection.start).y });
 		}
 
@@ -558,7 +609,7 @@ namespace GuiCode
 			container.selection = { index, container.selection.end };
 
 		container.ConstrainSelection();
-		if (e.keycode == Key::LEFT || e.keycode == Key::RIGHT)
+		if (e.keycode == Key::Left || e.keycode == Key::Right)
 			UpdateTypeX();
 	}
 

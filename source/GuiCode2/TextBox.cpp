@@ -1,90 +1,87 @@
-//#include "GuiCode/ui/components/text/TextBox.hpp"
-//
-//// --------------------------------------------------------------------------
-//// -------------------------------- TextBox ---------------------------------
-//// --------------------------------------------------------------------------
-//
-//TextBox::TextBox()
-//    : m_Displayer(Emplace<TextDisplayer>())
-//{
-//    m_Listener += [this](Event::MousePressed& e)
-//    {
-//        if (e.button != Event::MouseButton::LEFT)
-//            return;
-//
-//        m_Mouse = { e.x, e.y };
-//    };
-//
-//    m_Listener += [this](Event::MouseDragged& e)
-//    {
-//        if (e.button != Event::MouseButton::LEFT)
-//            return;
-//
-//        m_Mouse = { e.x, e.y };
-//    };
-//
-//    m_Listener += [this](Event::KeyPressed& e)
-//    {
-//        UpdateScroll();
-//    };
-//
-//    m_Listener += [this](Event::KeyTyped& e)
-//    {
-//        UpdateScroll();
-//    };
-//
-//    Background(Color{ 255, 255, 255, 255 });
-//    m_Displayer.TextWrap(TextDisplayer::Wrap::None);
-//}
-//
-//void TextBox::Update(const Vec4<int>& v)
-//{
-//    m_Displayer.LineHeight(Height() - 2 * Padding());
-//    if (!m_Displayer.Focused() && Focused())
-//    {
-//        m_Displayer.Focused(true);
-//        m_FocusedComponent = &m_Displayer;
-//    }
-//    Panel::Update(v);
-//    m_Displayer.Position({ -m_ScrollX, 0 });
-//    m_Displayer.Height(Height());
-//
-//    m_Displayer.MinWidth(Width());
-//
-//    if (m_Displayer.Dragging() && m_Displayer.Width() - m_Displayer.Padding() * 2 > Width())
-//    {
-//        if (m_Mouse.x < Width() * 0.1)
-//            m_ScrollX += -5 * 0.02 * ((Width() * 0.1 - m_Mouse.x));
-//
-//        if (m_Mouse.x > Width() - Width() * 0.1)
-//            m_ScrollX += 5 * 0.02 * ((m_Mouse.x - (Width() - Width() * 0.1)));
-//    }
-//
-//    m_ScrollX = constrain(m_ScrollX, 0, std::max(m_Displayer.Width() - Width(), 0));
-//}
-//
-//void TextBox::Render(CommandCollection& d)
-//{
-//    using namespace Graphics;
-//    d.Command<Clip>(X(), Y(), Width(), Height());
-//    d.Command<PushMatrix>();
-//    d.Command<Translate>(Vec2<int>{ X(), Y() });
-//    Background(d);
-//    m_Displayer.Render(d);
-//    d.Command<PopMatrix>();
-//    d.Command<PopClip>();
-//    NeedsRedraw(false);
-//    Component::Render(d);
-//}
-//    
-//void TextBox::UpdateScroll()
-//{
-//    auto pos = m_Displayer.IndexToPosition(m_Displayer.Container().Selection().start);
-//
-//    if (pos.x > m_ScrollX + Width() - m_Displayer.Padding() * 2) {
-//        m_ScrollX = pos.x - Width() + m_Displayer.Padding() * 2;
-//    }
-//    else if (pos.x < m_ScrollX + m_Displayer.Padding()) {
-//        m_ScrollX = pos.x - m_Displayer.Padding();
-//    }
-//}
+#include "GuiCode2/TextBox.hpp"
+
+namespace GuiCode
+{
+	TextBox::TextBox()
+		: Panel{ {.ratio = 1, .overflow = { Overflow::Hide, Overflow::Hide }} },
+		align(displayer.align),
+		container(displayer.container),
+		font(displayer.font),
+		fontSize(displayer.fontSize),
+		placeholder(displayer.placeholder),
+		textColor(displayer.textColor),
+		selectColor(displayer.selectColor)
+	{
+		panels.push_back({ {.ratio = 0, .size{ Auto, Auto } }, displayer });
+		components.emplace_back(&*panels.begin());
+	
+		listener += [this](const MousePress& e)
+		{
+			m_Mouse = e.pos - position;
+			UpdateScroll();
+			m_Dragging = true;
+		};
+
+		listener += [this](const MouseRelease& e)
+		{
+			m_Dragging = false;
+		};
+
+		listener += [this](const MouseDrag& e)
+		{
+			m_Mouse = e.pos - position;
+		};
+
+		listener += [this](const KeyPress& e)
+		{
+			if (e.Handled())
+				m_Update = 2;
+		};
+
+		listener += [this](const KeyType& e)
+		{
+			if (e.Handled())
+				m_Update = 2;
+		};
+	}
+
+	void TextBox::Update()
+	{
+		displayer.min = size;
+		displayer.height = height;
+		displayer.lineHeight = displayer.height;
+		displayer.wrap = Wrap::None;
+
+		if (m_Update)
+		{
+			m_Update--;
+			UpdateScroll();
+		}
+
+		if (m_Dragging & MouseButton::Left)
+		{
+			if (m_Mouse.x < width * 0.1)
+				scrollbar.x.value += -5 * 0.02 * (width * 0.1 - m_Mouse.x);
+
+			if (m_Mouse.x > width - width * 0.1)
+				scrollbar.x.value += 5 * 0.02 * (m_Mouse.x - (width - width * 0.1));
+
+			scrollbar.x.ConstrainValue();
+		}
+	}
+
+	void TextBox::UpdateScroll()
+	{
+		auto pos = displayer.IndexToPosition(container.selection.start);
+		pos.x -= displayer.x;
+		pos.y -= displayer.y;
+
+		if (pos.x > scrollbar.x.value + width - 2)
+			scrollbar.x.value = pos.x - width + 2;
+
+		else if (pos.x < scrollbar.x.value + 2)
+			scrollbar.x.value = pos.x - 2;
+
+		scrollbar.x.ConstrainValue();
+	}
+}

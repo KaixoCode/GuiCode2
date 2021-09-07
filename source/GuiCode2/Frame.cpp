@@ -3,6 +3,7 @@
 namespace GuiCode
 {
 	Frame::Button::Button()
+		: color(*this)
 	{
 		listener += [this](const MouseRelease& e)
 		{
@@ -11,7 +12,8 @@ namespace GuiCode
 		};
 	}
 
-	Frame::TitleBar::TitleBar()
+	Frame::TitleBar::TitleBar(std::string& title)
+		: title(title)
 	{
 		components.push_back(&close);
 		components.push_back(&minimize);
@@ -27,8 +29,17 @@ namespace GuiCode
 
 	void Frame::TitleBar::Render(CommandCollection& d) const
 	{
-		d.Fill(color);
+		d.Fill(background);
 		d.Quad(dimensions);
+
+		if (font == "")
+			return;
+
+		d.Fill(text);
+		d.TextAlign(textAlign);
+		d.FontSize(textSize);
+		d.Font(font);
+		d.Text(title, { x + height, y + height / 2 });
 	}
 
 	bool Frame::TitleBar::Hitbox(const Vec2<float>& v) const
@@ -37,20 +48,18 @@ namespace GuiCode
 	}
 	
 	Frame::Frame(const WindowData& data)
-		: Window(data)
+		: Window(data), titlebar(info.name)
 	{
 		titlebar.close.callback = [this]() { State<Visible>(Close); };
 		titlebar.minimize.callback = [this]() { State<Visible>(Minimize); };
 		titlebar.maximize.callback = [this]() { State<Visible>() == Maximize ? State<Visible>(Show) : State<Visible>(Maximize); };
 
-		titlebar.close.hover = { 255, 0, 0, 111 };
-		titlebar.close.press = { 170, 0, 0, 111 };
+		titlebar.close.color.base = { 255, 0, 0, 0 };
+		titlebar.close.color.State<Pressed>({ 170, 0, 0, 111 });
+		titlebar.close.color.State<Hovering>({ 255, 0, 0, 111 });
 		titlebar.close.render = [this](CommandCollection& d)
 		{
-			if (titlebar.close.State<Pressed>()) d.Fill(titlebar.close.press);
-			else if (titlebar.close.State<Hovering>()) d.Fill(titlebar.close.hover);
-			else d.Fill({ 0, 0, 0, 0 });
-
+			d.Fill(titlebar.close.color.Current());
 			d.Quad(titlebar.close.dimensions);
 
 			d.Fill({ 255, 255, 255, 255 });
@@ -61,14 +70,12 @@ namespace GuiCode
 			d.Line({ centerx - pad, centery + pad, centerx + pad, centery - pad }, 1.7);
 		};
 
-		titlebar.minimize.hover = { 128, 128, 128, 92 };
-		titlebar.minimize.press = { 128, 128, 128, 92 };
+		titlebar.minimize.color.base = { 128, 128, 128, 0 };
+		titlebar.minimize.color.State<Pressed>({ 128, 128, 128, 92 });
+		titlebar.minimize.color.State<Hovering>({ 128, 128, 128, 92 });
 		titlebar.minimize.render = [this](CommandCollection& d)
 		{
-			if (titlebar.minimize.State<Pressed>()) d.Fill(titlebar.minimize.press);
-			else if (titlebar.minimize.State<Hovering>()) d.Fill(titlebar.minimize.hover);
-			else d.Fill({ 0, 0, 0, 0 });
-
+			d.Fill(titlebar.minimize.color.Current());
 			d.Quad(titlebar.minimize.dimensions);
 
 			d.Fill({ 255, 255, 255, 255 });
@@ -77,14 +84,12 @@ namespace GuiCode
 			d.Quad({ centerx - 5, centery, 10, 1 });
 		};
 
-		titlebar.maximize.hover = { 128, 128, 128, 92 };
-		titlebar.maximize.press = { 128, 128, 128, 92 };
+		titlebar.maximize.color.base = { 128, 128, 128, 0 };
+		titlebar.maximize.color.State<Pressed>({ 128, 128, 128, 92 });
+		titlebar.maximize.color.State<Hovering>({ 128, 128, 128, 92 });
 		titlebar.maximize.render = [this](CommandCollection& d)
 		{
-			if (titlebar.maximize.State<Pressed>()) d.Fill(titlebar.maximize.press);
-			else if (titlebar.maximize.State<Hovering>()) d.Fill(titlebar.maximize.hover);
-			else d.Fill({ 0, 0, 0, 0 });
-
+			d.Fill(titlebar.maximize.color.Current());
 			d.Quad(titlebar.maximize.dimensions);
 
 			d.Fill({ 255, 255, 255, 255 });

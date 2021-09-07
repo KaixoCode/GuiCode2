@@ -1,85 +1,108 @@
-//#include "GuiCode/ui/components/text/TextArea.hpp"
-//
-//// --------------------------------------------------------------------------
-//// ------------------------------- TextArea ---------------------------------
-//// --------------------------------------------------------------------------
-//
-//TextArea::TextArea()
-//    : m_Displayer(Panel<TextDisplayer>())
-//{
-//    m_Listener += [this](Event::MousePressed& e)
-//    {
-//        if (e.button != Event::MouseButton::LEFT)
-//            return;
-//
-//        m_Mouse = { e.x, e.y };
-//    };
-//
-//    m_Listener += [this](Event::MouseDragged& e)
-//    {
-//        if (e.button != Event::MouseButton::LEFT)
-//            return;
-//
-//        m_Mouse = { e.x, e.y };
-//    };
-//
-//    m_Listener += [this](Event::KeyPressed& e)
-//    {
-//        UpdateScroll();
-//    };
-//
-//    m_Listener += [this](Event::KeyTyped& e)
-//    {
-//        UpdateScroll();
-//    };
-//
-//    Background(Color{ 255, 255, 255, 255 });
-//    EnableScrollbars(false, true);
-//    m_Displayer.TextWrap(TextDisplayer::Wrap::Word);
-//}
-//
-//void TextArea::Update(const Vec4<int>& v)
-//{
-//    ScrollPanel::Update(v);
-//
-//    if (Focused())
-//    {
-//        m_FocusedComponent = &m_Displayer;
-//        m_Displayer.Focused(true);
-//    }
-//
-//    if (m_Displayer.Dragging())
-//    {
-//        if (m_EnableY && m_Mouse.y < Height() * 0.1)
-//            m_ScrollbarY->Scroll(5 * 0.02 * ((Height() * 0.1 - m_Mouse.y)));
-//
-//        if (m_EnableY && m_Mouse.y > Height() - Height() * 0.1)
-//            m_ScrollbarY->Scroll(-5 * 0.02 * ((m_Mouse.y - (Height() - Height() * 0.1))));
-//
-//        if (m_EnableX && m_Mouse.x < Width() * 0.1)
-//            m_ScrollbarX->Scroll(-5 * 0.02 * ((Width() * 0.1 - m_Mouse.x)));
-//
-//        if (m_EnableX && m_Mouse.x > Width() - Width() * 0.1)
-//            m_ScrollbarX->Scroll(5 * 0.02 * ((m_Mouse.x - (Width() - Width() * 0.1))));
-//    }
-//}
-//
-//void TextArea::UpdateScroll()
-//{
-//    auto pos = m_Displayer.IndexToPosition(m_Displayer.Container().Selection().start);
-//    pos.y = m_Displayer.Height() - pos.y;
-//
-//    if (pos.y > m_ScrollbarY->Value() + Height() - m_Displayer.Padding() * 2 - m_Displayer.LineHeight()) {
-//        m_ScrollbarY->Value(pos.y - Height() + m_Displayer.Padding() * 2 + m_Displayer.LineHeight());
-//    }
-//    else if (pos.y < m_ScrollbarY->Value() + m_Displayer.Padding()) {
-//        m_ScrollbarY->Value(pos.y - m_Displayer.Padding());
-//    }
-//
-//    if (pos.x > m_ScrollbarX->Value() + Width() - m_Displayer.Padding() * 2) {
-//        m_ScrollbarX->Value(pos.x - Width() + m_Displayer.Padding() * 2);
-//    }
-//    else if (pos.x < m_ScrollbarX->Value() + m_Displayer.Padding()) {
-//        m_ScrollbarX->Value(pos.x - m_Displayer.Padding());
-//    }
-//}
+#include "GuiCode2/TextArea.hpp"
+
+namespace GuiCode
+{
+	TextArea::TextArea()
+		: Panel{ {.ratio = 1, .overflow = Overflow::Scroll } },
+		align(displayer.align),
+		container(displayer.container),
+		font(displayer.font),
+		fontSize(displayer.fontSize),
+		lineHeight(displayer.lineHeight),
+		placeholder(displayer.placeholder),
+		textColor(displayer.textColor),
+		selectColor(displayer.selectColor),
+		wrap(displayer.wrap)
+	{
+		panels.push_back({ {.ratio = 0, .size{ Auto, Auto } }, displayer });
+		components.emplace_back(&*panels.begin());
+
+		listener += [this](const MousePress& e)
+		{
+			if (e.button != MouseButton::Left || scrollbar.x.State<Hovering>() || scrollbar.y.State<Hovering>())
+				return;
+
+			m_Mouse = e.pos - position;
+			UpdateScroll();
+			m_Dragging = true;
+		};
+
+		listener += [this](const MouseRelease& e)
+		{			
+			if (e.button != MouseButton::Left)
+				return;
+
+			m_Dragging = false;
+		};
+
+		listener += [this](const MouseDrag& e)
+		{
+			m_Mouse = e.pos - position;
+		};
+
+		listener += [this](const KeyPress& e)
+		{
+			if (e.Handled())
+				m_Update = 2;
+		};
+
+		listener += [this](const KeyType& e)
+		{
+			if (e.Handled())
+				m_Update = 2;
+		};
+	}
+
+	void TextArea::Update() 
+	{
+		displayer.min = size - Vec2<float>{ scrollbar.y.width* scrollbar.y.Necessary(), scrollbar.x.height* scrollbar.x.Necessary() };
+		if (displayer.wrap != Wrap::None)
+			displayer.width = width - scrollbar.y.width * scrollbar.y.Necessary();
+
+		if (m_Update)
+		{
+			m_Update--;
+			UpdateScroll();
+		}
+
+		if (m_Dragging & MouseButton::Left)
+		{
+			if (m_Mouse.y < height * 0.1)
+				scrollbar.y.value += -5 * 0.02 * (height * 0.1 - m_Mouse.y);
+
+			if (m_Mouse.y > height - height * 0.1)
+				scrollbar.y.value += 5 * 0.02 * (m_Mouse.y - (height - height * 0.1));
+
+			if (m_Mouse.x < width * 0.1)
+				scrollbar.x.value += -5 * 0.02 * (width * 0.1 - m_Mouse.x);
+
+			if (m_Mouse.x > width - width * 0.1)
+				scrollbar.x.value += 5 * 0.02 * (m_Mouse.x - (width - width * 0.1));
+
+			scrollbar.x.ConstrainValue();
+			scrollbar.y.ConstrainValue();
+		}
+	}
+
+	void TextArea::UpdateScroll()
+	{
+		auto pos = displayer.IndexToPosition(container.selection.start);
+		pos.x -= displayer.x;
+		pos.y -= displayer.y;
+
+		if (pos.y > scrollbar.y.value + height - displayer.lineHeight - scrollbar.x.height)
+			scrollbar.y.value = pos.y - height + displayer.lineHeight + scrollbar.x.height;
+
+		else if (pos.y < scrollbar.y.value)
+			scrollbar.y.value = pos.y;
+
+		if (pos.x > scrollbar.x.value + width - 2 - scrollbar.y.width)
+			scrollbar.x.value = pos.x - width + 2 + scrollbar.y.width;
+
+		else if (pos.x < scrollbar.x.value + 2)
+			scrollbar.x.value = pos.x - 2;
+
+		scrollbar.x.ConstrainValue();
+		scrollbar.y.ConstrainValue();
+	}
+}

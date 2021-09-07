@@ -32,6 +32,7 @@ namespace GuiCode
 	struct WindowInfo
 	{
 		bool hideOnClose = false;
+		std::string name;
 	};
 
 
@@ -42,6 +43,7 @@ namespace GuiCode
 		WindowBase(const WindowData& d)
 		{
 			windowId = m_WindowIdCounter++;
+			info.name = d.name;
 		}
 
 		virtual bool Loop() = 0;

@@ -121,13 +121,18 @@ namespace GuiCode
 	{
 		if (component)
 		{
-			component->dimensions =
-			{
-				x + settings.padding.left,
-				y + settings.padding.top,
-				width - settings.padding.left - settings.padding.right,
-				height - settings.padding.top - settings.padding.bottom
-			};
+			if (settings.size.x == Auto)
+				width = component->width + settings.padding.left + settings.padding.right;
+			else
+				component->width = width - settings.padding.left - settings.padding.right;
+
+			if (settings.size.y == Auto)
+				height = component->height + settings.padding.top + settings.padding.bottom;
+			else
+				component->height = height - settings.padding.top - settings.padding.bottom;
+
+			component->x = x + settings.padding.left;
+			component->y = y + settings.padding.top;
 		}
 		else
 		{
@@ -137,12 +142,12 @@ namespace GuiCode
 			Vec2<float> _scrollTranslate{ 0, 0 };
 			Vec2<float> _scrollbarOffsets{ 0, 0 };
 
-			if (settings.overflow.x == Overflow::Scroll)
+			if (settings.overflow.y != Overflow::Show)
 				if (scrollbar.x.Necessary())
 					_scrollTranslate.x = -scrollbar.x.value,
 					_scrollbarOffsets.y = scrollbar.x.height;
 
-			if (settings.overflow.y == Overflow::Scroll)
+			if (settings.overflow.y != Overflow::Show)
 				if (scrollbar.y.Necessary())
 					_scrollTranslate.y = -scrollbar.y.value,
 					_scrollbarOffsets.x = scrollbar.y.width;
@@ -470,12 +475,7 @@ namespace GuiCode
 
 	void Panel::ForwardUpdate()
 	{
-		RefreshScrollbars();
-
-		RefreshLayout();
-
-		scrollbar.x.State<Visible>(scrollbar.x.Necessary() && settings.overflow.x == Overflow::Scroll);
-		scrollbar.y.State<Visible>(scrollbar.y.Necessary() && settings.overflow.y == Overflow::Scroll);
+		Update();
 		scrollbar.x.ForwardUpdate();
 		scrollbar.y.ForwardUpdate();
 
@@ -485,6 +485,13 @@ namespace GuiCode
 		else
 			for (auto& _s : panels)
 				_s.ForwardUpdate();
+
+		RefreshLayout();
+
+		RefreshScrollbars();
+
+		scrollbar.x.State<Visible>(scrollbar.x.Necessary() && settings.overflow.x == Overflow::Scroll);
+		scrollbar.y.State<Visible>(scrollbar.y.Necessary() && settings.overflow.y == Overflow::Scroll);
 	}
 
 	void Panel::ForwardRender(CommandCollection& d)
@@ -513,6 +520,8 @@ namespace GuiCode
 				height - _scrollbarOffsets.y
 			});
 		}
+
+		Render(d);
 
 		if (component)
 			component->ForwardRender(d);

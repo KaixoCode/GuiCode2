@@ -14,8 +14,7 @@ namespace GuiCode
 		public:
 			Button();
 
-			Color hover;
-			Color press;
+			StateColors color;
 			std::function<void(void)> callback;
 			std::function<void(CommandCollection&)> render;
 
@@ -29,11 +28,16 @@ namespace GuiCode
 		class TitleBar : public Component
 		{
 		public:
-			TitleBar();
+			TitleBar(std::string& title);
 
-			Color color{ 26, 26, 26, 255 };
+			Color background{ 26, 26, 26, 255 };
+			Color text{ 255, 255, 255, 255 };
 			Button close, maximize, minimize;
-			
+			std::string& title;
+			float textSize = 14;
+			int textAlign = Align::Left | Align::CenterY;
+			std::string_view font;
+
 			void Update() override;
 			void Render(CommandCollection& d) const override;
 			bool Hitbox(const Vec2<float>& v) const override;

@@ -187,7 +187,7 @@ namespace GuiCode
 
 	private:
 		std::list<Component*>* components = nullptr;
-		std::vector<std::unique_ptr<EventFunctionBase>> m_Listeners;
+		std::list<std::unique_ptr<EventFunctionBase>> m_Listeners;
 		std::map<int, StateHandler> m_StateHandlers;
 	};
 }

@@ -43,13 +43,12 @@ namespace GuiCode
 
 			Character& Char(char c)
 			{
-				return m_CharMap.at(c);
+				return m_CharMap[c];
 			}
 
-			float Height()
-			{
-				return m_Face->height >> 6;
-			}
+			float Height() { return m_Ascender - m_Descender; }
+			float Ascender() { return m_Ascender; }
+			float Descender() { return m_Descender; }
 
 			unsigned int texture;
 
@@ -62,6 +61,10 @@ namespace GuiCode
 				glGenTextures(1, &texture);
 				glBindTexture(GL_TEXTURE_2D_ARRAY, texture);
 				glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RED, m_Size, m_Size, 128, 0, GL_RED, GL_UNSIGNED_BYTE, 0);
+
+				m_Ascender = m_Face->size->metrics.ascender / 64.;
+				m_Descender = m_Face->size->metrics.descender / 64.;
+				m_Height = m_Face->size->metrics.height / 64.;
 
 				unsigned char* empty = new unsigned char[m_Size * m_Size];
 				for (int i = 0; i < m_Size * m_Size; i++)
@@ -117,8 +120,11 @@ namespace GuiCode
 			}
 
 			Character nullchar;
-			std::map<char, Character> m_CharMap;
+			Character m_CharMap[128];
 			int m_Size;
+			float m_Ascender;
+			float m_Descender;
+			float m_Height;
 			FT_Face& m_Face;
 		};
 

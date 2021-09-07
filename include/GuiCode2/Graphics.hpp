@@ -24,8 +24,8 @@ namespace GuiCode
         };
 
         const enum Type : char {
-            Fill = 0, Clip, PushClip, PopClip, ClearClip, Translate, PushMatrix,
-            PopMatrix, Viewport, Line, Quad, Ellipse, Triangle, Text, TextSize, Font, TextAlign
+            Fill = 0, Clip, PushClip, PopClip, ClearClip, Translate, PushMatrix, PopMatrix, 
+            Viewport, Line, Quad, Ellipse, Triangle, Text, FontSize, Font, TextAlign, LineHeight
         } type;
     };
 
@@ -34,24 +34,26 @@ namespace GuiCode
         std::queue<Command>& Get() { return m_Commands; }
 
         void Fill(const Color& a) { m_Commands.push(Command{ .color = a, .type = Command::Fill }); };
-        void Clip(const Vec4<float>& a) { m_Commands.push(Command{.a = a, .type = Command::Clip }); };
-        void PushClip() { m_Commands.push(Command{ .type = Command::PushClip }); };
-        void PopClip() { m_Commands.push(Command{ .type = Command::PopClip }); };
-        void ClearClip() { m_Commands.push(Command{ .type = Command::ClearClip }); };
+        void Clip(const Vec4<float>& a) { viewport = viewport.Overlap(a); m_Commands.push(Command{ .a = a, .type = Command::Clip }); };
+        void PushClip() { m_ViewportStack.push(viewport); m_Commands.push(Command{ .type = Command::PushClip }); };
+        void PopClip() { viewport = m_ViewportStack.top(); m_ViewportStack.pop(); m_Commands.push(Command{ .type = Command::PopClip }); };
         void Translate(const Vec2<float>& a) { m_Commands.push(Command{ .as = {.a = a }, .type = Command::Translate }); };
         void PushMatrix() { m_Commands.push(Command{ .type = Command::PushMatrix }); };
         void PopMatrix() { m_Commands.push(Command{ .type = Command::PopMatrix }); };
         void Viewport(const Vec4<float>& a) { m_Commands.push(Command{.a = a, .type = Command::Viewport }); };
         void Line(const Vec4<float>& a, float thickness) { m_Commands.push(Command{.a = a, .bs = {.a = thickness }, .type = Command::Line }); };
         void Quad(const Vec4<float>& a, float b = 0) { m_Commands.push(Command{ .a = a, .bs = {.a = b }, .type = Command::Quad }); };
-        void Ellipse(const Vec4<float>& a, const Vec2<float>& b) { m_Commands.push(Command{ .a = a, .b = b, .type = Command::Ellipse }); };
+        void Ellipse(const Vec4<float>& a, const Vec2<float>& b = { 0, 0 }) { m_Commands.push(Command{ .a = a, .b = b, .type = Command::Ellipse }); };
         void Triangle(const Vec4<float>& a, float b = 0) { m_Commands.push(Command{ .a = a, .bs{.a = b }, .type = Command::Triangle }); };
         void Text(std::string_view str, const Vec2<float>& b) { m_Commands.push(Command{.view = str, .b = b, .type = Command::Text }); };
         void Font(std::string_view str) { m_Commands.push(Command{.view = str, .type = Command::Font }); };
         void TextAlign(int align) { m_Commands.push(Command{ .as3 = {.a = align }, .type = Command::TextAlign }); };
-        void TextSize(float size) { m_Commands.push(Command{ .as2 = {.a = size }, .type = Command::TextSize }); };
+        void FontSize(float size) { m_Commands.push(Command{ .as2 = {.a = size }, .type = Command::FontSize }); };
+        void LineHeight(float mult) { m_Commands.push(Command{ .as2 = {.a = mult }, .type = Command::FontSize }); };
 
+        Vec4<float> viewport;
     private:
+        std::stack<Vec4<float>> m_ViewportStack;
         std::queue<Command> m_Commands;
     };
 
@@ -101,7 +103,8 @@ namespace GuiCode
         virtual void Text(std::string_view, const glm::vec2&) = 0;
         virtual void Font(std::string_view) = 0;
         virtual void TextAlign(int) = 0;
-        virtual void TextSize(float) = 0;
+        virtual void FontSize(float) = 0;
+        virtual void LineHeight(float) = 0;
         virtual void Clip(const glm::vec4&) = 0;
         virtual void PushClip() = 0;
         virtual void PopClip() = 0;
@@ -145,7 +148,8 @@ namespace GuiCode
         void Text(std::string_view, const glm::vec2&) override;
         void Font(std::string_view) override;
         void TextAlign(int) override;
-        void TextSize(float) override;
+        void FontSize(float) override;
+        void LineHeight(float) override;
         void Clip(const glm::vec4&) override;
         void PushClip() override;
         void PopClip() override;
@@ -154,7 +158,8 @@ namespace GuiCode
 
         int m_PreviousShader = -1;
         Color m_Fill{ 1, 1, 1, 1 };
-        float m_TextSize = 16;
+        float m_FontSize = 16;
+        float m_LineHeight = 1.2;
         int m_TextAlign = Align::Left | Align::Bottom;
 
         GuiCode::Font* m_CurrentFont = nullptr;
