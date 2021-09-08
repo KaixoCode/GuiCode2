@@ -55,6 +55,18 @@ namespace GuiCode
 		components.sort([](Component* a, Component* b) { return a->zIndex > b->zIndex; });
 	}
 
+	Component* Component::Get(int state)
+	{
+		for (auto& i : components)
+			if (auto _c = i->Get(state))
+				return _c;
+
+		if (State(state))
+			return this;
+
+		return nullptr;
+	}
+
 	void Component::ForwardRender(CommandCollection& d)
 	{
 		d.PushClip();

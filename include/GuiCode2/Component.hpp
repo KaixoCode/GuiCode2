@@ -15,6 +15,11 @@ namespace GuiCode
 		Hovering, Focused, Pressed, Visible
 	};
 
+	enum Cursor
+	{
+		Arrow, IBeam, Crosshair, Hand, HResize, VResize
+	};
+
 	/**
 	 * Base class for objects that receive events, have state, and are drawable.
 	 */
@@ -39,6 +44,8 @@ namespace GuiCode
 		 * state handlers through this object.
 		 */
 		EventListener listener;
+
+		uint8_t cursor = Cursor::Arrow;
 
 		/**
 		 * Return's true when the position in within this 
@@ -79,6 +86,8 @@ namespace GuiCode
 		template<int state>
 		void State(int value) { m_States[state] = value; }
 		void State(int state, int value) { m_States[state] = value; }
+
+		virtual Component* Get(int state);
 
 		virtual void ForwardRender(CommandCollection& d);
 		virtual void ForwardUpdate();

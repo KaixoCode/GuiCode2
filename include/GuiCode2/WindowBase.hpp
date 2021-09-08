@@ -15,7 +15,6 @@ namespace GuiCode
 		Dimensions dimensions{ 0, 0, 500, 500 };
 		bool alwaysOnTop = false;
 		bool transparentBuffer = false;
-		bool hideOnClose = false;
 		int state = Show;
 		bool resizeable = true;
 		bool decorated = true;
@@ -31,11 +30,8 @@ namespace GuiCode
 
 	struct WindowInfo
 	{
-		bool hideOnClose = false;
 		std::string name;
 	};
-
-
 
 	class WindowBase : public Component
 	{

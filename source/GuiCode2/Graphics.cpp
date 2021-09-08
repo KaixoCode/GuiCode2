@@ -114,6 +114,22 @@ namespace GuiCode
         return out;
     }
 
+
+    void GraphicsBase::LoadFont(const char* name)
+    {
+        using namespace std::string_literals;
+        std::string _noExtension = "C:/Windows/Fonts/"s + name;
+        std::filesystem::path _font = _noExtension + ".ttf";
+
+        if (std::filesystem::exists(_font))
+            m_Fonts.emplace(name, GuiCode::Font{ _font.string() });
+    }
+
+    void GraphicsBase::LoadFont(const std::string& path, const char* name)
+    {
+        m_Fonts.emplace(name, GuiCode::Font{ path });
+    }
+
     void GraphicsBase::Translate(const glm::vec2& v)
     {
         m_Matrix = glm::translate(m_Matrix, glm::vec3(v.x, v.y, 0));
@@ -195,11 +211,6 @@ namespace GuiCode
         }
 
         m_PreviousShader = -1;
-    }
-
-    void OpenGL::LoadFont(const std::string& path, std::string_view name)
-    {
-        m_Fonts.emplace(name, GuiCode::Font{ path });
     }
 
     void OpenGL::FontSize(float size)
@@ -673,7 +684,7 @@ namespace GuiCode
             "in vec2 texpos;                                                                                        \n"
             "                                                                                                       \n"
             "void main() {                                                                                          \n"
-            "    float sampled = texture(Texture, vec3(texpos, theTexture)).r;                                      \n"
+            "    float sampled = texture(Texture, vec3(texpos.x, texpos.y, theTexture)).r;                                      \n"
             "    col.rgb = color.rgb; col.a = color.a * sampled;                                                    \n"
             "}",
         };

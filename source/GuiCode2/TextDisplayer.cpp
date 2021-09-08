@@ -6,6 +6,8 @@ namespace GuiCode
 	TextDisplayer::TextDisplayer()
 		: container()
 	{
+		cursor = Cursor::IBeam;
+
 		listener += [this](const KeyPress& e)
 		{
 			if (!State<Focused>())

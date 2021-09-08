@@ -25,7 +25,7 @@ namespace GuiCode
 
         const enum Type : char {
             Fill = 0, Clip, PushClip, PopClip, ClearClip, Translate, PushMatrix, PopMatrix, 
-            Viewport, Line, Quad, Ellipse, Triangle, Text, FontSize, Font, TextAlign, LineHeight
+            Viewport, Line, Quad, Ellipse, Triangle, Text, FontSize, Font, TextAlign, LineHeight, 
         } type;
     };
 
@@ -66,7 +66,8 @@ namespace GuiCode
 
         virtual void Render() = 0;
         virtual void SetProjection(const glm::mat4& proj);
-        virtual void LoadFont(const std::string& path, std::string_view name) = 0;
+        virtual void LoadFont(const std::string& path, const char* name);
+        virtual void LoadFont(const char* name);
 
         static inline float CharWidth(const char c, const std::string_view& font, float size)
         {
@@ -128,8 +129,6 @@ namespace GuiCode
     public:
         OpenGL();
         void Render() override;
-
-        void LoadFont(const std::string& path, std::string_view name) override;
 
     private:
         glm::vec4 FlipY(const glm::vec4& v) { return { v.x, m_Size.height - v.y - v.w, v.z, v.w }; };

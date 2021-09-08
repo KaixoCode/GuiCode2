@@ -239,8 +239,8 @@ int main()
 
 	TextArea _text{};
 	_text.font = "segoeui";
-	_text.lineHeight = 14;
-	_text.fontSize = 14;
+	_text.lineHeight = 64;
+	_text.fontSize = 64;
 	_text.wrap = Wrap::Word;
 	_text.container.content = "apple juice";
 	_text.textColor = { 255, 255, 255 };
@@ -248,6 +248,13 @@ int main()
 	_text.scrollbar.y.background = 0x469c74;
 	_text.scrollbar.x.bar.base = 0x67e6ab;
 	_text.scrollbar.y.bar.base = 0x67e6ab;
+
+	_text.scrollbar.x.background =
+	_text.scrollbar.y.background = 0x4ba67c;
+	_text.scrollbar.x.bar.base = 0x40916C;
+	_text.scrollbar.x.bar.State<Pressed>(0x327356);
+	_text.scrollbar.x.bar.State<Hovering>(0x3b8765);
+	_text.scrollbar.y.bar = _text.scrollbar.x.bar;
 
 	window.panel = {
 		{

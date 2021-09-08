@@ -58,21 +58,30 @@ namespace GuiCode
 				FT_Set_Pixel_Sizes(m_Face, 0, m_Size);
 				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
+				int _width = m_Size;
+				int _height = m_Size;
+	
 				glGenTextures(1, &texture);
 				glBindTexture(GL_TEXTURE_2D_ARRAY, texture);
-				glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RED, m_Size, m_Size, 128, 0, GL_RED, GL_UNSIGNED_BYTE, 0);
+				glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RED, _width, _height, 128, 0, GL_RED, GL_UNSIGNED_BYTE, 0);
 
 				m_Ascender = m_Face->size->metrics.ascender / 64.;
 				m_Descender = m_Face->size->metrics.descender / 64.;
 				m_Height = m_Face->size->metrics.height / 64.;
 
-				unsigned char* empty = new unsigned char[m_Size * m_Size];
-				for (int i = 0; i < m_Size * m_Size; i++)
+				unsigned char* empty = new unsigned char[_width * _height];
+				for (int i = 0; i < _width * _height; i++)
 					empty[i] = 0;
 
 				for (int _c = 0; _c < 128; _c++)
 				{
-					if (FT_Load_Char(m_Face, _c, FT_LOAD_RENDER))
+					if (FT_Load_Char(m_Face, _c, FT_LOAD_DEFAULT))
+					{
+						LOG("ERROR::FREETYTPE: Failed to load Glyph");
+						continue;
+					}
+
+					if (FT_Render_Glyph(m_Face->glyph, FT_RENDER_MODE_NORMAL))
 					{
 						LOG("ERROR::FREETYTPE: Failed to load Glyph");
 						continue;
@@ -85,14 +94,11 @@ namespace GuiCode
 						static_cast<unsigned int>(m_Face->glyph->advance.x)
 					};
 
-					int _xpos = _character.bearing.x;
-					int _ypos = _character.size.y - _character.bearing.y;
-
 					glTexSubImage3D(
 						GL_TEXTURE_2D_ARRAY,
 						0, 0, 0, _c,
-						m_Size,
-						m_Size,
+						_width,
+						_height,
 						1, GL_RED,
 						GL_UNSIGNED_BYTE,
 						empty
@@ -100,7 +106,7 @@ namespace GuiCode
 
 					glTexSubImage3D(
 						GL_TEXTURE_2D_ARRAY,
-						0, 0, m_Size - _character.size.y, _c,
+						0, 0, _height - _character.size.y, _c,
 						m_Face->glyph->bitmap.width,
 						m_Face->glyph->bitmap.rows,
 						1, GL_RED,

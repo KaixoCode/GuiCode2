@@ -44,7 +44,6 @@ namespace GuiCode
     WindowsWindow::WindowsWindow(const WindowData& data)
         : WindowBase(data)
     {
-        info.hideOnClose = data.hideOnClose;
         dimensions = data.dimensions.dimensions;
         
         if (m_WindowCount == 0 && !glfwInit())
@@ -135,8 +134,7 @@ namespace GuiCode
         if (m_PrevVisibility != _visible)
         {
             int _cmd = 0;
-            if (_visible == Close && info.hideOnClose) ShowWindow(GetWin32Handle(), SW_HIDE);
-            else if (_visible == Close) return false;
+            if (_visible == Close) return false;
             else if (_visible == Show && m_PrevVisibility == Hide) ShowWindow(GetWin32Handle(), SW_SHOW);
             else if (_visible == Show && m_PrevVisibility == Minimize) ShowWindow(GetWin32Handle(), SW_RESTORE);
             else if (_visible == Show && m_PrevVisibility == Maximize) ShowWindow(GetWin32Handle(), SW_RESTORE);
@@ -179,6 +177,10 @@ namespace GuiCode
             //WindowFocused(GetForegroundWindow() == GetWin32Handle());
 
             ForwardUpdate();
+
+            auto _c = Get(Hovering);
+            if (_c)
+                UpdateCursor(_c->cursor);
         }
 
         if (_visible)
@@ -206,6 +208,36 @@ namespace GuiCode
 
         return true;
     }
+
+    void WindowsWindow::UpdateCursor(int c)
+    {
+        if (m_Cursorid == c)
+            return;
+
+        m_Cursorid = c;
+
+        if (m_GLFWCursor)
+            glfwDestroyCursor(m_GLFWCursor);
+        if (m_Cursorid == -1)
+            glfwSetCursor(m_Window, m_GLFWCursor = glfwCreateStandardCursor(GLFW_CURSOR_NORMAL));
+        else
+        {
+            int _glfwId = GLFW_CURSOR_NORMAL;
+            switch (c)
+            {
+            case Cursor::Arrow: _glfwId = GLFW_CURSOR_NORMAL; break;
+            case Cursor::Crosshair: _glfwId = GLFW_CROSSHAIR_CURSOR; break;
+            case Cursor::Hand: _glfwId = GLFW_HAND_CURSOR; break;
+            case Cursor::HResize: _glfwId = GLFW_HRESIZE_CURSOR; break;
+            case Cursor::VResize: _glfwId = GLFW_VRESIZE_CURSOR; break;
+            case Cursor::IBeam: _glfwId = GLFW_IBEAM_CURSOR; break;
+            }
+
+            glfwSetCursor(m_Window,
+                (m_GLFWCursor = glfwCreateStandardCursor(_glfwId)));
+        }
+    }
+
 
     // Hit test the frame for resizing and moving.
     LRESULT HitTestNCA(HWND hWnd, int x, int y, float scale)
