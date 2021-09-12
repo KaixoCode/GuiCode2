@@ -14,9 +14,8 @@ namespace GuiCode
 		selectColor(displayer.selectColor),
 		wrap(displayer.wrap)
 	{
-		panels.push_back({ {.ratio = 0, .size{ Auto, Auto } }, displayer });
-		components.emplace_back(&*panels.begin());
-
+		panels.Emplace({ {.ratio = 0, .size{ Auto, Auto } }, displayer });
+		
 		listener += [this](const MousePress& e)
 		{
 			if (e.button != MouseButton::Left || scrollbar.x.State<Hovering>() || scrollbar.y.State<Hovering>())

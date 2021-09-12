@@ -12,9 +12,8 @@ namespace GuiCode
 		textColor(displayer.textColor),
 		selectColor(displayer.selectColor)
 	{
-		panels.push_back({ {.ratio = 0, .size{ Auto, Auto } }, displayer });
-		components.emplace_back(&*panels.begin());
-	
+		panels.Emplace({ {.ratio = 0, .size{ Auto, Auto } }, displayer });
+		
 		listener += [this](const MousePress& e)
 		{
 			m_Mouse = e.pos - position;

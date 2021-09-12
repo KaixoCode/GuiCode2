@@ -34,7 +34,7 @@ namespace GuiCode
 			Color text{ 255, 255, 255, 255 };
 			Button close, maximize, minimize;
 			std::string& title;
-			float textSize = 14;
+			float textSize = 12;
 			int textAlign = Align::Left | Align::CenterY;
 			std::string_view font;
 

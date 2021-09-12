@@ -684,8 +684,11 @@ namespace GuiCode
             "in vec2 texpos;                                                                                        \n"
             "                                                                                                       \n"
             "void main() {                                                                                          \n"
-            "    float sampled = texture(Texture, vec3(texpos.x, texpos.y, theTexture)).r;                                      \n"
-            "    col.rgb = color.rgb; col.a = color.a * sampled;                                                    \n"
+            "    vec3 sampled = texture(Texture, vec3(texpos.x, texpos.y, theTexture)).rgb;                         \n"
+            "    col.a = (sampled.r + sampled.g + sampled.b) / 3;                                                   \n"
+            "    col.r = sampled.r * color.r;                     \n"
+            "    col.g = sampled.g * color.g;                     \n"
+            "    col.b = sampled.b * color.b;                     \n"
             "}",
         };
 

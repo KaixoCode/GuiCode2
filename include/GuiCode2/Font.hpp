@@ -63,14 +63,14 @@ namespace GuiCode
 	
 				glGenTextures(1, &texture);
 				glBindTexture(GL_TEXTURE_2D_ARRAY, texture);
-				glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RED, _width, _height, 128, 0, GL_RED, GL_UNSIGNED_BYTE, 0);
+				glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA, _width, _height, 128, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
 				m_Ascender = m_Face->size->metrics.ascender / 64.;
 				m_Descender = m_Face->size->metrics.descender / 64.;
 				m_Height = m_Face->size->metrics.height / 64.;
 
-				unsigned char* empty = new unsigned char[_width * _height];
-				for (int i = 0; i < _width * _height; i++)
+				unsigned char* empty = new unsigned char[_width * _height * 4];
+				for (int i = 0; i < _width * _height * 4; i++)
 					empty[i] = 0;
 
 				for (int _c = 0; _c < 128; _c++)
@@ -81,7 +81,7 @@ namespace GuiCode
 						continue;
 					}
 
-					if (FT_Render_Glyph(m_Face->glyph, FT_RENDER_MODE_NORMAL))
+					if (FT_Render_Glyph(m_Face->glyph, FT_RENDER_MODE_LCD))
 					{
 						LOG("ERROR::FREETYTPE: Failed to load Glyph");
 						continue;
@@ -89,29 +89,49 @@ namespace GuiCode
 
 					Character _character = {
 						_c,
-						{ m_Face->glyph->bitmap.width, m_Face->glyph->bitmap.rows },
+						{ m_Face->glyph->bitmap.width / 3, m_Face->glyph->bitmap.rows },
 						{ m_Face->glyph->bitmap_left, m_Face->glyph->bitmap_top },
 						static_cast<unsigned int>(m_Face->glyph->advance.x)
 					};
+					
+					// Coords of small array
+					int subx = 0;
+					int suby = -(_height - _character.size.y); // Initial offset for y
+					for (int y = 0; y < _height; y++)
+					{
+						for (int x = 0; x < _width * 4; x++)
+						{
+							// Default value = 0
+							unsigned char value = 0;
+
+							// Don't get alpha values, because they don't exist
+							bool notAlpha = (x % 4) != 3;
+
+							// Make sure subx and suby within boundaries
+							if (notAlpha && subx < m_Face->glyph->bitmap.width && suby >= 0 && suby < m_Face->glyph->bitmap.rows)
+							{
+								// Sub index using amount of bytes * y + x
+								int subindex = suby * m_Face->glyph->bitmap.pitch + subx;
+								value = m_Face->glyph->bitmap.buffer[subindex];
+								subx++; // Increment the x
+							}
+
+							// Index in bigger array
+							int index = y * (_width * 4) + x;
+							empty[index] = value;
+						}
+						subx = 0; // reset x
+						suby++;   // increment y
+					}
 
 					glTexSubImage3D(
 						GL_TEXTURE_2D_ARRAY,
 						0, 0, 0, _c,
 						_width,
 						_height,
-						1, GL_RED,
+						1, GL_RGBA,
 						GL_UNSIGNED_BYTE,
 						empty
-					);
-
-					glTexSubImage3D(
-						GL_TEXTURE_2D_ARRAY,
-						0, 0, _height - _character.size.y, _c,
-						m_Face->glyph->bitmap.width,
-						m_Face->glyph->bitmap.rows,
-						1, GL_RED,
-						GL_UNSIGNED_BYTE,
-						m_Face->glyph->bitmap.buffer
 					);
 
 					m_CharMap[_c] = _character;

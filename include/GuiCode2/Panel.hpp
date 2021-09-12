@@ -132,7 +132,26 @@ namespace GuiCode
 
 		Settings settings;
 		Component* component = nullptr;
-		std::list<Panel> panels;
+		struct Panels
+		{
+			Panels(Panel& me, const std::list<Panel>& data = {});
+
+			Panel& Emplace(Panel&& panel);
+
+			void Remove(int index);
+			void Remove(Panel& panel);
+			void Clear();
+
+			auto begin() { return data.begin(); }
+			auto end() { return data.end(); }
+			auto Size() const { return data.size(); }
+
+		private:
+			Panel& me;
+			std::list<Panel> data;
+
+			friend class Panel;
+		} panels;
 		struct { Scrollbar x, y; } scrollbar;
 
 		void ForwardRender(CommandCollection&) override;

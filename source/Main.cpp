@@ -209,11 +209,68 @@ class Parser
 
 };
 
+class MenuItem
+{
+public:
+
+};
+
+class Menu : public Panel
+{
+	using Panel::settings;
+	bool m_Prev = false;
+public:
+	Menu()
+		: Panel({.ratio = 1, .layout = Layout::Column })
+	{
+		listener.State<Selected>({ .limit = 1 }) +=
+			[&](const KeyPress& e, const Panel& c, int left) -> int
+		{
+			if (e.keycode != Key::Down && e.keycode != Key::Up)
+				return c.component->State<Selected>();
+
+			bool _curr = c.component->State<Selected>();
+
+			if (left && m_Prev)
+			{
+				return true;
+			}
+
+			m_Prev = _curr;
+
+			return false;
+		};
+
+	}
+
+
+};
+
+
+class Button : public Component, public MenuItem
+{
+public:
+	Button()
+		: colors(*this)
+	{
+		colors.base = { 0, 0, 0, 255 };
+		colors.State<Hovering>({ 255, 0, 0, 255 });
+		colors.State<Selected>({ 255, 0, 0, 255 });
+		std::cout << "Hello" << std::endl;
+	}
+
+	void Render(CommandCollection& d) const override
+	{
+		d.Fill(colors.Current());
+		d.Quad(dimensions);
+	}
+
+	StateColors colors;
+};
 
 
 int main()
 {
-	constexpr int siez = sizeof Command;
 
 	Frame window{ {
 		.name = "A really epic window",
@@ -240,10 +297,11 @@ int main()
 	TextArea _text{};
 	_text.font = "segoeui";
 	_text.lineHeight = 64;
-	_text.fontSize = 64;
+	_text.fontSize = 16;
 	_text.wrap = Wrap::Word;
 	_text.container.content = "apple juice";
 	_text.textColor = { 255, 255, 255 };
+	//_text.textColor = { 0, 0, 0, 255 };
 	_text.scrollbar.x.background = 0x469c74;
 	_text.scrollbar.y.background = 0x469c74;
 	_text.scrollbar.x.bar.base = 0x67e6ab;
@@ -256,14 +314,31 @@ int main()
 	_text.scrollbar.x.bar.State<Hovering>(0x3b8765);
 	_text.scrollbar.y.bar = _text.scrollbar.x.bar;
 
+	Menu _menu;
+	Button _button1;
+	Button _button2;
+	Button _button3;
+	Button _button4;
+
+	_button1.State<Selected>(true);
+
+	_menu.panels.Emplace({ {.ratio = 1}, _button1 });
+	_menu.panels.Emplace({ {.ratio = 1}, _button2 });
+	_menu.panels.Emplace({ {.ratio = 1}, _button3 });
+	_menu.panels.Emplace({ {.ratio = 1}, _button4 });
+
 	window.panel = {
 		{
+			.layout = Layout::Row,
 			.padding{ 8, 8, 8, 8 },
 			.margin{ 8, 8, 8, 8 },
 			.border{ 4, 0x469c74 },
 			.background{ 0x52B788 }
 		},
-		_text
+		{
+			{ {.ratio = 1}, _text },
+			{ {.ratio = 1}, _menu },
+		}
 	};
 
 	while (window.Loop())

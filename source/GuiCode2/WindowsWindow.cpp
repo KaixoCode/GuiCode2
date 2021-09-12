@@ -90,7 +90,8 @@ namespace GuiCode
 
         glEnable(GL_BLEND);
         glEnable(GL_TEXTURE_2D);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+        glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         //glEnable(GL_MULTISAMPLE);
         glEnable(GL_SCISSOR_TEST);
         glfwSwapInterval(0);
@@ -181,6 +182,8 @@ namespace GuiCode
             auto _c = Get(Hovering);
             if (_c)
                 UpdateCursor(_c->cursor);
+            else
+                UpdateCursor(Cursor::Arrow);
         }
 
         if (_visible)

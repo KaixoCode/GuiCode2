@@ -3,6 +3,47 @@
 // Panel id
 namespace GuiCode
 {
+
+	Panel::Panels::Panels(Panel& me, const std::list<Panel>& data)
+		: data(data), me(me)
+	{}
+
+	Panel& Panel::Panels::Emplace(Panel&& panel)
+	{
+		auto& _panel = data.emplace_back(std::forward<Panel>(panel));
+		me.components.push_back(&_panel);
+		return _panel;
+	}
+
+	void Panel::Panels::Remove(int index)
+	{
+		int _index = 0;
+		for (auto _it = data.begin(); _it != data.end(); _it++)
+		{
+			if (index == _index)
+			{
+				me.components.remove(&*_it);
+				data.erase(_it);
+				break;
+			}
+			_index++;
+		}
+	}
+
+	void Panel::Panels::Remove(Panel& panel)
+	{
+		me.components.remove(&panel);
+		data.remove_if([&](Panel& a) { return &a == &panel; });
+	}
+
+	void Panel::Panels::Clear()
+	{
+		for (auto& i : data)
+			me.components.remove(&i);
+
+		data.clear();
+	}
+
 	Panel::Id::Id()
 		: m_Id(m_Counter++)
 	{}
@@ -23,26 +64,26 @@ namespace GuiCode
 	}
 
 	Panel::Panel()
+		: panels(*this)
 	{
 		Init();
 	}
 
 	Panel::Panel(const Settings& s)
-		: settings(s)
+		: settings(s), panels(*this)
 	{
 		Init();
 	}
 
 	Panel::Panel(const Settings& s, const std::list<Panel>& d)
 		: settings(s),
-		panels(d)
+		panels(*this, d)
 	{
 		Init();
 	}
 
 	Panel::Panel(const Settings& s, Component& c)
-		: settings(s),
-		component(&c)
+		: settings(s), component(&c), panels(*this)
 	{
 		Init();
 	}
@@ -61,16 +102,16 @@ namespace GuiCode
 
 		settings = other.settings;
 		component = other.component;
-		panels = other.panels;
+		panels.data = other.panels.data;
 
 		if (component)
 			components.push_back(component);
 
-		scrollbar.x.zIndex = std::numeric_limits<float>::max();
-		scrollbar.y.zIndex = std::numeric_limits<float>::max();
-
 		for (auto& i : panels)
 			components.push_back(&i);
+
+		scrollbar.x.zIndex = std::numeric_limits<float>::max();
+		scrollbar.y.zIndex = std::numeric_limits<float>::max();
 
 		components.push_back(&scrollbar.x);
 		components.push_back(&scrollbar.y);
@@ -136,7 +177,7 @@ namespace GuiCode
 		}
 		else
 		{
-			if (panels.size() == 0)
+			if (panels.Size() == 0)
 				return;
 
 			Vec2<float> _scrollTranslate{ 0, 0 };
@@ -252,7 +293,7 @@ namespace GuiCode
 		// If there is remaining space due to the max size of some components,
 		// we'll loop here until that space is <= 1.
 		float _toFill = (content.x + content.width) - _x;
-		for (int tries = 0; tries < panels.size(); tries++)
+		for (int tries = 0; tries < panels.Size(); tries++)
 		{
 			// x + padding + width = goal for x to reach, difference needs to be filled
 			_toFill = (content.x + content.width) - _x;
@@ -389,7 +430,7 @@ namespace GuiCode
 		// If there is remaining space due to the max size of some components,
 		// we'll loop here until that space is <= 1.
 		float _toFill = (content.y + content.height) - _y;
-		for (int tries = 0; tries < panels.size() && _toFill > 1; tries++)
+		for (int tries = 0; tries < panels.Size() && _toFill > 1; tries++)
 		{
 			// y + padding + height = goal for x to reach, difference needs to be filled
 			_toFill = (content.y + content.height) - _y;

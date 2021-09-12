@@ -66,8 +66,8 @@ namespace GuiCode
 			int pad = 5;
 			float centerx = titlebar.close.x + titlebar.close.width / 2;
 			float centery = titlebar.close.y + titlebar.close.height / 2 - 1;
-			d.Line({ centerx - pad, centery - pad, centerx + pad, centery + pad }, 1.7);
-			d.Line({ centerx - pad, centery + pad, centerx + pad, centery - pad }, 1.7);
+			d.Line({ centerx - pad, centery - pad, centerx + pad, centery + pad }, 1.0);
+			d.Line({ centerx - pad, centery + pad, centerx + pad, centery - pad }, 1.0);
 		};
 
 		titlebar.minimize.color.base = { 128, 128, 128, 0 };
