@@ -15,9 +15,9 @@ namespace GuiCode
 	Frame::TitleBar::TitleBar(std::string& title)
 		: title(title)
 	{
-		components.push_back(&close);
-		components.push_back(&minimize);
-		components.push_back(&maximize);
+		components.push_back(close);
+		components.push_back(minimize);
+		components.push_back(maximize);
 	}
 
 	void Frame::TitleBar::Update()
@@ -116,8 +116,8 @@ namespace GuiCode
 			}
 		};
 
-		components.push_back(&titlebar);
-		components.push_back(&panel);
+		components.push_back(titlebar);
+		components.push_back(panel);
 	}
 
 	void Frame::ForwardUpdate()

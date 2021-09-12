@@ -110,7 +110,7 @@ namespace GuiCode
 	struct KeyPress : public Event
 	{
 		KeyPress(int code, int mod, bool repeat)
-			: keycode(code), mod(mod), repeat(repeat)
+			: keycode(code), mod(mod), repeat(repeat), Event(false)
 		{}
 
 		bool Forward(const Component& c) const override { return true; };
@@ -123,7 +123,7 @@ namespace GuiCode
 	struct KeyType : public Event
 	{
 		KeyType(char key, int mod, bool coded)
-			: key(key), mod(mod), coded(coded)
+			: key(key), mod(mod), coded(coded), Event(false)
 		{}
 
 		bool Forward(const Component& c) const override { return true; };

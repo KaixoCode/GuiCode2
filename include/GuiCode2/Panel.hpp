@@ -30,6 +30,22 @@ namespace GuiCode
 		Inherit = -3 // Give parent full control over the size. Min/max will be parent size
 	};
 
+	struct Border
+	{
+		struct Side
+		{
+			float width = 0;
+			Color color;
+		};
+
+		float width = 0;		   // Border can be picked
+		Color color;               // for individual sides
+		Side left; 				   // or for the entire border
+		Side right; 			   // at once. If side is specified
+		Side top; 				   // it will override width/color
+		Side bottom;			   // specified for entire border
+	};
+
 	/**
 	 * A Panel contains settings for creating scroll areas
 	 * and complex layouts.
@@ -72,21 +88,7 @@ namespace GuiCode
 			} overflow = Overflow::Show;
 			Vec4<float> padding{ 0, 0, 0, 0 }; // Padding for all sides
 			Vec4<float> margin{ 0, 0, 0, 0 };  // Margin for all sides
-			struct Border
-			{
-				struct Side
-				{
-					float width = 0;
-					Color color{ 0, 0, 0, 0 };
-				};
-
-				float width = 0;		   // Border can be picked
-				Color color{ 0, 0, 0, 0 }; // for individual sides
-				Side left; 				   // or for the entire border
-				Side right; 			   // at once. If side is specified
-				Side top; 				   // it will override width/color
-				Side bottom;			   // specified for entire border
-			} border{};
+			Border border;
 			float zIndex = 0;				      // zIndex for this Panel in parent Panel.
 			Vec2<float> size{ Inherit, Inherit }; // prefered size, will be constrained to min/max
 			Vec2<float> min{ Inherit, Inherit };        // minimum size for this Panel
@@ -98,7 +100,7 @@ namespace GuiCode
 		Panel();
 		Panel(const Settings& s);
 		Panel(const Settings& s, const std::list<Panel>& d);
-		Panel(const Settings& s, Component& c);
+		Panel(const Settings& s, Wrapper<Component>&& c);
 		Panel(const Panel& other);
 		Panel& operator=(const Panel& other);
 
@@ -131,7 +133,7 @@ namespace GuiCode
 		void RefreshLayout();
 
 		Settings settings;
-		Component* component = nullptr;
+		Wrapper<Component> component;
 		struct Panels
 		{
 			Panels(Panel& me, const std::list<Panel>& data = {});
@@ -151,7 +153,7 @@ namespace GuiCode
 			std::list<Panel> data;
 
 			friend class Panel;
-		} panels;
+		} panels{ *this };
 		struct { Scrollbar x, y; } scrollbar;
 
 		void ForwardRender(CommandCollection&) override;

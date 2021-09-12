@@ -218,54 +218,157 @@ public:
 class Menu : public Panel
 {
 	using Panel::settings;
-	bool m_Prev = false;
+
 public:
+	using Panel::panels;
+
 	Menu()
-		: Panel({.ratio = 1, .layout = Layout::Column })
+		: Panel({ .ratio = 1, .layout = Layout::Column, .overflow = Overflow::Scroll })
 	{
-		listener.State<Selected>({ .limit = 1 }) +=
-			[&](const KeyPress& e, const Panel& c, int left) -> int
-		{
-			if (e.keycode != Key::Down && e.keycode != Key::Up)
-				return c.component->State<Selected>();
-
-			bool _curr = c.component->State<Selected>();
-
-			if (left && m_Prev)
-			{
-				return true;
-			}
-
-			m_Prev = _curr;
-
-			return false;
-		};
-
+		Init();
 	}
 
+	template<std::derived_from<Component> T>
+	Menu(std::list<T>&& comp)
+		: Panel({ .ratio = 1, .layout = Layout::Column, .overflow = Overflow::Scroll })
+	{
+		for (auto& i : comp)
+			panels.Emplace({ {.ratio = 1,.min{ -1, 12 }  }, std::move(i) });
+
+		Init();
+	}
+
+	Menu(Menu&&)
+		: Panel({ .ratio = 1, .layout = Layout::Column, .overflow = Overflow::Scroll })
+	{
+		Init();
+	}
+
+	template<std::derived_from<Component> T, typename ...Args> requires std::constructible_from<T, Args...>
+	T& Emplace(Args&&...args) 
+	{
+		auto& panel = panels.Emplace({ {.ratio = 1,.min{ -1, 12 } }, T{ std::forward<Args>(args)... } });
+		return panel.component;
+	}	
+
+private:
+	void Init()
+	{
+		listener += [&](const KeyPress& e)
+		{
+			if (e.Handled() || !State<Focused>())
+				return;
+
+			Component* _c = Get(Hovering);
+			if (e.keycode == Key::Down)
+			{
+				if (_c)
+				{
+					bool _found = false;
+					for (auto& i : panels)
+					{
+						if (_found)
+						{
+							_c->State<Hovering>(false);
+							i.component->State<Hovering>(true);
+							break;
+						}
+
+						if (i.component == _c)
+							_found = true;
+					}
+				}
+				else
+					panels.begin()->component->State<Hovering>(true);
+			}
+			else if (e.keycode == Key::Up)
+			{
+				if (_c)
+				{
+					Component* _prev = nullptr;
+					for (auto& i : panels)
+					{
+						if (i.component == _c)
+						{
+							if (_prev)
+							{
+								_c->State<Hovering>(false);
+								_prev->State<Hovering>(true);
+							}
+							break;
+						}
+
+						_prev = i.component;
+					}
+				}
+				else
+					(--panels.end())->component->State<Hovering>(true);
+			}
+		};
+
+		listener += [&](const Unfocus& e)
+		{
+			Component* _c = Get(Hovering);
+			if (_c)
+				_c->State<Hovering>(false);
+		};
+	}
 
 };
 
 
-class Button : public Component, public MenuItem
+class Button : public Component
 {
 public:
 	Button()
-		: colors(*this)
 	{
-		colors.base = { 0, 0, 0, 255 };
-		colors.State<Hovering>({ 255, 0, 0, 255 });
-		colors.State<Selected>({ 255, 0, 0, 255 });
-		std::cout << "Hello" << std::endl;
+		Init();
+	}
+
+	Button(Button&&)
+	{
+		Init();
+	}
+
+	Button(const Button&)
+	{
+		Init();
 	}
 
 	void Render(CommandCollection& d) const override
 	{
-		d.Fill(colors.Current());
+
+		d.Fill(border.color.Current());
 		d.Quad(dimensions);
+
+		d.Fill(color.Current());
+		d.Quad({ x + border.width, y + border.width, width - 2 * border.width, height - 2 * border.width });
 	}
 
-	StateColors colors;
+	StateColors color{ *this };
+	struct 
+	{
+		float width;
+		StateColors color;
+	} border{ 1, *this };
+	
+private:
+	void Init()
+	{
+		color.base = { 0, 0, 0, 255 };
+		color.State<Hovering>({ 255, 0, 0, 255 });
+		border.color.base = { 128, 128, 128 };
+
+		listener += [&](const KeyPress& e) 
+		{
+			if (e.keycode == Key::Left)
+			{
+				e.Handle();
+			}
+
+
+		};
+	}
 };
 
 
@@ -293,40 +396,7 @@ int main()
 	window.titlebar.minimize.color.State<Pressed>(0x469c74);
 	window.titlebar.maximize.color.State<Pressed>(0x469c74);
 	window.background = 0x39805f;
-
-	TextArea _text{};
-	_text.font = "segoeui";
-	_text.lineHeight = 64;
-	_text.fontSize = 16;
-	_text.wrap = Wrap::Word;
-	_text.container.content = "apple juice";
-	_text.textColor = { 255, 255, 255 };
-	//_text.textColor = { 0, 0, 0, 255 };
-	_text.scrollbar.x.background = 0x469c74;
-	_text.scrollbar.y.background = 0x469c74;
-	_text.scrollbar.x.bar.base = 0x67e6ab;
-	_text.scrollbar.y.bar.base = 0x67e6ab;
-
-	_text.scrollbar.x.background =
-	_text.scrollbar.y.background = 0x4ba67c;
-	_text.scrollbar.x.bar.base = 0x40916C;
-	_text.scrollbar.x.bar.State<Pressed>(0x327356);
-	_text.scrollbar.x.bar.State<Hovering>(0x3b8765);
-	_text.scrollbar.y.bar = _text.scrollbar.x.bar;
-
-	Menu _menu;
-	Button _button1;
-	Button _button2;
-	Button _button3;
-	Button _button4;
-
-	_button1.State<Selected>(true);
-
-	_menu.panels.Emplace({ {.ratio = 1}, _button1 });
-	_menu.panels.Emplace({ {.ratio = 1}, _button2 });
-	_menu.panels.Emplace({ {.ratio = 1}, _button3 });
-	_menu.panels.Emplace({ {.ratio = 1}, _button4 });
-
+	Panel::Id _textId, _menuId;
 	window.panel = {
 		{
 			.layout = Layout::Row,
@@ -336,10 +406,33 @@ int main()
 			.background{ 0x52B788 }
 		},
 		{
-			{ {.ratio = 1}, _text },
-			{ {.ratio = 1}, _menu },
+			{ {.id = _textId, .ratio = 1}, TextArea{} },
+			{ {.id = _menuId, .ratio = 1}, Menu{} },
 		}
 	};
+
+	Menu& _menu = window.panel.Find(_menuId)->component;
+	
+	for (int i = 0; i < 10; i++)
+		_menu.panels.Emplace({ {.ratio = 1}, Button{} });
+
+	TextArea& _text = window.panel.Find(_textId)->component;
+	_text.font = "segoeui";
+	_text.lineHeight = 64;
+	_text.fontSize = 16;
+	_text.wrap = Wrap::Word;
+	_text.container.content = "apple juice";
+	_text.textColor = { 255, 255, 255 };
+	_text.scrollbar.x.background = 0x469c74;
+	_text.scrollbar.y.background = 0x469c74;
+	_text.scrollbar.x.bar.base = 0x67e6ab;
+	_text.scrollbar.y.bar.base = 0x67e6ab;
+	_text.scrollbar.x.background =
+	_text.scrollbar.y.background = 0x4ba67c;
+	_text.scrollbar.x.bar.base = 0x40916C;
+	_text.scrollbar.x.bar.State<Pressed>(0x327356);
+	_text.scrollbar.x.bar.State<Hovering>(0x3b8765);
+	_text.scrollbar.y.bar = _text.scrollbar.x.bar;
 
 	while (window.Loop())
 	{

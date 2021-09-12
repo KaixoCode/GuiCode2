@@ -5,8 +5,8 @@
 namespace GuiCode
 {
 	/**
-	 * Link this object to a Component, and then assign colors
-	 * to states. The order in which you assign colors will 
+	 * Link this object to a Component, and then assign color
+	 * to states. The order in which you assign color will 
 	 * determine which state has priority, first added is
 	 * higher priority. The Current method will then return
 	 * the color by looking at the state of the Component.
@@ -18,7 +18,7 @@ namespace GuiCode
 		StateColors& operator=(const StateColors& other);
 
 		/**
-		 * Clears all colors apart from the base color.
+		 * Clears all color apart from the base color.
 		 */
 		void Clear();
 

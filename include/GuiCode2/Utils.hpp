@@ -167,6 +167,97 @@ namespace GuiCode
             Middle = CenterY,
         };
     };
+
+
+    /**
+     * Simple Component wrapper, either contains pointer to
+     * heap allocated Component object, or a reference to an
+     * existing Component object.
+     */
+    template<typename T>
+    class Wrapper
+    {
+    public:
+        Wrapper()
+        {}
+
+        template<std::derived_from<T> Type>
+        Wrapper(Type&& c)
+            : m_Data(new Type(std::move(c))), m_Delete(true)
+        {}
+
+        template<std::derived_from<T> Type>
+        Wrapper(Type& c)
+            : m_Data(&c), m_Delete(false)
+        {}
+
+        Wrapper(Wrapper&& c)
+            : m_Data(c.m_Data), m_Delete(c.m_Delete)
+        {
+            c.m_Delete = false;
+        }
+
+        Wrapper(const Wrapper& c)
+            : m_Data(c.m_Data), m_Delete(c.m_Delete)
+        {
+            c.m_Delete = false;
+        }
+
+        Wrapper& operator=(const Wrapper& c)
+        {
+            m_Data = c.m_Data;
+            m_Delete = c.m_Delete;
+            c.m_Delete = false;
+            return *this;
+        }
+
+        Wrapper& operator=(Wrapper&& c)
+        {
+            m_Data = c.m_Data;
+            m_Delete = c.m_Delete;
+            c.m_Delete = false;
+            return *this;
+        }
+
+        T* operator->() { return m_Data; }
+        T* operator&() { return m_Data; }
+        T& operator*() { return *m_Data; }
+        const T* operator->() const { return m_Data; }
+        const T* operator&() const { return m_Data; }
+        const T& operator*() const { return *m_Data; }
+
+        template<std::derived_from<T> Type>
+        operator Type& () { return *dynamic_cast<Type*>(m_Data); }
+
+        template<std::derived_from<T> Type>
+        operator const Type& () const { return *dynamic_cast<Type*>(m_Data); }
+
+        template<std::derived_from<T> Type>
+        operator Type* () { return dynamic_cast<Type*>(m_Data); }
+
+        template<std::derived_from<T> Type>
+        operator const Type* () const { return dynamic_cast<Type*>(m_Data); }
+
+        operator T& () { return *m_Data; }
+        operator const T& () const { return *m_Data; }
+
+        operator T* () { return m_Data; }
+        operator const T* () const { return m_Data; }
+
+        operator bool() const { return m_Data; }
+
+        bool operator==(Wrapper other) const { return other.m_Data == m_Data; }
+
+        ~Wrapper()
+        {
+            if (m_Delete)
+                delete m_Data;
+        }
+
+    private:
+        T* m_Data = nullptr;
+        mutable bool m_Delete = false;
+    };
 }
 
 namespace std

@@ -10,8 +10,12 @@ namespace GuiCode
 
 	Panel& Panel::Panels::Emplace(Panel&& panel)
 	{
-		auto& _panel = data.emplace_back(std::forward<Panel>(panel));
-		me.components.push_back(&_panel);
+		auto& _panel = data.emplace_back(std::move(panel));
+		if (_panel.component)
+			me.components.push_back(*_panel.component);
+		else
+			me.components.push_back(_panel);
+
 		return _panel;
 	}
 
@@ -22,7 +26,11 @@ namespace GuiCode
 		{
 			if (index == _index)
 			{
-				me.components.remove(&*_it);
+				if (_it->component)
+					me.components.remove(*(_it->component));
+				else
+					me.components.remove(*_it);
+
 				data.erase(_it);
 				break;
 			}
@@ -32,14 +40,21 @@ namespace GuiCode
 
 	void Panel::Panels::Remove(Panel& panel)
 	{
-		me.components.remove(&panel);
+		if (panel.component)
+			me.components.remove(*panel.component);
+		else
+			me.components.remove(panel);
+
 		data.remove_if([&](Panel& a) { return &a == &panel; });
 	}
 
 	void Panel::Panels::Clear()
 	{
 		for (auto& i : data)
-			me.components.remove(&i);
+			if (i.component)
+				me.components.remove(*i.component);
+			else
+				me.components.remove(i);
 
 		data.clear();
 	}
@@ -64,13 +79,12 @@ namespace GuiCode
 	}
 
 	Panel::Panel()
-		: panels(*this)
 	{
 		Init();
 	}
 
 	Panel::Panel(const Settings& s)
-		: settings(s), panels(*this)
+		: settings(s)
 	{
 		Init();
 	}
@@ -82,8 +96,8 @@ namespace GuiCode
 		Init();
 	}
 
-	Panel::Panel(const Settings& s, Component& c)
-		: settings(s), component(&c), panels(*this)
+	Panel::Panel(const Settings& s, Wrapper<Component>&& c)
+		: settings(s), component(c)
 	{
 		Init();
 	}
@@ -91,7 +105,7 @@ namespace GuiCode
 	Panel::Panel(const Panel& other)
 		: settings(other.settings),
 		component(other.component),
-		panels(other.panels)
+		panels(*this, other.panels.data)
 	{
 		Init();
 	}
@@ -105,32 +119,38 @@ namespace GuiCode
 		panels.data = other.panels.data;
 
 		if (component)
-			components.push_back(component);
+			components.push_back(*component);
 
 		for (auto& i : panels)
-			components.push_back(&i);
+			if (i.component)
+				components.push_back(*i.component);
+			else
+				components.push_back(i);
 
 		scrollbar.x.zIndex = std::numeric_limits<float>::max();
 		scrollbar.y.zIndex = std::numeric_limits<float>::max();
 
-		components.push_back(&scrollbar.x);
-		components.push_back(&scrollbar.y);
+		components.push_back(scrollbar.x);
+		components.push_back(scrollbar.y);
 		return *this;
 	}
 
 	void Panel::Init()
 	{
 		if (component)
-			components.push_back(component);
+			components.push_back(*component);
 
 		for (auto& i : panels)
-			components.push_back(&i);
-
+			if (i.component)
+				components.push_back(*i.component);
+			else
+				components.push_back(i);
+		
 		scrollbar.x.zIndex = std::numeric_limits<float>::max();
 		scrollbar.y.zIndex = std::numeric_limits<float>::max();
 
-		components.push_back(&scrollbar.x);
-		components.push_back(&scrollbar.y);
+		components.push_back(scrollbar.x);
+		components.push_back(scrollbar.y);
 		
 		listener += [this](const MouseWheel& e)
 		{

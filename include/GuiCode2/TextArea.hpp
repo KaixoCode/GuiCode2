@@ -10,6 +10,8 @@ namespace GuiCode
 		using Panel::settings;
 	public:
 		TextArea();
+		TextArea(const TextArea&) = delete;
+		TextArea(const TextArea&&);
 
 		void Update() override;
 
@@ -30,5 +32,6 @@ namespace GuiCode
 		int m_Update = 0;
 
 		void UpdateScroll();
+		void Init();
 	};
 }

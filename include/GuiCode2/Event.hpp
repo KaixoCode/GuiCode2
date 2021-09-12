@@ -53,7 +53,7 @@ namespace GuiCode
 		 * EventListener needs the list of components to work with.
 		 * @param c component list
 		 */
-		EventListener(std::list<Component*>& c)
+		EventListener(std::list<Wrapper<Component>>& c)
 			: components(&c)
 		{}
 		
@@ -102,7 +102,7 @@ namespace GuiCode
 		template<typename, typename>
 		struct StateFunction;
 		template<typename Func, typename Type, typename Obj>
-		struct StateFunction<Func, int(const Type&, const Obj&, int)> : StateFunctionBase
+		struct StateFunction<Func, int(const Type&, Obj&, int)> : StateFunctionBase
 		{
 			StateFunction(int a, Func b) 
 				: state(a), callback(b) 
@@ -183,10 +183,10 @@ namespace GuiCode
 		 * Run event through this listener.
 		 * @param e event
 		 */
-		void operator()(const Event& e) const;
+		void operator()(const Event& e);
 
 	private:
-		std::list<Component*>* components = nullptr;
+		std::list<Wrapper<Component>>* components = nullptr;
 		std::list<std::unique_ptr<EventFunctionBase>> m_Listeners;
 		std::map<int, StateHandler> m_StateHandlers;
 	};

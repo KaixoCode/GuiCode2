@@ -2,6 +2,21 @@
 
 namespace GuiCode
 {
+	TextArea::TextArea(const TextArea&&)
+		: Panel{ {.ratio = 1, .overflow = Overflow::Scroll } },
+		align(displayer.align),
+		container(displayer.container),
+		font(displayer.font),
+		fontSize(displayer.fontSize),
+		lineHeight(displayer.lineHeight),
+		placeholder(displayer.placeholder),
+		textColor(displayer.textColor),
+		selectColor(displayer.selectColor),
+		wrap(displayer.wrap)
+	{
+		Init();
+	}
+
 	TextArea::TextArea()
 		: Panel{ {.ratio = 1, .overflow = Overflow::Scroll } },
 		align(displayer.align),
@@ -13,6 +28,11 @@ namespace GuiCode
 		textColor(displayer.textColor),
 		selectColor(displayer.selectColor),
 		wrap(displayer.wrap)
+	{
+		Init();
+	}
+
+	void TextArea::Init()
 	{
 		panels.Emplace({ {.ratio = 0, .size{ Auto, Auto } }, displayer });
 		

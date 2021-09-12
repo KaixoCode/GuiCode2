@@ -3,7 +3,7 @@
 
 namespace GuiCode
 {
-	void EventListener::operator()(const Event& e) const
+	void EventListener::operator()(const Event& e)
 	{
 		// If we have components
 		if (components)
