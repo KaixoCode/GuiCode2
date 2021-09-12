@@ -10,8 +10,8 @@ namespace GuiCode
 		using Panel::settings;
 	public:
 		TextArea();
-		TextArea(const TextArea&) = delete;
-		TextArea(const TextArea&&);
+		TextArea(const TextArea&);
+		TextArea(TextArea&&);
 
 		void Update() override;
 

@@ -2,10 +2,6 @@
 
 namespace GuiCode
 {
-	TextContainer::TextContainer()
-		: editable(true)
-	{}
-
 	void TextContainer::Insert(const std::string& add)
 	{
 		RemoveSelection();

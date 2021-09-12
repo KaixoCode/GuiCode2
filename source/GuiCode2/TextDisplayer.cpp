@@ -6,6 +6,48 @@ namespace GuiCode
 	TextDisplayer::TextDisplayer()
 		: container()
 	{
+		Init();
+
+		min = { 50, 50 };
+		size = min;
+	}
+
+	TextDisplayer::TextDisplayer(const TextDisplayer& other)
+		: container(other.container),
+		wrap(other.wrap),
+		align(other.align),
+		lineHeight(other.lineHeight),
+		fontSize(other.fontSize),
+		font(other.font),
+		placeholder(other.placeholder),
+		textColor(other.textColor), 
+		selectColor(other.selectColor)
+	{
+		Init();
+
+		min = other.min;
+		size = other.size;
+	}
+
+	TextDisplayer::TextDisplayer(TextDisplayer&& other)
+		: container(other.container),
+		wrap(other.wrap),
+		align(other.align),
+		lineHeight(other.lineHeight),
+		fontSize(other.fontSize),
+		font(other.font),
+		placeholder(other.placeholder),
+		textColor(other.textColor),
+		selectColor(other.selectColor)
+	{
+		Init();
+
+		min = other.min;
+		size = other.size;
+	}
+
+	void TextDisplayer::Init()
+	{
 		cursor = Cursor::IBeam;
 
 		listener += [this](const KeyPress& e)
@@ -95,7 +137,7 @@ namespace GuiCode
 
 		listener += [this](const Unfocus& e)
 		{
-			//container.selection = container.selection.start;
+			container.selection = container.selection.start;
 		};
 
 		listener += [this](const Focus& e)
@@ -103,11 +145,6 @@ namespace GuiCode
 			m_Timer = 60;
 			RecalculateLines();
 		};
-
-		min = { 50, 50 };
-		size = min;
-
-		//m_Cursor = GLFW_IBEAM_CURSOR;
 	}
 
 	void TextDisplayer::Update()

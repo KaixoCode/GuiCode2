@@ -22,6 +22,9 @@ namespace GuiCode
 
 	/**
 	 * Base class for objects that receive events, have state, and are drawable.
+	 * When copying or moving, any event listerers/state handlers declared outside
+	 * of the constructor will not be copied/moved, since the callbacks may contain
+	 * a this-pointer.
 	 */
 	class Component : public Dimensions
 	{
@@ -45,6 +48,9 @@ namespace GuiCode
 		 */
 		EventListener listener;
 
+		/**
+		 * Cursor that should display when hovering over this component.
+		 */
 		uint8_t cursor = Cursor::Arrow;
 
 		/**
@@ -66,9 +72,6 @@ namespace GuiCode
 		 */
 		virtual void ConstrainSize();
 
-		virtual void Render(CommandCollection& d) const {};
-		virtual void Update() {};
-
 		/**
 		 * Get the value of a state.
 		 * @param state state
@@ -87,7 +90,15 @@ namespace GuiCode
 		void State(int value) { m_States[state] = value; }
 		void State(int state, int value) { m_States[state] = value; }
 
+		/**
+		 * Get the first component it finds with a certain state.
+		 * @param state state
+		 * @return nullptr if none found
+		 */
 		virtual Component* Get(int state);
+
+		virtual void Render(CommandCollection& d) const {};
+		virtual void Update() {};
 
 		virtual void ForwardRender(CommandCollection& d);
 		virtual void ForwardUpdate();

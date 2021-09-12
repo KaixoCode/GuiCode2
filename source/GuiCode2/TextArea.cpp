@@ -2,8 +2,25 @@
 
 namespace GuiCode
 {
-	TextArea::TextArea(const TextArea&&)
+	TextArea::TextArea(TextArea&& other)
 		: Panel{ {.ratio = 1, .overflow = Overflow::Scroll } },
+		displayer(other.displayer),
+		align(displayer.align),
+		container(displayer.container),
+		font(displayer.font),
+		fontSize(displayer.fontSize),
+		lineHeight(displayer.lineHeight),
+		placeholder(displayer.placeholder),
+		textColor(displayer.textColor),
+		selectColor(displayer.selectColor),
+		wrap(displayer.wrap)
+	{
+		Init();
+	}
+
+	TextArea::TextArea(const TextArea& other)
+		: Panel{ {.ratio = 1, .overflow = Overflow::Scroll } },
+		displayer(other.displayer),
 		align(displayer.align),
 		container(displayer.container),
 		font(displayer.font),

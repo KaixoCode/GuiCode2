@@ -100,7 +100,7 @@ namespace GuiCode
 		Panel();
 		Panel(const Settings& s);
 		Panel(const Settings& s, const std::list<Panel>& d);
-		Panel(const Settings& s, Wrapper<Component>&& c);
+		Panel(const Settings& s, const Wrapper<Component>&& c);
 		Panel(const Panel& other);
 		Panel& operator=(const Panel& other);
 

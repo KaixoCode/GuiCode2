@@ -18,8 +18,6 @@ namespace GuiCode
 	class TextContainer
 	{
 	public:
-		TextContainer();
-
 		auto SelectionString() -> std::string_view { return std::string_view(content).substr(selection.Lowest(), (size_t)selection.Highest() - selection.Lowest()); }
 
 		void Insert(const std::string& add);

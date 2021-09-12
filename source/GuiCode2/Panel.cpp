@@ -1,9 +1,7 @@
 #include "GuiCode2/Panel.hpp"
 
-// Panel id
 namespace GuiCode
 {
-
 	Panel::Panels::Panels(Panel& me, const std::list<Panel>& data)
 		: data(data), me(me)
 	{}
@@ -96,8 +94,8 @@ namespace GuiCode
 		Init();
 	}
 
-	Panel::Panel(const Settings& s, Wrapper<Component>&& c)
-		: settings(s), component(c)
+	Panel::Panel(const Settings& s, const Wrapper<Component>&& c)
+		: settings(s), component(std::forward<const Wrapper<Component>&&>(c))
 	{
 		Init();
 	}

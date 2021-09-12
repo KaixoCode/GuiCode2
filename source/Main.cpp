@@ -217,20 +217,12 @@ public:
 
 class Menu : public Panel
 {
+	using Panel::panels;
 	using Panel::settings;
 
 public:
-	using Panel::panels;
 
-	Menu()
-		: Panel({ .ratio = 1, .layout = Layout::Column, .overflow = Overflow::Scroll })
-	{
-		Init();
-	}
-
-	template<std::derived_from<Component> T>
-	Menu(std::list<T>&& comp)
-		: Panel({ .ratio = 1, .layout = Layout::Column, .overflow = Overflow::Scroll })
+	Menu(std::initializer_list<Wrapper<Component>>&& comp)
 	{
 		for (auto& i : comp)
 			panels.Emplace({ {.ratio = 1,.min{ -1, 12 }  }, std::move(i) });
@@ -238,11 +230,9 @@ public:
 		Init();
 	}
 
-	Menu(Menu&&)
-		: Panel({ .ratio = 1, .layout = Layout::Column, .overflow = Overflow::Scroll })
-	{
-		Init();
-	}
+	Menu() { Init(); }
+	Menu(Menu&&) { Init(); }
+	Menu(const Menu&) { Init(); }
 
 	template<std::derived_from<Component> T, typename ...Args> requires std::constructible_from<T, Args...>
 	T& Emplace(Args&&...args) 
@@ -251,9 +241,17 @@ public:
 		return panel.component;
 	}	
 
+	void Clear()
+	{
+		panels.Clear();
+	}
+
 private:
 	void Init()
 	{
+		settings.ratio = 1;
+		settings.layout = Layout::Column;
+		settings.overflow = Overflow::Scroll;
 		listener += [&](const KeyPress& e)
 		{
 			if (e.Handled() || !State<Focused>())
@@ -323,16 +321,24 @@ public:
 	Button()
 	{
 		Init();
+		std::cout << "CONSTRUCT" << std::endl;
 	}
 
 	Button(Button&&)
 	{
 		Init();
+		std::cout << "MOVE" << std::endl;
 	}
 
 	Button(const Button&)
 	{
 		Init();
+		std::cout << "COPY" << std::endl;
+	}
+
+	~Button()
+	{
+		std::cout << "DESTRUCT" << std::endl;
 	}
 
 	void Render(CommandCollection& d) const override
@@ -414,7 +420,7 @@ int main()
 	Menu& _menu = window.panel.Find(_menuId)->component;
 	
 	for (int i = 0; i < 10; i++)
-		_menu.panels.Emplace({ {.ratio = 1}, Button{} });
+		_menu.Emplace<Button>();
 
 	TextArea& _text = window.panel.Find(_textId)->component;
 	_text.font = "segoeui";

@@ -15,12 +15,11 @@ namespace GuiCode
 
 	class TextDisplayer : public Component
 	{
-		struct StringView
-		{
-			size_t start, end;
-		};
+		struct StringView { size_t start, end; };
 	public:
 		TextDisplayer();
+		TextDisplayer(const TextDisplayer&);
+		TextDisplayer(TextDisplayer&&);
 
 		void Update() override;
 		void Render(CommandCollection& d) const override;
@@ -64,5 +63,6 @@ namespace GuiCode
 		void ChangeIndexActions(const KeyPress& e);
 
 		void UpdateTypeX();
+		void Init();
 	};
 }

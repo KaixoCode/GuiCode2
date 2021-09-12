@@ -172,91 +172,122 @@ namespace GuiCode
     /**
      * Simple Component wrapper, either contains pointer to
      * heap allocated Component object, or a reference to an
-     * existing Component object.
+     * existing Component object. Automatically deletes object
+     * when there are 0 references left.
      */
     template<typename T>
     class Wrapper
     {
+        constexpr static inline size_t NO = static_cast<size_t>(-1);
+        struct Object
+        {
+            T* data;
+            size_t refs;
+        };
     public:
         Wrapper()
+            : m_Data(new Object(nullptr, NO))
         {}
 
         template<std::derived_from<T> Type>
         Wrapper(Type&& c)
-            : m_Data(new Type(std::move(c))), m_Delete(true)
+            : m_Data(new Object(new Type(std::move(c)), 1))
         {}
 
         template<std::derived_from<T> Type>
         Wrapper(Type& c)
-            : m_Data(&c), m_Delete(false)
+            : m_Data(new Object(&c, NO))
         {}
 
         Wrapper(Wrapper&& c)
-            : m_Data(c.m_Data), m_Delete(c.m_Delete)
+            : m_Data(c.m_Data)
         {
-            c.m_Delete = false;
+            if (c.m_Data->refs != NO)
+                c.m_Data->refs++;
         }
 
         Wrapper(const Wrapper& c)
-            : m_Data(c.m_Data), m_Delete(c.m_Delete)
+            : m_Data(c.m_Data)
         {
-            c.m_Delete = false;
+            if (c.m_Data->refs != NO)
+                c.m_Data->refs++;
         }
 
         Wrapper& operator=(const Wrapper& c)
         {
-            m_Data = c.m_Data;
-            m_Delete = c.m_Delete;
-            c.m_Delete = false;
+            if (m_Data->refs != NO)
+            {
+                m_Data->refs--;
+                if (m_Data->refs == 0)
+                    delete m_Data->data;
+            }
+
+            m_Data->data = c.m_Data->data;
+            if (c.m_Data->refs != NO)
+                m_Data->refs = ++c.m_Data->refs;
+
             return *this;
         }
 
         Wrapper& operator=(Wrapper&& c)
         {
-            m_Data = c.m_Data;
-            m_Delete = c.m_Delete;
-            c.m_Delete = false;
+            if (m_Data->refs != NO)
+            {
+                m_Data->refs--;
+                if (m_Data->refs == 0)
+                    delete m_Data->data;
+            }
+
+            m_Data->data = c.m_Data.data;
+            if (c.m_Data->refs != NO)
+                m_Data->refs = ++c.m_Data->refs;
+
             return *this;
         }
 
-        T* operator->() { return m_Data; }
-        T* operator&() { return m_Data; }
-        T& operator*() { return *m_Data; }
-        const T* operator->() const { return m_Data; }
-        const T* operator&() const { return m_Data; }
-        const T& operator*() const { return *m_Data; }
+        T* operator->() { return m_Data->data; }
+        T* operator&() { return m_Data->data; }
+        T& operator*() { return *m_Data->data; }
+        const T* operator->() const { return m_Data->data; }
+        const T* operator&() const { return m_Data->data; }
+        const T& operator*() const { return *m_Data->data; }
 
         template<std::derived_from<T> Type>
-        operator Type& () { return *dynamic_cast<Type*>(m_Data); }
+        operator Type& () { return *dynamic_cast<Type*>(m_Data->data); }
 
         template<std::derived_from<T> Type>
-        operator const Type& () const { return *dynamic_cast<Type*>(m_Data); }
+        operator const Type& () const { return *dynamic_cast<Type*>(m_Data->data); }
 
         template<std::derived_from<T> Type>
-        operator Type* () { return dynamic_cast<Type*>(m_Data); }
+        operator Type* () { return dynamic_cast<Type*>(m_Data->data); }
 
         template<std::derived_from<T> Type>
-        operator const Type* () const { return dynamic_cast<Type*>(m_Data); }
+        operator const Type* () const { return dynamic_cast<Type*>(m_Data->data); }
 
-        operator T& () { return *m_Data; }
-        operator const T& () const { return *m_Data; }
+        operator T& () { return *m_Data->data; }
+        operator const T& () const { return *m_Data->data; }
 
-        operator T* () { return m_Data; }
-        operator const T* () const { return m_Data; }
+        operator T* () { return m_Data->data; }
+        operator const T* () const { return m_Data->data; }
 
-        operator bool() const { return m_Data; }
+        operator bool() const { return m_Data->data; }
 
-        bool operator==(Wrapper other) const { return other.m_Data == m_Data; }
+        bool operator==(const Wrapper& other) const { return other.m_Data->data == m_Data->data; }
 
         ~Wrapper()
         {
-            if (m_Delete)
+            if (m_Data->refs != NO)
+                m_Data->refs--;
+
+            if (m_Data->refs == 0)
+            {
+                delete m_Data->data;
                 delete m_Data;
+            }
         }
 
     private:
-        T* m_Data = nullptr;
-        mutable bool m_Delete = false;
+        Object* m_Data = nullptr;
     };
 }
 

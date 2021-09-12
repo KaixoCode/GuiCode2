@@ -57,8 +57,11 @@ namespace GuiCode
 			: components(&c)
 		{}
 		
-		// Don't copy anything, since callbacks may contain a now invalid this-pointer
-		EventListener(const EventListener& other) {} 
+		// Don't copy anything, since callbacks may contain a this-pointer
+		EventListener(const EventListener&) {}
+		EventListener(EventListener&&) {}
+		EventListener& operator=(const EventListener&) { return *this; };
+		EventListener& operator=(EventListener&&) { return *this; };
 
 		/**
 		 * Type erasure using inheritance, base class contains Call

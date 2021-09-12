@@ -6,6 +6,8 @@ namespace GuiCode
 	{
 		dimensions = other.dimensions;
 		zIndex = other.zIndex;
+		min = other.min;
+		max = other.max;
 		return *this;
 	}
 
@@ -13,6 +15,8 @@ namespace GuiCode
 	{
 		dimensions = other.dimensions;
 		zIndex = other.zIndex;
+		min = other.min;
+		max = other.max;
 		return *this;
 	}
 }
