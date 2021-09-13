@@ -47,8 +47,6 @@ namespace GuiCode
 			if (!settings.callback || State<Disabled>())
 				return;
 
-			std::cout << "enter" << std::endl;
-
 			if (settings.type == Hover)
 			{
 				State<Selected>(true);
@@ -60,8 +58,6 @@ namespace GuiCode
 		{
 			if (!settings.callback || State<Disabled>())
 				return;
-
-			std::cout << "exit" << std::endl;
 
 			if (settings.type == Hover)
 			{
