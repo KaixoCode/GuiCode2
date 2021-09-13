@@ -37,6 +37,16 @@ namespace GuiCode
             CTRL_X = ('X' << 16) | EventMods::Control, CTRL_SHIFT_X = ('X' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_X = ('X' << 16) | EventMods::Control | EventMods::Alt,
             CTRL_Y = ('Y' << 16) | EventMods::Control, CTRL_SHIFT_Y = ('Y' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_Y = ('Y' << 16) | EventMods::Control | EventMods::Alt,
             CTRL_Z = ('Z' << 16) | EventMods::Control, CTRL_SHIFT_Z = ('Z' << 16) | EventMods::Control | EventMods::Shift, CTRL_ALT_Z = ('Z' << 16) | EventMods::Control | EventMods::Alt,
+            CTRL_1 = ('1' << 16) | EventMods::Control,
+            CTRL_2 = ('2' << 16) | EventMods::Control,
+            CTRL_3 = ('3' << 16) | EventMods::Control,
+            CTRL_4 = ('4' << 16) | EventMods::Control,
+            CTRL_5 = ('5' << 16) | EventMods::Control,
+            CTRL_6 = ('6' << 16) | EventMods::Control,
+            CTRL_7 = ('7' << 16) | EventMods::Control,
+            CTRL_8 = ('8' << 16) | EventMods::Control,
+            CTRL_9 = ('9' << 16) | EventMods::Control,
+            CTRL_0 = ('0' << 16) | EventMods::Control,
             CTRL_SPACE = (' ' << 16) | EventMods::Control,
             CTRL_COMMA = (188 << 16) | EventMods::Control,
             ALT_F4 = (0x73 << 16) | EventMods::Alt,
@@ -88,7 +98,7 @@ namespace GuiCode
         bool operator>=(Key::Combo a) const { return m_Value >= a; }
         operator int()       const { return static_cast<int>(m_Value); }
 
-        inline const std::string& ToString()
+        inline const std::string& ToString() const
         {
             static std::string _ctrl = "Ctrl+";
             static std::string _shift = "Shift+";
@@ -128,7 +138,7 @@ namespace GuiCode
         }
 
     private:
-        int m_Value;
+        int m_Value = 0;
     };
 
     static inline bool operator ==(const KeyPress& a, const Key b) { return (a.keycode == (b >> 16)) && ((a.mod & 0xFF) == (b & 0xFF)); }

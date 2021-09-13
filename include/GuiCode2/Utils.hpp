@@ -176,7 +176,7 @@ namespace GuiCode
      * when there are 0 references left.
      */
     template<typename T>
-    class Wrapper
+    class Pointer
     {
         constexpr static inline size_t NO = static_cast<size_t>(-1);
         struct Object
@@ -185,35 +185,35 @@ namespace GuiCode
             size_t refs;
         };
     public:
-        Wrapper()
+        Pointer()
             : m_Data(new Object(nullptr, NO))
         {}
 
         template<std::derived_from<T> Type>
-        Wrapper(Type&& c)
+        Pointer(Type&& c)
             : m_Data(new Object(new Type(std::move(c)), 1))
         {}
 
         template<std::derived_from<T> Type>
-        Wrapper(Type& c)
+        Pointer(Type& c)
             : m_Data(new Object(&c, NO))
         {}
 
-        Wrapper(Wrapper&& c)
+        Pointer(Pointer&& c)
             : m_Data(c.m_Data)
         {
             if (c.m_Data->refs != NO)
                 c.m_Data->refs++;
         }
 
-        Wrapper(const Wrapper& c)
+        Pointer(const Pointer& c)
             : m_Data(c.m_Data)
         {
             if (c.m_Data->refs != NO)
                 c.m_Data->refs++;
         }
 
-        Wrapper& operator=(const Wrapper& c)
+        Pointer& operator=(const Pointer& c)
         {
             if (m_Data->refs != NO)
             {
@@ -229,7 +229,7 @@ namespace GuiCode
             return *this;
         }
 
-        Wrapper& operator=(Wrapper&& c)
+        Pointer& operator=(Pointer&& c)
         {
             if (m_Data->refs != NO)
             {
@@ -272,9 +272,9 @@ namespace GuiCode
 
         operator bool() const { return m_Data->data; }
 
-        bool operator==(const Wrapper& other) const { return other.m_Data->data == m_Data->data; }
+        bool operator==(const Pointer& other) const { return other.m_Data->data == m_Data->data; }
 
-        ~Wrapper()
+        ~Pointer()
         {
             if (m_Data->refs != NO)
                 m_Data->refs--;

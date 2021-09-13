@@ -100,7 +100,7 @@ namespace GuiCode
 		Panel();
 		Panel(const Settings& s);
 		Panel(const Settings& s, const std::list<Panel>& d);
-		Panel(const Settings& s, const Wrapper<Component>&& c);
+		Panel(const Settings& s, const Pointer<Component>&& c);
 		Panel(const Panel& other);
 		Panel& operator=(const Panel& other);
 
@@ -133,7 +133,7 @@ namespace GuiCode
 		void RefreshLayout();
 
 		Settings settings;
-		Wrapper<Component> component;
+		Pointer<Component> component;
 		struct Panels
 		{
 			Panels(Panel& me, const std::list<Panel>& data = {});

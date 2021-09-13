@@ -31,12 +31,12 @@ namespace GuiCode
 
 		Wrap wrap = Wrap::Word;
 		int align = Align::Left | Align::Top;
-		float lineHeight = 16;
+		float lineHeight = 1;
 		float fontSize = 14;
 		std::string_view font;
 		TextContainer container;
 		std::string placeholder;
-		Color textColor{ 0, 0, 0, 255 };
+		Color textColor{ 255, 255, 255, 255 };
 		Color selectColor{ 128, 128, 255, 255 };
 
 	protected:

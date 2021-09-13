@@ -20,7 +20,7 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 add_library(GLAD STATIC
-  libs/glad/glad.cpp
+  libs/glad/glad.c
 )
 
 include_directories(

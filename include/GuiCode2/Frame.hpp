@@ -46,7 +46,8 @@ namespace GuiCode
 	public:
 		Frame(const WindowData& data);
 
-		Color background{ 26, 26, 26, 255 };
+		Color background{ 13, 13, 13, 255 };
+		Color border{ 64, 64, 64 };
 		TitleBar titlebar;
 		Panel panel;
 

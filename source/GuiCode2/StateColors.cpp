@@ -2,11 +2,19 @@
 
 namespace GuiCode
 {
-	StateColors::StateColors(Component& link)
+	StateColors::StateColors(Component* link)
 		: m_Link(link)
 	{}
 
 	StateColors& StateColors::operator=(const StateColors& other)
+	{
+		base = other.base;
+		m_States = other.m_States;
+		m_ColorMap = other.m_ColorMap;
+		return *this;
+	}
+
+	StateColors& StateColors::operator=(StateColors&& other)
 	{
 		base = other.base;
 		m_States = other.m_States;
@@ -45,10 +53,13 @@ namespace GuiCode
 
 	Color StateColors::Current() const
 	{
+		if (!m_Link)
+			return base;
+
 		// Get current state
 		int _state = NoValue;
 		for (auto& i : m_States)
-			if (m_Link.State(i))
+			if (m_Link->State(i))
 			{
 				_state = i;
 				break;

@@ -3,7 +3,7 @@
 namespace GuiCode
 {
 	Frame::Button::Button()
-		: color(*this)
+		: color(this)
 	{
 		listener += [this](const MouseRelease& e)
 		{
@@ -22,9 +22,9 @@ namespace GuiCode
 
 	void Frame::TitleBar::Update()
 	{
-		close.dimensions = { x + width - 46 * 1, y, 46, 32 };
-		maximize.dimensions = { x + width - 46 * 2, y, 46, 32 };
-		minimize.dimensions = { x + width - 46 * 3, y, 46, 32 };
+		close.dimensions = { x + width - 46 * 1, y, 46, 30 };
+		maximize.dimensions = { x + width - 46 * 2, y, 46, 30 };
+		minimize.dimensions = { x + width - 46 * 3, y, 46, 30 };
 	}
 
 	void Frame::TitleBar::Render(CommandCollection& d) const
@@ -54,9 +54,9 @@ namespace GuiCode
 		titlebar.minimize.callback = [this]() { State<Visible>(Minimize); };
 		titlebar.maximize.callback = [this]() { State<Visible>() == Maximize ? State<Visible>(Show) : State<Visible>(Maximize); };
 
-		titlebar.close.color.base = { 255, 0, 0, 0 };
-		titlebar.close.color.State<Pressed>({ 170, 0, 0, 111 });
-		titlebar.close.color.State<Hovering>({ 255, 0, 0, 111 });
+		titlebar.close.color.base = { 26, 26, 26, 255 };
+		titlebar.close.color.State<Pressed>({ 170, 0, 0, 255 });
+		titlebar.close.color.State<Hovering>({ 255, 0, 0, 255 });
 		titlebar.close.render = [this](CommandCollection& d)
 		{
 			d.Fill(titlebar.close.color.Current());
@@ -70,9 +70,9 @@ namespace GuiCode
 			d.Line({ centerx - pad, centery + pad, centerx + pad, centery - pad }, 1.0);
 		};
 
-		titlebar.minimize.color.base = { 128, 128, 128, 0 };
-		titlebar.minimize.color.State<Pressed>({ 128, 128, 128, 92 });
-		titlebar.minimize.color.State<Hovering>({ 128, 128, 128, 92 });
+		titlebar.minimize.color.base = { 26, 26, 26, 255 };
+		titlebar.minimize.color.State<Pressed>({ 64, 64, 64, 255 });
+		titlebar.minimize.color.State<Hovering>({ 78, 78, 78, 255 });
 		titlebar.minimize.render = [this](CommandCollection& d)
 		{
 			d.Fill(titlebar.minimize.color.Current());
@@ -84,9 +84,9 @@ namespace GuiCode
 			d.Quad({ centerx - 5, centery, 10, 1 });
 		};
 
-		titlebar.maximize.color.base = { 128, 128, 128, 0 };
-		titlebar.maximize.color.State<Pressed>({ 128, 128, 128, 92 });
-		titlebar.maximize.color.State<Hovering>({ 128, 128, 128, 92 });
+		titlebar.maximize.color.base = { 26, 26, 26, 255 };
+		titlebar.maximize.color.State<Pressed>({ 64, 64, 64, 255 });
+		titlebar.maximize.color.State<Hovering>({ 78, 78, 78, 255 });
 		titlebar.maximize.render = [this](CommandCollection& d)
 		{
 			d.Fill(titlebar.maximize.color.Current());
@@ -122,19 +122,23 @@ namespace GuiCode
 
 	void Frame::ForwardUpdate()
 	{
-		float padding = State<Visible>() == Maximize ? 8 : 0;
+		float padding = State<Visible>() == Maximize ? 8 : 1;
 
-		titlebar.dimensions = { padding, padding, width - 2 * padding, 32 };
-		panel.settings.size = { width - 2 * padding, height - 2 * padding - 32 };
-		panel.SetDimensions({ padding, 32 + padding, width - 2 * padding, height - 2 * padding - 32 });
+		titlebar.dimensions = { padding, padding, width - 2 * padding, 30 };
+		panel.settings.size = { width - 2 * padding, height - 2 * padding - 30 };
+		panel.SetDimensions({ padding, 30 + padding, width - 2 * padding, height - 2 * padding - 30 });
 		panel.zIndex = std::numeric_limits<int>::max();
 		Window::ForwardUpdate();
 	}
 
 	void Frame::ForwardRender(CommandCollection& d)
 	{
-		d.Fill(background);
+		d.Fill(border);
 		d.Quad({ 0, 0, width, height });
+
+		d.Fill(background);
+		d.Quad({ 1, 1, width - 2, height - 2 });
+
 		Window::ForwardRender(d);
 	}
 

@@ -94,8 +94,8 @@ namespace GuiCode
 		Init();
 	}
 
-	Panel::Panel(const Settings& s, const Wrapper<Component>&& c)
-		: settings(s), component(std::forward<const Wrapper<Component>&&>(c))
+	Panel::Panel(const Settings& s, const Pointer<Component>&& c)
+		: settings(s), component(std::forward<const Pointer<Component>&&>(c))
 	{
 		Init();
 	}

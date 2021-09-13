@@ -91,6 +91,7 @@ namespace GuiCode
 
 			if (m_Click > 0 && m_PressPos == Vec2<float>{ e.pos.x, e.pos.y })
 				container.selection = { container.CtrlLeft(), container.CtrlRight() };
+			container.ConstrainSelection();
 
 			m_PressPos = { e.pos.x, e.pos.y };
 
@@ -108,6 +109,7 @@ namespace GuiCode
 				container.selection = { PositionToIndex({ e.pos.x, e.pos.y }), container.selection.end };
 			else
 				container.selection = PositionToIndex({ e.pos.x, e.pos.y });
+			container.ConstrainSelection();
 
 			UpdateTypeX();
 
@@ -131,6 +133,7 @@ namespace GuiCode
 			if (m_Dragging)
 			{
 				container.selection = { PositionToIndex({ e.pos.x, e.pos.y }), container.selection.end };
+				container.ConstrainSelection();
 				UpdateTypeX();
 			}
 		};
@@ -138,6 +141,7 @@ namespace GuiCode
 		listener += [this](const Unfocus& e)
 		{
 			container.selection = container.selection.start;
+			container.ConstrainSelection();
 		};
 
 		listener += [this](const Focus& e)
@@ -157,8 +161,7 @@ namespace GuiCode
 			m_Click--;
 
 		Component::Update();
-		height = m_Lines.size() * lineHeight + 2;
-
+		height = m_Lines.size() * lineHeight * fontSize + 2;
 
 		if (m_PrevSize != size)
 		{
@@ -180,6 +183,7 @@ namespace GuiCode
 		d.FontSize(fontSize);
 		int ypos = 0;
 		int beginindex = 0;
+		float lineHeight = this->lineHeight * fontSize;
 		auto sel = container.selection;
 		d.Fill(textColor);
 		int index = 0;
@@ -298,7 +302,7 @@ namespace GuiCode
 	{
 		// Get the line _index by dividing the y position minus the padding by the text
 		// height. Also contrain the _index to make sure no IndexOutOfBounds is thrown
-		float textheight = lineHeight;
+		float textheight = lineHeight * fontSize;
 		int line = (pos.y - y) / textheight;
 		line = constrain(line, 0, m_Lines.size() - 1);
 
@@ -344,7 +348,7 @@ namespace GuiCode
 	Vec2<float> TextDisplayer::IndexToPosition(int index)
 	{
 		// Get the font metrics of the Graphics2D
-		int textheight = lineHeight;
+		int textheight = lineHeight * fontSize;
 
 		int line = 0;
 		int in = index;

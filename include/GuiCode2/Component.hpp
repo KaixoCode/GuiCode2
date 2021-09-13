@@ -12,7 +12,7 @@ namespace GuiCode
 	enum State
 	{
 		NoValue = 0, 
-		Hovering, Focused, Pressed, Visible
+		Hovering, Focused, Pressed, Visible, Disabled, Selected
 	};
 
 	enum Cursor
@@ -38,7 +38,7 @@ namespace GuiCode
 		 * Make sure to remove component from the list whenever its 
 		 * lifetime expires!!!
 		 */
-		std::list<Wrapper<Component>> components;
+		std::list<Pointer<Component>> components;
 
 		/**
 		 * Listener of this component, will handle forwarding of events

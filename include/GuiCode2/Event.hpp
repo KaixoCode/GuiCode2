@@ -53,7 +53,7 @@ namespace GuiCode
 		 * EventListener needs the list of components to work with.
 		 * @param c component list
 		 */
-		EventListener(std::list<Wrapper<Component>>& c)
+		EventListener(std::list<Pointer<Component>>& c)
 			: components(&c)
 		{}
 		
@@ -189,7 +189,7 @@ namespace GuiCode
 		void operator()(const Event& e);
 
 	private:
-		std::list<Wrapper<Component>>* components = nullptr;
+		std::list<Pointer<Component>>* components = nullptr;
 		std::list<std::unique_ptr<EventFunctionBase>> m_Listeners;
 		std::map<int, StateHandler> m_StateHandlers;
 	};

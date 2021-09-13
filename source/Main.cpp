@@ -9,6 +9,8 @@
 #include "GuiCode2/Key.hpp"
 #include "GuiCode2/TextArea.hpp"
 #include "GuiCode2/TextBox.hpp"
+#include "GuiCode2/Button.hpp"
+#include "GuiCode2/Menu.hpp"
 
 using namespace GuiCode;
 
@@ -209,174 +211,13 @@ class Parser
 
 };
 
-class MenuItem
-{
-public:
 
-};
-
-class Menu : public Panel
-{
-	using Panel::panels;
-	using Panel::settings;
-
-public:
-
-	Menu(std::initializer_list<Wrapper<Component>>&& comp)
-	{
-		for (auto& i : comp)
-			panels.Emplace({ {.ratio = 1,.min{ -1, 12 }  }, std::move(i) });
-
-		Init();
-	}
-
-	Menu() { Init(); }
-	Menu(Menu&&) { Init(); }
-	Menu(const Menu&) { Init(); }
-
-	template<std::derived_from<Component> T, typename ...Args> requires std::constructible_from<T, Args...>
-	T& Emplace(Args&&...args) 
-	{
-		auto& panel = panels.Emplace({ {.ratio = 1,.min{ -1, 12 } }, T{ std::forward<Args>(args)... } });
-		return panel.component;
-	}	
-
-	void Clear()
-	{
-		panels.Clear();
-	}
-
-private:
-	void Init()
-	{
-		settings.ratio = 1;
-		settings.layout = Layout::Column;
-		settings.overflow = Overflow::Scroll;
-		listener += [&](const KeyPress& e)
-		{
-			if (e.Handled() || !State<Focused>())
-				return;
-
-			Component* _c = Get(Hovering);
-			if (e.keycode == Key::Down)
-			{
-				if (_c)
-				{
-					bool _found = false;
-					for (auto& i : panels)
-					{
-						if (_found)
-						{
-							_c->State<Hovering>(false);
-							i.component->State<Hovering>(true);
-							break;
-						}
-
-						if (i.component == _c)
-							_found = true;
-					}
-				}
-				else
-					panels.begin()->component->State<Hovering>(true);
-			}
-			else if (e.keycode == Key::Up)
-			{
-				if (_c)
-				{
-					Component* _prev = nullptr;
-					for (auto& i : panels)
-					{
-						if (i.component == _c)
-						{
-							if (_prev)
-							{
-								_c->State<Hovering>(false);
-								_prev->State<Hovering>(true);
-							}
-							break;
-						}
-
-						_prev = i.component;
-					}
-				}
-				else
-					(--panels.end())->component->State<Hovering>(true);
-			}
-		};
-
-		listener += [&](const Unfocus& e)
-		{
-			Component* _c = Get(Hovering);
-			if (_c)
-				_c->State<Hovering>(false);
-		};
-	}
-
-};
-
-
-class Button : public Component
-{
-public:
-	Button()
-	{
-		Init();
-		std::cout << "CONSTRUCT" << std::endl;
-	}
-
-	Button(Button&&)
-	{
-		Init();
-		std::cout << "MOVE" << std::endl;
-	}
-
-	Button(const Button&)
-	{
-		Init();
-		std::cout << "COPY" << std::endl;
-	}
-
-	~Button()
-	{
-		std::cout << "DESTRUCT" << std::endl;
-	}
-
-	void Render(CommandCollection& d) const override
-	{
-
-		d.Fill(border.color.Current());
-		d.Quad(dimensions);
-
-		d.Fill(color.Current());
-		d.Quad({ x + border.width, y + border.width, width - 2 * border.width, height - 2 * border.width });
-	}
-
-	StateColors color{ *this };
-	struct 
-	{
-		float width;
-		StateColors color;
-	} border{ 1, *this };
-	
-private:
-	void Init()
-	{
-		color.base = { 0, 0, 0, 255 };
-		color.State<Hovering>({ 255, 0, 0, 255 });
-		border.color.base = { 128, 128, 128 };
-
-		listener += [&](const KeyPress& e) 
-		{
-			if (e.keycode == Key::Left)
-			{
-				e.Handle();
-			}
-
-
-		};
-	}
-};
-
+/**
+ * Button types:
+ *  - Normal
+ *  - Toggle
+ *  - Hover
+ */
 
 int main()
 {
@@ -391,54 +232,78 @@ int main()
 	window.graphics->LoadFont(SEGOEUI, "segoeui");
 
 	window.titlebar.font = "segoeui";
-	window.titlebar.background = 0x39805f;
-	window.titlebar.close.color.base = 0x39805f;
-	window.titlebar.minimize.color.base = 0x39805f;
-	window.titlebar.maximize.color.base = 0x39805f;
-	window.titlebar.close.color.State<Hovering>(0xcc5c5c);
-	window.titlebar.minimize.color.State<Hovering>(0x52B788);
-	window.titlebar.maximize.color.State<Hovering>(0x52B788);
-	window.titlebar.close.color.State<Pressed>(0x803939);
-	window.titlebar.minimize.color.State<Pressed>(0x469c74);
-	window.titlebar.maximize.color.State<Pressed>(0x469c74);
-	window.background = 0x39805f;
 	Panel::Id _textId, _menuId;
 	window.panel = {
 		{
 			.layout = Layout::Row,
 			.padding{ 8, 8, 8, 8 },
 			.margin{ 8, 8, 8, 8 },
-			.border{ 4, 0x469c74 },
-			.background{ 0x52B788 }
 		},
 		{
 			{ {.id = _textId, .ratio = 1}, TextArea{} },
 			{ {.id = _menuId, .ratio = 1}, Menu{} },
 		}
 	};
+	Menu _menu1;
+	Pointer<Component> component1{ _menu1 }; // This Pointer stores a pointer to the original menu
+	Pointer<Component> component2{ Menu{} }; // This Pointer stores the menu
+	Menu& _a = component1; // Automatic type operator
+	Menu& _b = component2;
 
 	Menu& _menu = window.panel.Find(_menuId)->component;
-	
-	for (int i = 0; i < 10; i++)
-		_menu.Emplace<Button>();
-
+	Panel& _panel = _menu;
+	_panel.settings.background = { 19, 19, 19, 255 };
+	{
+		Button::Group _group1;
+		Button::Group _group2;
+		_menu.Emplace(MenuButton{ {.name = "Choose 1" } }).State<Disabled>(true);
+		_menu.Emplace(Divider{});
+		_menu.Emplace(MenuButton{ {
+			.group = _group1,
+			.type = Button::Radio, 
+			.callback = [](bool value) { std::cout << value << std::endl; }, 
+			.combo = Key::CTRL_1, 
+			.name = "Button1" 
+		} });
+		_menu.Emplace(MenuButton{ {
+			.group = _group1,
+			.type = Button::Radio,
+			.callback = [](bool value) { std::cout << value << std::endl; },
+			.combo = Key::CTRL_2,
+			.name = "Button2"
+		} });
+		_menu.Emplace(MenuButton{ {
+			.group = _group1,
+			.type = Button::Radio,
+			.callback = [](bool value) { std::cout << value << std::endl; },
+			.combo = Key::CTRL_3,
+			.name = "Button3"
+		} });
+		_menu.Emplace(MenuButton{ {
+			.group = _group1,
+			.type = Button::Radio,
+			.callback = [](bool value) { std::cout << value << std::endl; },
+			.combo = Key::CTRL_4,
+			.name = "Button4"
+		} });
+		_menu.Emplace(Divider{});
+		_menu.Emplace(MenuButton{ {
+			.group = _group2,
+			.type = Button::Radio,
+			.callback = [](bool value) { std::cout << value << std::endl; },
+			.combo = Key::CTRL_5,
+			.name = "Button5"
+		} });
+		_menu.Emplace(MenuButton{ {
+			.group = _group2,
+			.type = Button::Radio,
+			.callback = [](bool value) { std::cout << value << std::endl; },
+			.combo = Key::CTRL_6,
+			.name = "Button6"
+		} });
+	}
 	TextArea& _text = window.panel.Find(_textId)->component;
 	_text.font = "segoeui";
-	_text.lineHeight = 64;
-	_text.fontSize = 16;
-	_text.wrap = Wrap::Word;
-	_text.container.content = "apple juice";
-	_text.textColor = { 255, 255, 255 };
-	_text.scrollbar.x.background = 0x469c74;
-	_text.scrollbar.y.background = 0x469c74;
-	_text.scrollbar.x.bar.base = 0x67e6ab;
-	_text.scrollbar.y.bar.base = 0x67e6ab;
-	_text.scrollbar.x.background =
-	_text.scrollbar.y.background = 0x4ba67c;
-	_text.scrollbar.x.bar.base = 0x40916C;
-	_text.scrollbar.x.bar.State<Pressed>(0x327356);
-	_text.scrollbar.x.bar.State<Hovering>(0x3b8765);
-	_text.scrollbar.y.bar = _text.scrollbar.x.bar;
 
 	while (window.Loop())
 	{

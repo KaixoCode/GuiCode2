@@ -653,7 +653,6 @@ namespace GuiCode
 
         glBindBuffer(GL_ARRAY_BUFFER, text.vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(_vertices), _vertices, GL_STATIC_DRAW);
-
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
     }
@@ -701,6 +700,7 @@ namespace GuiCode
         if (!m_CurrentFont)
             return;
 
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         if (m_PreviousShader != 1)
         {
             glBindVertexArray(text.vao);
@@ -788,7 +788,8 @@ namespace GuiCode
         }
 
         glBindTexture(GL_TEXTURE_2D, 0);
-    }
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
 
     void OpenGL::Font(std::string_view font)
     {
