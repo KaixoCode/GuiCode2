@@ -178,6 +178,7 @@ namespace GuiCode
 
 	void MenuButton::Update()
 	{
+		// Set the minimum width of this menu button to fit all text.
 		float _minWidth = 0;
 		_minWidth += GraphicsBase::StringWidth(settings.name, settings.font, settings.text.size);
 		_minWidth += GraphicsBase::StringWidth(settings.combo.ToString(), settings.font, settings.text.size);

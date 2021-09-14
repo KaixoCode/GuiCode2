@@ -8,6 +8,9 @@
 
 namespace GuiCode
 {
+	/**
+	 * Basic menu, makes use of a Panel to layout.
+	 */
 	class Menu : public Panel
 	{
 		using Panel::panels;
@@ -18,6 +21,11 @@ namespace GuiCode
 		Menu(Menu&&);
 		Menu(const Menu&);
 
+		/**
+		 * Add a component to this menu.
+		 * @param object
+		 * @return the object
+		 */
 		template<std::derived_from<Component> T>
 		T& Emplace(T&& object)
 		{
@@ -26,6 +34,11 @@ namespace GuiCode
 			return panel.component;
 		}
 
+		/**
+		 * Add a component to this menu.
+		 * @param object
+		 * @return the object
+		 */
 		template<std::derived_from<Component> T>
 		T& Emplace(T& object)
 		{
@@ -35,7 +48,6 @@ namespace GuiCode
 		}
 
 		void Clear();
-
 		bool Hitbox(const Vec2<float>& pos) const override;
 
 		Vec4<float>& padding;
@@ -47,6 +59,9 @@ namespace GuiCode
 		void Init();
 	};
 
+	/**
+	 * Button with menu graphics.
+	 */
 	class MenuButton : public Button
 	{
 	public:
@@ -119,6 +134,10 @@ namespace GuiCode
 		void Init();
 	};
 
+	/**
+	 * Button with menu graphics, that opens a 
+	 * sub-menu when pressed.
+	 */
 	struct SubMenuButton : public MenuButton
 	{
 		SubMenuButton(const Settings& settings = {}) : MenuButton(settings) { Init(); }

@@ -2,109 +2,46 @@
 #include "GuiCode2/pch.hpp"
 #include "GuiCode2/Window.hpp"
 
-
 namespace GuiCode
 {
-
+	/**
+	 * Frame for a context menu.
+	 */
 	class ContextFrame : public Window
 	{
-		bool shouldClose = false;
+		bool m_ShouldClose = false;
+
 	public:
-		ContextFrame()
-			: Window({.alwaysOnTop = true, .state = Hide, .resizeable = false, .decorated = true, .noAnimations = true })
-		{}
+		ContextFrame();
 
-		void Update() override
-		{
-			if (components.size())
-			{
-				Component& _c = *components.begin();
-				size = _c.size;
-			}
-
-			if (shouldClose)
-			{
-				if (components.size())
-				{
-					Component& _c = *components.begin();
-					if (_c.State<Focused>())
-					{
-						_c.State<Focused>(false);
-						_c.listener(Unfocus{});
-					}
-					components.clear();
-				}
-				State<Visible>(Hide);
-				owner = nullptr;
-				shouldClose = false;
-			}
-		}
-
-		void Render(CommandCollection& d) const override
-		{
-			d.Fill({ 0, 0, 0 });
-			d.Quad(dimensions);
-		}
-
-		void Close()
-		{
-			shouldClose = true;
-		}
+		void Update() override;
+		void Close();
 
 		WindowBase* owner = nullptr;
 	};
 
+	/**
+	 * Context menu singleton, contains a pool of ContextFrames
+	 * to open context menus.
+	 */
 	class ContextMenu
 	{
 	public:
-
 		static inline Vec2<float> offset;
 
-		static inline void Open(Component& c, const Vec2<float> position)
-		{
-			ContextFrame* _theChosenOne = nullptr;
-			for (auto& _window : m_WindowPool)
-			{
-				if (_window.State<Visible>() == Hide)
-				{
-					_theChosenOne = &_window;
-					break;
-				}
-			}
+		/**
+		 * Open a ContextFrame with the component.
+		 * @param c the component
+		 * @param position the position relative to the current window
+		 */
+		static void Open(Component& c, const Vec2<float> position);
 
-			if (!_theChosenOne)
-				_theChosenOne = &m_WindowPool.emplace_back();
-
-			_theChosenOne->position = offset + position;
-			_theChosenOne->size = c.size;
-			_theChosenOne->components.push_back(c);
-			_theChosenOne->owner = WindowBase::currentWindow;
-			if (!c.State<Focused>())
-			{
-				c.State<Focused>(true);
-				c.listener(Focus{});
-			}
-			_theChosenOne->State<Visible>(Show);
-		}
-
-		static inline void Close(Component& c)
-		{
-			for (auto& _window : m_WindowPool)
-			{
-				if (_window.components.size() && &*_window.components.begin() == &c)
-				{
-					_window.Close();
-				}
-			}
-		}
-
-		static inline void Loop()
-		{
-			for (auto& _window : m_WindowPool)
-			{
-				_window.Loop();
-			}
-		}
+		/**
+		 * Close the ContextFrame that is displaying the component.
+		 * @param c the component
+		 */
+		static void Close(Component& c);
+		static void Loop();
 
 	private:
 		static inline std::list<ContextFrame> m_WindowPool;
