@@ -231,10 +231,28 @@ namespace GuiCode
 				break;
 			}
 			}
+
+			if (settings.size.width == Auto)
+			{
+				float _width = 0;
+				for (auto& i : panels)
+					_width += i.width;
+				width = _width + settings.padding.left + settings.padding.right;
+			}
+
+			if (settings.size.height == Auto)
+			{
+				float _height = 0;
+				for (auto& i : panels)
+					_height += i.height;
+				height = _height + settings.padding.top + settings.padding.bottom;
+			}
+
+			ConstrainSize();
 		}
 	}
 
-	void Panel::RowLayout(const Vec4<float>& content)
+	void Panel::RowLayout(Vec4<float>& content)
 	{
 		// Calculate Row layout in 3 steps
 		//  1: Determine sum of ratios and explicit sizes if no ratio was given
@@ -373,7 +391,7 @@ namespace GuiCode
 		m_Viewport.height = _biggestHeight - content.height + height;
 	}
 
-	void Panel::ColumnLayout(const Vec4<float>& content)
+	void Panel::ColumnLayout(Vec4<float>& content)
 	{		
 		// Calculate Column layout in 3 steps
 		//  1: Determine sum of ratios and explicit sizes if no ratio was given
@@ -537,7 +555,7 @@ namespace GuiCode
 		Update();
 		scrollbar.x.ForwardUpdate();
 		scrollbar.y.ForwardUpdate();
-
+		
 		if (component)
 			component->ForwardUpdate();
 
@@ -587,9 +605,9 @@ namespace GuiCode
 		else
 		{
 			std::list<Panel*> _panels;
-			for (auto& _span : panels)
-				if (_span.BoundingBox().Overlaps(BoundingBox()))
-					_panels.push_back(&_span);
+			for (auto& _panel : panels)
+				if (_panel.BoundingBox().Overlaps(BoundingBox()))
+					_panels.push_back(&_panel);
 
 			_panels.sort([](Panel* a, Panel* b) -> bool { return a->settings.zIndex < b->settings.zIndex; });
 

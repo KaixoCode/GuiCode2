@@ -1,4 +1,5 @@
 #include "GuiCode2/WindowsWindow.hpp"
+#include "GuiCode2/ContextMenu.hpp"
 
 namespace GuiCode
 {
@@ -40,6 +41,7 @@ namespace GuiCode
     }
 
     int WindowsWindow::m_WindowCount = 0;
+    WindowsWindow* WindowsWindow::m_MainWindow = nullptr;
 
     WindowsWindow::WindowsWindow(const WindowData& data)
         : WindowBase(data)
@@ -64,7 +66,9 @@ namespace GuiCode
         glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
         glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
 
-        m_Window = glfwCreateWindow(55, 55, "NAME", NULL, NULL);
+        m_Window = glfwCreateWindow(55, 55, data.name.c_str(), nullptr, m_MainWindow ? m_MainWindow->m_Window : nullptr);
+        if (m_MainWindow == nullptr)
+            m_MainWindow = this;
 
         if (&m_Window == NULL)
         {
@@ -108,12 +112,23 @@ namespace GuiCode
         MARGINS _margins = { 1, 1, 1, 1 };
         DwmExtendFrameIntoClientArea(GetWin32Handle(), &_margins);
 
+        if (data.noAnimations)
+        {
+            BOOL fDisable = TRUE;
+            DwmSetWindowAttribute(GetWin32Handle(), DWMWA_TRANSITIONS_FORCEDISABLED, &fDisable, sizeof(fDisable));
+        }
+
         State<Visible>(data.state);
     }
 
 
     bool WindowsWindow::Loop()
     {
+        if (auto _w = dynamic_cast<ContextFrame*>(this))
+            currentWindow = _w->owner;
+        else
+            currentWindow = this;
+
         bool _ret = WindowsLoop();
         glfwPollEvents();
         return _ret;
@@ -134,31 +149,37 @@ namespace GuiCode
 
         if (m_PrevVisibility != _visible)
         {
+            int _placement;
+
             int _cmd = 0;
             if (_visible == Close) return false;
-            else if (_visible == Show && m_PrevVisibility == Hide) ShowWindow(GetWin32Handle(), SW_SHOW);
-            else if (_visible == Show && m_PrevVisibility == Minimize) ShowWindow(GetWin32Handle(), SW_RESTORE);
-            else if (_visible == Show && m_PrevVisibility == Maximize) ShowWindow(GetWin32Handle(), SW_RESTORE);
-            else if (_visible == Hide && m_PrevVisibility == Show) ShowWindow(GetWin32Handle(), SW_HIDE);
-            else if (_visible == Hide && m_PrevVisibility == Minimize) ShowWindow(GetWin32Handle(), SW_HIDE);
-            else if (_visible == Hide && m_PrevVisibility == Maximize) ShowWindow(GetWin32Handle(), SW_HIDE);
-            else if (_visible == Minimize && m_PrevVisibility == Show) ShowWindow(GetWin32Handle(), SW_MINIMIZE);
-            else if (_visible == Minimize && m_PrevVisibility == Hide) ShowWindow(GetWin32Handle(), SW_MINIMIZE);
-            else if (_visible == Minimize && m_PrevVisibility == Maximize) ShowWindow(GetWin32Handle(), SW_MINIMIZE);
-            else if (_visible == Maximize && m_PrevVisibility == Show) ShowWindow(GetWin32Handle(), SW_MAXIMIZE);
-            else if (_visible == Maximize && m_PrevVisibility == Hide) ShowWindow(GetWin32Handle(), SW_MAXIMIZE);
-            else if (_visible == Maximize && m_PrevVisibility == Minimize) ShowWindow(GetWin32Handle(), SW_MAXIMIZE);
+            else if (_visible == Show && m_PrevVisibility == Hide) _placement = SW_SHOW;
+            else if (_visible == Show && m_PrevVisibility == Minimize) _placement = SW_RESTORE;
+            else if (_visible == Show && m_PrevVisibility == Maximize) _placement = SW_RESTORE;
+            else if (_visible == Hide && m_PrevVisibility == Show) _placement = SW_HIDE;
+            else if (_visible == Hide && m_PrevVisibility == Minimize) _placement = SW_HIDE;
+            else if (_visible == Hide && m_PrevVisibility == Maximize) _placement = SW_HIDE;
+            else if (_visible == Minimize && m_PrevVisibility == Show) _placement = SW_MINIMIZE;
+            else if (_visible == Minimize && m_PrevVisibility == Hide) _placement = SW_MINIMIZE;
+            else if (_visible == Minimize && m_PrevVisibility == Maximize) _placement = SW_MINIMIZE;
+            else if (_visible == Maximize && m_PrevVisibility == Show) _placement = SW_MAXIMIZE;
+            else if (_visible == Maximize && m_PrevVisibility == Hide) _placement = SW_MAXIMIZE;
+            else if (_visible == Maximize && m_PrevVisibility == Minimize) _placement = SW_MAXIMIZE;
+            ShowWindow(GetWin32Handle(), _placement);
 
             m_PrevVisibility = _visible;
         }
+
         WINDOWPLACEMENT placement;
         placement.length = sizeof(WINDOWPLACEMENT);
         GetWindowPlacement(GetWin32Handle(), &placement);
-        if (placement.showCmd == SW_NORMAL) _visible = Show;
+        if (placement.showCmd == SW_SHOW) _visible = Show;
+        else if (_visible != Hide && placement.showCmd == SW_NORMAL) _visible = Show;
         else if (placement.showCmd == SW_HIDE) _visible = Hide;
         else if (placement.showCmd == SW_SHOWMAXIMIZED) _visible = Maximize;
         else if (placement.showCmd == SW_SHOWMINIMIZED) _visible = Minimize;
         State<Visible>(_visible);
+        
 
         // Only change context if it's necessary, because this seems to
         // have a relatively high impact on the CPU usage.
@@ -177,6 +198,7 @@ namespace GuiCode
             //Graphics::Scaling(m_Scale);
             //WindowFocused(GetForegroundWindow() == GetWin32Handle());
 
+            ContextMenu::offset = position;
             ForwardUpdate();
 
             auto _c = Get(Hovering);
@@ -263,7 +285,8 @@ namespace GuiCode
 
         // Determine if the point is at the top or bottom of the window.
         int _padding = 8 / scale;
-        if (_ptMouse.y >= _rcWindow.top && _ptMouse.y < _rcWindow.top + 32 / scale)
+        bool _maximized = IsMaximized(hWnd);
+        if (_ptMouse.y >= _rcWindow.top && _ptMouse.y < _rcWindow.top + (_maximized ? 40 : 32) / scale)
         {
             _fOnResizeBorder = (_ptMouse.y < (_rcWindow.top - _rcFrame.top));
             _uRow = 0;
@@ -390,6 +413,41 @@ namespace GuiCode
 
         switch (uMsg)
         {
+        case WM_KILLFOCUS:
+        {
+            if (auto _w = dynamic_cast<ContextFrame*>(_self))
+            {
+                if (_w->owner == nullptr)
+                    break;
+                bool _any = false;
+                for (auto& i : ContextMenu::m_WindowPool)
+                {
+                    if (i.owner == _w->owner && GetFocus() == i.GetWin32Handle())
+                    {
+                        _any = true;
+                        break;
+                    }
+                }
+
+                if (!_any)
+                {
+                    ((WindowsWindow*)_w->owner)->m_EventQueue.push(std::make_unique<Unfocus>());
+                    for (auto& i : ContextMenu::m_WindowPool)
+                    {
+                        if (i.owner == _w->owner)
+                            i.m_EventQueue.push(std::make_unique<Unfocus>());
+                    }
+
+                }
+            }
+
+            break;
+        }
+        case WM_SETFOCUS:
+        {
+            _self->m_EventQueue.push(std::make_unique<Focus>());
+            break;
+        }
         case WM_SYSKEYDOWN:
         case WM_SYSKEYUP:
         case WM_KEYDOWN:

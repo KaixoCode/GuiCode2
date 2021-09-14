@@ -47,7 +47,7 @@ namespace GuiCode
 			if (!settings.callback || State<Disabled>())
 				return;
 
-			if (settings.type == Hover)
+			if (settings.type == Hover && !State<Hovering>())
 			{
 				State<Selected>(true);
 				settings.callback(true);
@@ -68,7 +68,7 @@ namespace GuiCode
 
 		listener += [this](const MouseRelease& e)
 		{
-			if (!settings.callback || !(State<Focused>() && State<Hovering>() && Hitbox(e.pos)) || State<Disabled>())
+			if (!settings.callback || ~e.button & MouseButton::Left || !(State<Focused>() && State<Hovering>() && Hitbox(e.pos)) || State<Disabled>())
 				return;
 
 			if (settings.type == Click)
@@ -101,16 +101,24 @@ namespace GuiCode
 			if (!e.repeat && (State<Hovering>() && e.keycode == Key::Enter || e == settings.combo))
 			{
 				if (settings.type == Click)
+				{
 					settings.callback(true);
-
-				if (settings.type == Radio)
+					e.Handle();
+				}
+				else if (settings.type == Radio && !State<Selected>())
 				{
 					settings.group->Unselect();
 					State<Selected>(true);
 					settings.callback(true);
+					e.Handle();
 				}
-
-				if (settings.type == Toggle)
+				else if (settings.type == Hover && !State<Selected>())
+				{
+					State<Selected>(true);
+					settings.callback(true);
+					e.Handle();
+				}
+				else if (settings.type == Toggle)
 				{
 					bool _selected = State<Selected>() ^ true;
 					settings.group->Unselect();
@@ -119,8 +127,24 @@ namespace GuiCode
 						State<Selected>(_selected);
 						settings.callback(_selected);
 					}
+					e.Handle();
 				}
-				e.Handle();
+			}
+
+			if (!e.repeat && settings.type == Hover && State<Hovering>())
+			{
+				if (e.keycode == Key::Right && !State<Selected>())
+				{
+					State<Selected>(true);
+					settings.callback(true);
+					e.Handle();
+				}
+				else if (e.keycode == Key::Left && State<Selected>())
+				{
+					State<Selected>(false);
+					settings.callback(false);
+					e.Handle();
+				}
 			}
 		};
 	}

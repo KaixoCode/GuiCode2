@@ -2,9 +2,15 @@
 
 namespace GuiCode
 {
-	StateColors::StateColors(Component* link)
-		: m_Link(link)
-	{}
+	StateColors::StateColors(const Settings& settings)
+		: m_Link(settings.link), transition(settings.transition), base(settings.base)
+	{
+		for (auto& [state, color] : settings.colors)
+		{
+			m_States.push_front(state);
+			m_ColorMap[state] = color;
+		}
+	}
 
 	StateColors& StateColors::operator=(const StateColors& other)
 	{

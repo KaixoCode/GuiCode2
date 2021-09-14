@@ -14,7 +14,15 @@ namespace GuiCode
 	class StateColors
 	{
 	public:
-		StateColors(Component* link = nullptr);
+		struct Settings
+		{
+			Component* link = nullptr;
+			Color base{ 0, 0, 0, 0 };
+			std::map<int, Color> colors;
+			float transition = 100;
+		};
+
+		StateColors(const Settings& settings = {});
 		StateColors& operator=(const StateColors& other);
 		StateColors& operator=(StateColors&& other);
 
@@ -47,8 +55,8 @@ namespace GuiCode
 		 */
 		Color Current() const;
 
-		Color base{ 0, 0, 0, 0 }; // Base color, when no state is present
-		float transition = 100; // Transition time in milliseconds
+		Color base;       // Base color, when no state is present
+		float transition; // Transition time in milliseconds
 
 	private:
 		Component* m_Link;

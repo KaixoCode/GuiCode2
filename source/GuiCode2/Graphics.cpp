@@ -606,8 +606,20 @@ namespace GuiCode
     {
         static Shader _shader
         {
-            "#version 330 core \n layout(location = 0) in vec2 aPos; uniform mat4 projection; uniform mat4 view; uniform mat4 model; void main() { gl_Position = projection * view * model * vec4(aPos, 0.0, 1.0); }",
-            "#version 330 core \n out vec4 FragColor; uniform vec4 color; void main() { FragColor = color; } "
+            "#version 330 core \n "
+            "layout(location = 0) in vec2 aPos; "
+            "uniform mat4 projection; "
+            "uniform mat4 view; "
+            "uniform mat4 model; "
+            "void main() { "
+            "    gl_Position = projection * view * model * vec4(aPos, 0.0, 1.0); "
+            "}",
+            "#version 330 core \n "
+            "out vec4 FragColor; "
+            "uniform vec4 color; "
+            "void main() { "
+            "    FragColor = color; "
+            "} "
         };
         static GLint model = glGetUniformLocation(_shader.ID, "model");
         static GLint view = glGetUniformLocation(_shader.ID, "view");

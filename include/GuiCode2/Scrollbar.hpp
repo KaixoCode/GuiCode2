@@ -27,7 +27,7 @@ namespace GuiCode
 		Axis axis = Horizontal;
 
 		Color background{ 96, 96, 96 };
-		StateColors bar{ this };
+		StateColors bar{ {.link = this } };
 
 		void Update() override;
 		void Render(CommandCollection& d) const override;

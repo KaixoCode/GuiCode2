@@ -146,6 +146,8 @@ namespace GuiCode
 
 			auto begin() { return data.begin(); }
 			auto end() { return data.end(); }
+			auto begin() const { return data.begin(); }
+			auto end() const { return data.end(); }
 			auto Size() const { return data.size(); }
 
 		private:
@@ -168,7 +170,7 @@ namespace GuiCode
 
 		void RenderBorder(CommandCollection&);
 
-		void RowLayout(const Vec4<float>& content);
-		void ColumnLayout(const Vec4<float>& content);
+		void RowLayout(Vec4<float>& content);
+		void ColumnLayout(Vec4<float>& content);
 	};
 }

@@ -1,9 +1,10 @@
+#include "GuiCode2/ContextMenu.hpp"
 #include "GuiCode2/Frame.hpp"
 
 namespace GuiCode
 {
 	Frame::Button::Button()
-		: color(this)
+		: color({ .link = this })
 	{
 		listener += [this](const MouseRelease& e)
 		{
@@ -18,6 +19,9 @@ namespace GuiCode
 		components.push_back(close);
 		components.push_back(minimize);
 		components.push_back(maximize);
+		components.push_back(menu);
+		menu.border.width = 0;
+		menu.padding = { 0, 0, 0, 0 };
 	}
 
 	void Frame::TitleBar::Update()
@@ -25,6 +29,8 @@ namespace GuiCode
 		close.dimensions = { x + width - 46 * 1, y, 46, 30 };
 		maximize.dimensions = { x + width - 46 * 2, y, 46, 30 };
 		minimize.dimensions = { x + width - 46 * 3, y, 46, 30 };
+		menu.height = height;
+		menu.position = { x + height + 12, y };
 	}
 
 	void Frame::TitleBar::Render(CommandCollection& d) const
@@ -36,10 +42,13 @@ namespace GuiCode
 			return;
 
 		d.Fill(text);
+		d.Quad({ x + 6, y + 6, height - 12, height - 12 });
+		d.Quad({ x + height + menu.width + 18, y + 8, 1, height - 16 });
+		d.Quad({ x + height + 6, y + 8, 1, height - 16 });
 		d.TextAlign(textAlign);
 		d.FontSize(textSize);
 		d.Font(font);
-		d.Text(title, { x + height, y + height / 2 });
+		d.Text(title, { x + height + menu.width + 31, y + height / 2 });
 	}
 
 	bool Frame::TitleBar::Hitbox(const Vec2<float>& v) const
@@ -147,7 +156,7 @@ namespace GuiCode
 		// Window border is hit when hovering over titlebar, but not over the buttons
 		// or when hovering over the outer 8 pixels, which is the resize part.
 		return (titlebar.State<Hovering>() && !titlebar.close.Hitbox(v) &&
-			!titlebar.minimize.Hitbox(v) && !titlebar.maximize.Hitbox(v))
+			!titlebar.minimize.Hitbox(v) && !titlebar.maximize.Hitbox(v) && !titlebar.menu.Hitbox(v))
 			|| v.x < 8 || v.y >= height - 8 || v.x >= width - 8 || v.y < 8;
 	}
 }

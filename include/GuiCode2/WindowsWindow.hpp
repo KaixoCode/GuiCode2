@@ -41,5 +41,6 @@ namespace GuiCode
 
         static LRESULT SubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
         static int m_WindowCount;
+        static WindowsWindow* m_MainWindow;
     };
 }

@@ -1,4 +1,5 @@
 #pragma once
+#include "GuiCode2/Menu.hpp"
 #include "GuiCode2/Window.hpp"
 
 namespace GuiCode
@@ -37,6 +38,7 @@ namespace GuiCode
 			float textSize = 12;
 			int textAlign = Align::Left | Align::CenterY;
 			std::string_view font;
+			Menu menu{ false /* Not vertical menu */ };
 
 			void Update() override;
 			void Render(CommandCollection& d) const override;

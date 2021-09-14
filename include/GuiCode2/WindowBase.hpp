@@ -18,7 +18,7 @@ namespace GuiCode
 		int state = Show;
 		bool resizeable = true;
 		bool decorated = true;
-		WindowBase* parent = nullptr;
+		bool noAnimations = false;
 	};
 
 	struct MouseInfo
@@ -36,6 +36,8 @@ namespace GuiCode
 	class WindowBase : public Component
 	{
 	public:
+		static inline WindowBase* currentWindow = nullptr;
+
 		WindowBase(const WindowData& d)
 		{
 			windowId = m_WindowIdCounter++;

@@ -2,35 +2,77 @@
 
 namespace GuiCode
 {
-	Menu::Menu(std::initializer_list<Pointer<Component>> comp)
+	Menu::Menu(bool vertical)
+		: vertical(vertical),
+		border(settings.border),
+		background(settings.background),
+		padding(settings.padding)
 	{
-		for (auto& i : comp)
-			panels.Emplace({ {.ratio = 0,.size{ Inherit, Auto }  }, std::move(i) });
-
 		Init();
+		background = { 26, 26, 26, 255 };
+		padding = { 4, 4, 4, 4 };
+		border.width = 1;
+		border.color = { 64, 64, 64, 255 };
 	}
 
-	Menu::Menu() { Init(); }
-	Menu::Menu(Menu&&) { Init(); }
-	Menu::Menu(const Menu&) { Init(); }
+	Menu::Menu(Menu&& other)
+		: vertical(other.vertical),
+		border(settings.border),
+		background(settings.background),
+		padding(settings.padding)
+	{
+		Init();
+		background = other.background;
+		padding = other.padding;
+		border = other.border;
+	}
+
+	Menu::Menu(const Menu& other)
+		: vertical(other.vertical),
+		border(settings.border),
+		background(settings.background),
+		padding(settings.padding)
+	{
+		Init();
+		background = other.background;
+		padding = other.padding;
+		border = other.border;
+	}
 
 	void Menu::Clear()
 	{
 		panels.Clear();
 	}
 
+	bool Menu::Hitbox(const Vec2<float>& pos) const
+	{
+		if (Panel::Hitbox(pos))
+			return true;
+
+		// Make sure to include menu component hitboxes
+		for (auto& i : panels)
+			if (i.component->Hitbox(pos))
+				return true;
+
+		return false;
+	}
+
 	void Menu::Init()
 	{
+		settings.max.height = 500;
+		settings.max.width = 500;
 		settings.ratio = 1;
-		settings.layout = Layout::Column;
+		settings.layout = vertical ? Layout::Column : Layout::Row;
 		settings.overflow = Overflow::Scroll;
+		settings.size.width = vertical ? Inherit : Auto;
+		settings.size.height = vertical ? Auto : Inherit;
 		listener += [&](const KeyPress& e)
 		{
 			if (e.Handled() || !State<Focused>())
 				return;
 
 			Component* _c = Get(Hovering);
-			if (e.keycode == Key::Down)
+			if ((vertical && e.keycode == Key::Down) || (!vertical && e.keycode == Key::Right))
 			{
 				if (_c && _c != this)
 				{
@@ -58,7 +100,7 @@ namespace GuiCode
 					e.Handle();
 				}
 			}
-			else if (e.keycode == Key::Up)
+			else if ((vertical && e.keycode == Key::Up) || (!vertical && e.keycode == Key::Left))
 			{
 				if (_c && _c != this)
 				{
@@ -72,7 +114,7 @@ namespace GuiCode
 								_c->State<Hovering>(false);
 								_c->listener(MouseExit{});
 								_prev->State<Hovering>(true);
-								_c->listener(MouseEnter{});
+								_prev->listener(MouseEnter{});
 								e.Handle();
 							}
 							break;
@@ -88,6 +130,11 @@ namespace GuiCode
 					(--panels.end())->component->listener(MouseEnter{});
 					e.Handle();
 				}
+			}
+
+			if (!e.Handled() && !e.repeat && e.keycode == Key::Left)
+			{
+				ContextMenu::Close(*this);
 			}
 		};
 
@@ -107,7 +154,6 @@ namespace GuiCode
 	{
 		this->settings = settings;
 		Init();
-		std::cout << "CONSTRUCT" << std::endl;
 	}
 
 	MenuButton::MenuButton(MenuButton&& other)
@@ -115,20 +161,28 @@ namespace GuiCode
 	{
 		settings = other.settings;
 		Init();
-		std::cout << "MOVE" << std::endl;
 	}
 
 	MenuButton::MenuButton(const MenuButton& other)
 		: Button({ other.settings.group, other.settings.type, other.settings.callback, other.settings.combo })
 	{
-		Init();
 		settings = other.settings;
-		std::cout << "COPY" << std::endl;
+		Init();
 	}
 
-	MenuButton::~MenuButton()
+	void MenuButton::Init()
 	{
-		std::cout << "DESTRUCT" << std::endl;
+		height = 20;
+		settings.Link(this);
+	}
+
+	void MenuButton::Update()
+	{
+		float _minWidth = 0;
+		_minWidth += GraphicsBase::StringWidth(settings.name, settings.font, settings.text.size);
+		_minWidth += GraphicsBase::StringWidth(settings.combo.ToString(), settings.font, settings.text.size);
+		_minWidth += height + 36;
+		min.width = _minWidth;
 	}
 
 	void MenuButton::Render(CommandCollection& d) const
@@ -153,27 +207,106 @@ namespace GuiCode
 		if (settings.combo)
 		{
 			d.TextAlign(Align::Middle | Align::Right);
-			d.Text(settings.combo.ToString(), { x + width - 9, y + height / 2});
+			d.Text(settings.combo.ToString(), { x + width - 9, y + height / 2 });
 		}
 	}
 
-	void MenuButton::Init()
+	void SubMenuButton::Init()
 	{
-		height = 20;
-		settings.Link(this);
-		settings.color.base = { 0, 0, 0, 0 };
-		settings.color.transition = 10;
-		settings.color.State<Disabled>({ 0, 0, 0, 0 });
-		settings.color.State<Pressed>(0x414141);
-		settings.color.State<Hovering>(0x262626);
-		settings.border.color.base = { 0, 0, 0, 0 };
-		settings.border.color.State<Disabled>({ 0, 0, 0, 0 });
-		settings.border.color.State<Pressed>(0x919191);
-		settings.border.color.State<Hovering>(0x767676);
-		settings.text.color.base = 0xE0E0E0;
-		settings.text.color.State<Disabled>(0xA0A0A0);
-		settings.select.base = 0x414141;
-		settings.select.State<Hovering>(0x767676);
+		Button::settings.type = Hover;
+		Button::settings.callback = [this](bool v)
+		{
+			if (v)
+				ContextMenu::Open(menu, { x + width, y });
+
+			else
+				ContextMenu::Close(menu);
+		};
+	}
+
+	void SubMenuButton::Update()
+	{
+		float _min = 136;
+		for (auto& c : menu.components)
+		{
+			if (c->min.width > _min)
+				_min = c->min.width;
+		}
+		menu.min.width = _min + (menu.scrollbar.y.Necessary() ? menu.scrollbar.y.width : 0) + menu.padding.left + menu.padding.right;
+		menu.min.height = 39 + menu.padding.top + menu.padding.bottom;
+		menu.ConstrainSize();
+
+		MenuButton::Update();
+	}
+
+	void SubMenuButton::Render(CommandCollection& d) const
+	{
+		d.Fill(settings.border.color.Current());
+		d.Quad(dimensions);
+
+		d.Fill(settings.color.Current());
+		d.Quad({ x + settings.border.width, y + settings.border.width, width - 2 * settings.border.width, height - 2 * settings.border.width });
+
+		d.Fill(settings.text.color.Current());
+		d.TextAlign(Align::Middle | Align::Left);
+		d.FontSize(settings.text.size);
+		d.Font(settings.font);
+		d.Text(settings.name, { x + height + 3, y + height / 2 });
+		d.Triangle({ x + width - 9, y + height / 2 - 6, 6, 6 }, 45 * 3);
+	}
+
+	bool SubMenuButton::Hitbox(const Vec2<float>& pos) const
+	{
+		return MenuButton::Hitbox(pos) || menu.Hitbox(pos - Vec2<float>{ x + width, y });
+	}
+
+	void MenuBarButton::Init()
+	{
+		Button::settings.type = Toggle;
+		Button::settings.callback = [this](bool v)
+		{
+			if (v)
+				ContextMenu::Open(menu, { x, y + height });
+
+			else
+				ContextMenu::Close(menu);
+		};
+
+		listener += [&](const Unfocus& e)
+		{
+			State<Selected>(false);
+			ContextMenu::Close(menu);
+		};
+	}
+
+	void MenuBarButton::Update()
+	{
+		width = GraphicsBase::StringWidth(settings.name, settings.font, settings.text.size) + settings.border.width * 2 + padding * 2;
+
+		float _min = 136;
+		for (auto& c : menu.components)
+		{
+			if (c->min.width > _min)
+				_min = c->min.width;
+		}
+		menu.min.width = _min + menu.padding.left + menu.padding.right;
+		menu.min.height = 39 + menu.padding.top + menu.padding.bottom;
+		menu.ConstrainSize();
+	}
+
+	void MenuBarButton::Render(CommandCollection& d) const
+	{
+		d.Fill(settings.border.color.Current());
+		d.Quad(dimensions);
+
+		d.Fill(settings.color.Current());
+		d.Quad({ x + settings.border.width, y + settings.border.width, width - 2 * settings.border.width, height - 2 * settings.border.width });
+
+		d.Fill(settings.text.color.Current());
+		d.TextAlign(Align::Center);
+		d.FontSize(settings.text.size);
+		d.Font(settings.font);
+		d.Text(settings.name, { x + width / 2, y + height / 2 });
 	}
 
 	Divider::Divider(const Settings& settings)

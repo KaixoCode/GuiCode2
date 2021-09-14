@@ -11,6 +11,7 @@
 #include "GuiCode2/TextBox.hpp"
 #include "GuiCode2/Button.hpp"
 #include "GuiCode2/Menu.hpp"
+#include "GuiCode2/ContextMenu.hpp"
 
 using namespace GuiCode;
 
@@ -233,81 +234,94 @@ int main()
 
 	window.titlebar.font = "segoeui";
 	Panel::Id _textId, _menuId;
-	window.panel = {
-		{
-			.layout = Layout::Row,
-			.padding{ 8, 8, 8, 8 },
-			.margin{ 8, 8, 8, 8 },
-		},
-		{
-			{ {.id = _textId, .ratio = 1}, TextArea{} },
-			{ {.id = _menuId, .ratio = 1}, Menu{} },
-		}
-	};
+
 	Menu _menu1;
 	Pointer<Component> component1{ _menu1 }; // This Pointer stores a pointer to the original menu
 	Pointer<Component> component2{ Menu{} }; // This Pointer stores the menu
 	Menu& _a = component1; // Automatic type operator
 	Menu& _b = component2;
 
-	Menu& _menu = window.panel.Find(_menuId)->component;
-	Panel& _panel = _menu;
-	_panel.settings.background = { 19, 19, 19, 255 };
+	MenuBarButton _file{ {.name = "File" } };
+	MenuBarButton _edit{ {.name = "Edit" } };
+
+	_edit.menu.Emplace(MenuButton{ {.name = "Apple" } });
+	_edit.menu.Emplace(MenuButton{ {.name = "Carrot" } });
+	_edit.menu.Emplace(MenuButton{ {.name = "Potato" } });
+
+	window.titlebar.menu.Emplace(_file);
+	window.titlebar.menu.Emplace(_edit);
+	
+	Menu& _menu = _file.menu;
+
+	SubMenuButton _submenu2{ {.name = "Submenu!" } };
+	_submenu2.menu.Emplace(MenuButton{ {.name = "SUB MENU!! "} });
+	_submenu2.menu.Emplace(MenuButton{ {.name = "EPICNESS!! "} });
+	_submenu2.menu.Emplace(MenuButton{ {.name = "WOOOO!! "} });
+
+	SubMenuButton _submenu{ { .name = "Submenu!" } };
+	_submenu.menu.Emplace(MenuButton{ {.name = "SUB MENU!! "}});
+	_submenu.menu.Emplace(MenuButton{ {.name = "EPICNESS!! "}});
+	_submenu.menu.Emplace(MenuButton{ {.name = "WOOOO!! "}});
+	_submenu.menu.Emplace(_submenu2);
+
+	Button::Group _group1;
+	Button::Group _group2;
+	_menu.Emplace(MenuButton{ {
+		.group = _group1,
+		.type = Button::Radio,
+		.callback = [](bool value) { std::cout << value << std::endl; },
+		.combo = Key::CTRL_2,
+		.name = "Button2"
+	} });
+	_menu.Emplace(_submenu);
+	_menu.Emplace(MenuButton{ {
+		.group = _group1,
+		.type = Button::Radio,
+		.callback = [](bool value) { std::cout << value << std::endl; },
+		.combo = Key::CTRL_3,
+		.name = "Button3"
+	} });
+	_menu.Emplace(MenuButton{ {
+		.group = _group1,
+		.type = Button::Radio,
+		.callback = [](bool value) { std::cout << value << std::endl; },
+		.combo = Key::CTRL_4,
+		.name = "Button4"
+	} });
+	_menu.Emplace(Divider{});
+	_menu.Emplace(MenuButton{ {
+		.group = _group2,
+		.type = Button::Radio,
+		.callback = [](bool value) { std::cout << value << std::endl; },
+		.combo = Key::CTRL_5,
+		.name = "Button5"
+	} });
+	_menu.Emplace(MenuButton{ {
+		.group = _group2,
+		.type = Button::Radio,
+		.callback = [](bool value) { std::cout << value << std::endl; },
+		.combo = Key::CTRL_6,
+		.name = "Button6",
+	} });
+
+	window.panel = {
 	{
-		Button::Group _group1;
-		Button::Group _group2;
-		_menu.Emplace(MenuButton{ {.name = "Choose 1" } }).State<Disabled>(true);
-		_menu.Emplace(Divider{});
-		_menu.Emplace(MenuButton{ {
-			.group = _group1,
-			.type = Button::Radio, 
-			.callback = [](bool value) { std::cout << value << std::endl; }, 
-			.combo = Key::CTRL_1, 
-			.name = "Button1" 
-		} });
-		_menu.Emplace(MenuButton{ {
-			.group = _group1,
-			.type = Button::Radio,
-			.callback = [](bool value) { std::cout << value << std::endl; },
-			.combo = Key::CTRL_2,
-			.name = "Button2"
-		} });
-		_menu.Emplace(MenuButton{ {
-			.group = _group1,
-			.type = Button::Radio,
-			.callback = [](bool value) { std::cout << value << std::endl; },
-			.combo = Key::CTRL_3,
-			.name = "Button3"
-		} });
-		_menu.Emplace(MenuButton{ {
-			.group = _group1,
-			.type = Button::Radio,
-			.callback = [](bool value) { std::cout << value << std::endl; },
-			.combo = Key::CTRL_4,
-			.name = "Button4"
-		} });
-		_menu.Emplace(Divider{});
-		_menu.Emplace(MenuButton{ {
-			.group = _group2,
-			.type = Button::Radio,
-			.callback = [](bool value) { std::cout << value << std::endl; },
-			.combo = Key::CTRL_5,
-			.name = "Button5"
-		} });
-		_menu.Emplace(MenuButton{ {
-			.group = _group2,
-			.type = Button::Radio,
-			.callback = [](bool value) { std::cout << value << std::endl; },
-			.combo = Key::CTRL_6,
-			.name = "Button6"
-		} });
+		.layout = Layout::Row,
+		.padding{ 8, 8, 8, 8 },
+		.margin{ 8, 8, 8, 8 },
+	},
+	{
+		{ {.id = _textId, .ratio = 1}, TextArea{} },
 	}
+	};
+
 	TextArea& _text = window.panel.Find(_textId)->component;
 	_text.font = "segoeui";
 
 	while (window.Loop())
 	{
 		LIMIT_FPS(60);
+		ContextMenu::Loop();
 		//MEASURE_FPS;
 	}
 }
