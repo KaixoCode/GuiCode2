@@ -70,14 +70,12 @@ namespace GuiCode
 	void Component::ForwardRender(CommandCollection& d)
 	{
 		d.PushClip();
-		d.PushMatrix();
 		Render(d);
 		CalculateOrder();
 		for (auto i = components.rbegin(); i != components.rend(); ++i)
 			if ((*i)->State<Visible>()) // If visible, and within bounding box, render
 				if ((*i)->BoundingBox().Overlaps(BoundingBox()))
 					(*i)->ForwardRender(d);
-		d.PopMatrix();
 		d.PopClip();
 	}
 

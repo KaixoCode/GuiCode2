@@ -8,12 +8,12 @@ namespace GuiCode
 {
 	enum class Layout
 	{
-		Free,         // not aligned
-		Grid,         // grid aligned
+		//Free,         // not aligned
+		//Grid,         // grid aligned
 		Row,          // left to right on x-axis
-		RowReverse,   // right to left on x-axis
+		//RowReverse,   // right to left on x-axis
 		Column,       // top to bottom on y-axis
-		ColumnReverse // bottom to top on y-axis
+		//ColumnReverse // bottom to top on y-axis
 	};
 
 	enum class Overflow

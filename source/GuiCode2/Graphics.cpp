@@ -8,7 +8,6 @@
 // --------------------------------------------------------------------------
 namespace GuiCode
 {
-
     Color rgb2hsv(Color in)
     {
         Color       out;
@@ -172,6 +171,7 @@ namespace GuiCode
         CreateLineBuffers();
         CreateTriangleBuffers();
         CreateEllipseBuffers();
+        CreateTextBuffers();
     }
 
     void OpenGL::Render()
@@ -650,12 +650,12 @@ namespace GuiCode
     void OpenGL::CreateTextBuffers()
     {
         float _vertices[] = {
-             1.0f,  1.0f,
-             1.0f,  0.0f,
-             0.0f,  1.0f,
-             1.0f,  0.0f,
-             0.0f,  0.0f,
-             0.0f,  1.0f,
+            0.0f, 0.0f,
+            1.0f, 0.0f,
+            0.0f, 1.0f,
+            1.0f, 0.0f,
+            1.0f, 1.0f,
+            0.0f, 1.0f
         };
 
         glGenVertexArrays(1, &text.vao);
@@ -715,8 +715,8 @@ namespace GuiCode
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         if (m_PreviousShader != 1)
         {
-            glBindVertexArray(text.vao);
             _shader.Use();
+            glBindVertexArray(text.vao);
         }
         m_PreviousShader = 1;
 

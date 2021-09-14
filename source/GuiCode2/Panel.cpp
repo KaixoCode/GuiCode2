@@ -575,7 +575,6 @@ namespace GuiCode
 	{
 		CalculateOrder();
 		d.PushClip();
-		d.PushMatrix();
 		d.Fill(settings.background);
 		d.Quad(dimensions);
 
@@ -615,7 +614,6 @@ namespace GuiCode
 				_span->ForwardRender(d);
 		}
 
-		d.PopMatrix();
 		d.PopClip();
 
 		if (scrollbar.x.State<Visible>())
