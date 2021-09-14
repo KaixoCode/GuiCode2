@@ -18,6 +18,7 @@ namespace GuiCode
 		void Close();
 
 		WindowBase* owner = nullptr;
+		bool hideOnClick = false;
 	};
 
 	/**
@@ -34,7 +35,7 @@ namespace GuiCode
 		 * @param c the component
 		 * @param position the position relative to the current window
 		 */
-		static void Open(Component& c, const Vec2<float> position);
+		static void Open(Component& c, const Vec2<float> position, bool hideOnClick = false);
 
 		/**
 		 * Close the ContextFrame that is displaying the component.

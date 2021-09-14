@@ -212,14 +212,6 @@ class Parser
 
 };
 
-
-/**
- * Button types:
- *  - Normal
- *  - Toggle
- *  - Hover
- */
-
 int main()
 {
 
@@ -308,7 +300,8 @@ int main()
 
 	TextArea& _text = window.panel.Find(_textId)->component;
 	_text.font = "segoeui";
-
+	_text.container.content = "Heo nofi ane faien pfaeb upaubg ubrg baerg aeg ";
+	_text.container.editable = false;
 	while (window.Loop())
 	{
 		LIMIT_FPS(60);

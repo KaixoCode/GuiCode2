@@ -80,8 +80,6 @@ namespace GuiCode
 				CtrlTypeActions(e), e.Handle();
 			else if (container.editable)
 				KeyTypeActions(e), e.Handle();
-
-			RecalculateLines();
 		};
 
 		listener += [this](const MouseClick& e)
@@ -563,6 +561,31 @@ namespace GuiCode
 		default: container.Insert(e.key);
 		}
 		container.ConstrainSelection();
+		RecalculateLines();
+	}
+
+	void TextDisplayer::Cut() 
+	{
+		Clipboard::Get().Copy(std::string(container.SelectionString()));
+		if (!container.editable)
+			return;
+
+		container.RemoveSelection();
+		RecalculateLines();
+	}
+
+	void TextDisplayer::Copy() 
+	{
+		Clipboard::Get().Copy(std::string(container.SelectionString()));
+	}
+
+	void TextDisplayer::Paste() 
+	{
+		if (!container.editable)
+			return;
+
+		container.Insert(Clipboard::Get().Paste());
+		RecalculateLines();
 	}
 
 	void TextDisplayer::CtrlTypeActions(const KeyType& e)
@@ -578,6 +601,7 @@ namespace GuiCode
 				container.Remove({ ctrl, container.selection.start });
 				container.selection = ctrl;
 			}
+			RecalculateLines();
 		}
 		else if (key == 1)
 		{
@@ -585,16 +609,15 @@ namespace GuiCode
 		}
 		else if ((int)key == 3)
 		{
-			Clipboard::Get().Copy(std::string(container.SelectionString()));
+			Copy();
 		}
-		else if ((int)key == 24 && container.editable)
+		else if ((int)key == 24)
 		{
-			Clipboard::Get().Copy(std::string(container.SelectionString()));
-			container.RemoveSelection();
+			Cut();
 		}
-		else if ((int)key == 22 && container.editable)
+		else if ((int)key == 22)
 		{
-			container.Insert(Clipboard::Get().Paste());
+			Paste();
 		}
 		container.ConstrainSelection();
 	}

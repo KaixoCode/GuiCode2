@@ -4,7 +4,13 @@ namespace GuiCode
 {
 	ContextFrame::ContextFrame()
 		: Window({ .alwaysOnTop = true, .state = Hide, .resizeable = false, .decorated = false, .noAnimations = true })
-	{}
+	{
+		listener += [this](const MouseRelease& e)
+		{
+			if (hideOnClick)
+				m_ShouldClose = true;
+		};
+	}
 
 	void ContextFrame::Update()
 	{
@@ -34,7 +40,7 @@ namespace GuiCode
 		m_ShouldClose = true;
 	}
 
-	void ContextMenu::Open(Component& c, const Vec2<float> position)
+	void ContextMenu::Open(Component& c, const Vec2<float> position, bool hideOnClick)
 	{
 		ContextFrame* _theChosenOne = nullptr;
 		for (auto& _window : m_WindowPool)
@@ -51,6 +57,7 @@ namespace GuiCode
 		_theChosenOne->size = c.size;
 		_theChosenOne->components.push_back(c);
 		_theChosenOne->owner = WindowBase::currentWindow;
+		_theChosenOne->hideOnClick = hideOnClick;
 		if (!c.State<Focused>())
 		{
 			c.State<Focused>(true);

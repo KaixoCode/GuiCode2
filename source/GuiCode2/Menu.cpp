@@ -44,6 +44,23 @@ namespace GuiCode
 		panels.Clear();
 	}
 
+	void Menu::Update()
+	{
+		float _min = 136;
+		for (auto& c : components)
+		{
+			if (c->min.width > _min)
+				_min = c->min.width;
+		}
+
+		if (vertical)
+		{
+			min.width = _min + (scrollbar.y.Necessary() ? scrollbar.y.width : 0) + padding.left + padding.right;
+			min.height = 39 + padding.top + padding.bottom + (scrollbar.x.Necessary() ? scrollbar.x.height : 0);
+		}
+		ConstrainSize();
+	}
+
 	bool Menu::Hitbox(const Vec2<float>& pos) const
 	{
 		if (Panel::Hitbox(pos))
@@ -225,21 +242,6 @@ namespace GuiCode
 		};
 	}
 
-	void SubMenuButton::Update()
-	{
-		float _min = 136;
-		for (auto& c : menu.components)
-		{
-			if (c->min.width > _min)
-				_min = c->min.width;
-		}
-		menu.min.width = _min + (menu.scrollbar.y.Necessary() ? menu.scrollbar.y.width : 0) + menu.padding.left + menu.padding.right;
-		menu.min.height = 39 + menu.padding.top + menu.padding.bottom;
-		menu.ConstrainSize();
-
-		MenuButton::Update();
-	}
-
 	void SubMenuButton::Render(CommandCollection& d) const
 	{
 		d.Fill(settings.border.color.Current());
@@ -283,16 +285,6 @@ namespace GuiCode
 	void MenuBarButton::Update()
 	{
 		width = GraphicsBase::StringWidth(settings.name, settings.font, settings.text.size) + settings.border.width * 2 + padding * 2;
-
-		float _min = 136;
-		for (auto& c : menu.components)
-		{
-			if (c->min.width > _min)
-				_min = c->min.width;
-		}
-		menu.min.width = _min + menu.padding.left + menu.padding.right;
-		menu.min.height = 39 + menu.padding.top + menu.padding.bottom;
-		menu.ConstrainSize();
 	}
 
 	void MenuBarButton::Render(CommandCollection& d) const
@@ -318,12 +310,12 @@ namespace GuiCode
 
 	void Divider::Update()
 	{
-		height = settings.padding.y * 2 + settings.stroke;
+		height = settings.padding.top + settings.padding.bottom + settings.stroke;
 	}
 
 	void Divider::Render(CommandCollection& d) const
 	{
 		d.Fill(settings.color);
-		d.Quad({ x + settings.padding.x, y + settings.padding.y, width - 2 * settings.padding.x, settings.stroke });
+		d.Quad({ x + settings.padding.left, y + settings.padding.top, width - settings.padding.left - settings.padding.right, settings.stroke });
 	}
 }

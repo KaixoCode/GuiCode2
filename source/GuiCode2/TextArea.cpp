@@ -55,6 +55,8 @@ namespace GuiCode
 		
 		listener += [this](const MousePress& e)
 		{
+			ContextMenu::Close(m_Menu);
+
 			if (e.button != MouseButton::Left || scrollbar.x.State<Hovering>() || scrollbar.y.State<Hovering>())
 				return;
 
@@ -64,11 +66,15 @@ namespace GuiCode
 		};
 
 		listener += [this](const MouseRelease& e)
-		{			
-			if (e.button != MouseButton::Left)
-				return;
-
-			m_Dragging = false;
+		{
+			if (e.button == MouseButton::Left)
+				m_Dragging = false;
+			else if (e.button == MouseButton::Right)
+			{
+				m_Cut.State<Disabled>(!container.editable);
+				m_Paste.State<Disabled>(!container.editable);
+				ContextMenu::Open(m_Menu, e.pos, true);
+			}
 		};
 
 		listener += [this](const MouseDrag& e)
@@ -87,6 +93,15 @@ namespace GuiCode
 			if (e.Handled())
 				m_Update = 2;
 		};
+
+		listener += [this](const Unfocus& e)
+		{
+			ContextMenu::Close(m_Menu);
+		};
+
+		m_Menu.Emplace(m_Cut);
+		m_Menu.Emplace(m_Copy);
+		m_Menu.Emplace(m_Paste);
 	}
 
 	void TextArea::Update() 

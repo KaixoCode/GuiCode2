@@ -28,6 +28,9 @@ namespace GuiCode
 		Vec2<float> IndexToPosition(int index);
 
 		void RecalculateLines();
+		void Cut();
+		void Copy();
+		void Paste();
 
 		Wrap wrap = Wrap::Word;
 		int align = Align::Left | Align::Top;

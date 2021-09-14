@@ -48,6 +48,7 @@ namespace GuiCode
 		}
 
 		void Clear();
+		void Update() override;
 		bool Hitbox(const Vec2<float>& pos) const override;
 
 		Vec4<float>& padding;
@@ -144,7 +145,6 @@ namespace GuiCode
 		SubMenuButton(SubMenuButton&& other) : MenuButton(std::forward<SubMenuButton>(other)) { Init(); }
 		SubMenuButton(const SubMenuButton& other) : MenuButton(other) { Init(); }
 
-		void Update() override;
 		void Render(CommandCollection& d) const override;
 		bool Hitbox(const Vec2<float>& pos) const override;
 
@@ -176,10 +176,7 @@ namespace GuiCode
 	public:
 		struct Settings
 		{
-			struct {
-				float x = 1;
-				float y = 2;
-			} padding;
+			Vec4<float> padding{ 22, 2, 1, 2, };
 			float stroke = 1;
 			Color color{ 51, 51, 51, 255 };
 		} settings;
