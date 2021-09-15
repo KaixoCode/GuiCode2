@@ -28,7 +28,7 @@ include_directories(
   include/
 )
 
-add_executable(GuiCode2
+add_library(GuiCode2
   ${SOURCE}
 )
 
