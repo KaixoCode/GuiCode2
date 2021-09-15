@@ -26,8 +26,8 @@ namespace GuiCode
 		Vec2<float> range;
 		Axis axis = Horizontal;
 
-		Color background{ 96, 96, 96 };
-		StateColors bar{ {.link = this } };
+		Color background{ 34, 34, 34 };
+		StateColors bar{ {.link = this, .base = { 42, 42, 42 }, .colors{ { Pressed, { 72, 72, 72 } }, { Hovering, { 56, 56, 56 } } } } };
 
 		void Update() override;
 		void Render(CommandCollection& d) const override;

@@ -2,32 +2,79 @@
 
 namespace GuiCode
 {
-	Panel::Panels::Panels(Panel& me, const std::list<Panel>& data)
+	template<>
+	Layout Parsers<Layout>::Parse(const std::string& c)
+	{
+		return (Layout)Parsers<int>::Parse(c);
+	};
+
+	template<>
+	Overflow Parsers<Overflow>::Parse(const std::string& c)
+	{
+		return (Overflow)Parsers<int>::Parse(c);
+	};
+
+	template<>
+	Panel::Settings::OverflowStruct Parsers<Panel::Settings::OverflowStruct>::Parse(const std::string& c)
+	{
+		auto res = Parsers<Vec2<float>>::Parse(c);
+		return Panel::Settings::OverflowStruct{ (Overflow)res.x, (Overflow)res.y };
+	};
+
+	template<>
+	Border Parsers<Border>::Parse(const std::string& c)
+	{
+		std::string_view _view{ c };
+		auto _begin = _view.find_first_of("{");
+		if (_begin == std::string_view::npos)
+			_begin = 0;
+		else
+			_begin++;
+		auto _end = _view.find_last_of("}");
+		if (_end == std::string_view::npos)
+			_end = _view.size();
+
+		_view = _view.substr(_begin, _end - _begin);
+		float width = Parsers<float>::Parse(std::string{ _view.substr(0, _view.find_first_of(",")) });
+		_view = _view.substr(_view.find_first_of(",") + 1);
+		Color color = Parsers<Color>::Parse(std::string{ _view });
+
+		return Border{ width, color };
+	};
+
+	template<>
+	Border::Side Parsers<Border::Side>::Parse(const std::string& c)
+	{
+		auto res = Parsers<Border>::Parse(c);
+		return { res.width, res.color };
+	};
+
+	Panel::Panels::Panels(Panel& me, const std::list<Pointer<Panel>>& data)
 		: data(data), me(me)
 	{}
 
-	Panel& Panel::Panels::Emplace(Panel&& panel)
+	Panel& Panel::Panels::push_back(const Pointer<Panel>& panel)
 	{
-		auto& _panel = data.emplace_back(std::move(panel));
-		if (_panel.component)
-			me.components.push_back(*_panel.component);
+		auto& _panel = data.emplace_back(panel);
+		if (_panel->component)
+			me.components.push_back(*_panel->component);
 		else
-			me.components.push_back(_panel);
+			me.components.push_back(*_panel);
 
 		return _panel;
 	}
 
-	void Panel::Panels::Remove(int index)
+	void Panel::Panels::remove(int index)
 	{
 		int _index = 0;
 		for (auto _it = data.begin(); _it != data.end(); _it++)
 		{
 			if (index == _index)
 			{
-				if (_it->component)
-					me.components.remove(*(_it->component));
+				if ((*_it)->component)
+					me.components.remove(*((*_it)->component));
 				else
-					me.components.remove(*_it);
+					me.components.remove(*(*_it));
 
 				data.erase(_it);
 				break;
@@ -36,7 +83,7 @@ namespace GuiCode
 		}
 	}
 
-	void Panel::Panels::Remove(Panel& panel)
+	void Panel::Panels::remove(Panel& panel)
 	{
 		if (panel.component)
 			me.components.remove(*panel.component);
@@ -46,13 +93,13 @@ namespace GuiCode
 		data.remove_if([&](Panel& a) { return &a == &panel; });
 	}
 
-	void Panel::Panels::Clear()
+	void Panel::Panels::clear()
 	{
 		for (auto& i : data)
-			if (i.component)
-				me.components.remove(*i.component);
+			if (i->component)
+				me.components.remove(*i->component);
 			else
-				me.components.remove(i);
+				me.components.remove(*i);
 
 		data.clear();
 	}
@@ -87,7 +134,7 @@ namespace GuiCode
 		Init();
 	}
 
-	Panel::Panel(const Settings& s, const std::list<Panel>& d)
+	Panel::Panel(const Settings& s, const std::list<Pointer<Panel>>& d)
 		: settings(s),
 		panels(*this, d)
 	{
@@ -108,6 +155,14 @@ namespace GuiCode
 		Init();
 	}
 
+	Panel::Panel(Panel&& other)
+		: settings(other.settings),
+		component(other.component),
+		panels(*this, other.panels.data)
+	{
+		Init();
+	}
+
 	Panel& Panel::operator=(const Panel& other)
 	{
 		components.clear();
@@ -120,10 +175,10 @@ namespace GuiCode
 			components.push_back(*component);
 
 		for (auto& i : panels)
-			if (i.component)
-				components.push_back(*i.component);
+			if (i->component)
+				components.push_back(*i->component);
 			else
-				components.push_back(i);
+				components.push_back(*i);
 
 		scrollbar.x.zIndex = std::numeric_limits<float>::max();
 		scrollbar.y.zIndex = std::numeric_limits<float>::max();
@@ -139,10 +194,10 @@ namespace GuiCode
 			components.push_back(*component);
 
 		for (auto& i : panels)
-			if (i.component)
-				components.push_back(*i.component);
+			if (i->component)
+				components.push_back(*i->component);
 			else
-				components.push_back(i);
+				components.push_back(*i);
 		
 		scrollbar.x.zIndex = std::numeric_limits<float>::max();
 		scrollbar.y.zIndex = std::numeric_limits<float>::max();
@@ -170,7 +225,7 @@ namespace GuiCode
 			return this;
 
 		for (auto& i : panels)
-			if (Panel* _div = i.Find(id))
+			if (Panel* _div = i->Find(id))
 				return _div;
 
 		return nullptr;
@@ -195,7 +250,7 @@ namespace GuiCode
 		}
 		else
 		{
-			if (panels.Size() == 0)
+			if (panels.size() == 0)
 				return;
 
 			Vec2<float> _scrollTranslate{ 0, 0 };
@@ -236,7 +291,7 @@ namespace GuiCode
 			{
 				float _width = 0;
 				for (auto& i : panels)
-					_width += i.width;
+					_width += i->width + i->settings.margin.left + i->settings.margin.right;
 				width = _width + settings.padding.left + settings.padding.right;
 			}
 
@@ -244,7 +299,7 @@ namespace GuiCode
 			{
 				float _height = 0;
 				for (auto& i : panels)
-					_height += i.height;
+					_height += i->height + i->settings.margin.top + i->settings.margin.bottom;
 				height = _height + settings.padding.top + settings.padding.bottom;
 			}
 
@@ -267,11 +322,11 @@ namespace GuiCode
 		float _ratioSum = 0, _explicitWidthSum = 0, _biggestHeight = 0;
 		for (auto& _s : panels)
 		{
-			Vec2<float> _sizes = _s.SetDimensions({ -1, -1, -1, -1 });
-			if (_s.settings.ratio == 0) // If no ratio, check what width it will become
+			Vec2<float> _sizes = _s->SetDimensions({ -1, -1, -1, -1 });
+			if (_s->settings.ratio == 0) // If no ratio, check what width it will become
 				_explicitWidthSum += _sizes.width;
 			else // Otherwise add to ratio sum
-				_ratioSum += _s.settings.ratio;
+				_ratioSum += _s->settings.ratio;
 
 			// Get biggest height
 			if (_sizes.height > _biggestHeight)
@@ -291,45 +346,45 @@ namespace GuiCode
 		for (auto& _s : panels)
 		{
 			Vec4<float> _newDims{ _x, _y, Auto, Auto };
-			Vec4<float> _offsets = _s.Offsets();
+			Vec4<float> _offsets = _s->Offsets();
 
 			// When height not set, set to this height.
-			if (_s.settings.size.height == Inherit) _newDims.height = content.height;
+			if (_s->settings.size.height == Inherit) _newDims.height = content.height;
 
 			// Set the width if ratio is defined
-			if (_s.settings.ratio != 0)
-				_newDims.width = _ratioWidth * _s.settings.ratio / _ratioSum;
+			if (_s->settings.ratio != 0)
+				_newDims.width = _ratioWidth * _s->settings.ratio / _ratioSum;
 
 			// Set the dimensions, taking into account margin etc. incr with width
-			Vec2<float> _actual = _s.SetDimensions(_newDims);
+			Vec2<float> _actual = _s->SetDimensions(_newDims);
 			_x += _actual.width;
 
 			// Alignment only if not full height
-			if (_s.settings.size.height != Inherit)
-				if (_s.settings.align & Align::CenterY)
+			if (_s->settings.size.height != Inherit)
+				if (_s->settings.align & Align::CenterY)
 				{
-					_s.y = content.y + content.height / 2 - _s.height / 2;
-					if (_s.y - _offsets.top - content.y < m_Viewport.y)
-						m_Viewport.y = _s.y - _offsets.top - content.y;
+					_s->y = content.y + content.height / 2 - _s->height / 2;
+					if (_s->y - _offsets.top - content.y < m_Viewport.y)
+						m_Viewport.y = _s->y - _offsets.top - content.y;
 				}
-				else if (_s.settings.align & Align::Bottom)
+				else if (_s->settings.align & Align::Bottom)
 				{
-					_s.y = content.y + content.height - _s.height;
-					if (_s.y - _offsets.top - content.y < m_Viewport.y)
-						m_Viewport.y = _s.y - _offsets.top - content.y;
+					_s->y = content.y + content.height - _s->height;
+					if (_s->y - _offsets.top - content.y < m_Viewport.y)
+						m_Viewport.y = _s->y - _offsets.top - content.y;
 				}
 
 			// If we didn't add everything to width, we've reached max. Account for
 			// that by acting like this component now has a fixed size (it's max size)
-			if (_s.settings.ratio != 0 && _actual.width != _newDims.width)
+			if (_s->settings.ratio != 0 && _actual.width != _newDims.width)
 				_ratioWidth -= _actual.width,   // By removing the width from ratio
-				_ratioSum -= _s.settings.ratio; // And removing ratio from sum.
+				_ratioSum -= _s->settings.ratio; // And removing ratio from sum.
 		}
 
 		// If there is remaining space due to the max size of some components,
 		// we'll loop here until that space is <= 1.
 		float _toFill = (content.x + content.width) - _x;
-		for (int tries = 0; tries < panels.Size(); tries++)
+		for (int tries = 0; tries < panels.size(); tries++)
 		{
 			// x + padding + width = goal for x to reach, difference needs to be filled
 			_toFill = (content.x + content.width) - _x;
@@ -338,51 +393,51 @@ namespace GuiCode
 			_x = content.x; // Reset x
 			for (auto& _s : panels)
 			{
-				Vec4<float> _offsets = _s.Offsets();
+				Vec4<float> _offsets = _s->Offsets();
 
 				// If the width != max width, we can add stuff
-				if (_s.settings.ratio != 0 && _s.width != _s.max.width && _s.width != _s.min.width)
+				if (_s->settings.ratio != 0 && _s->width != _s->max.width && _s->width != _s->min.width)
 				{
 					Vec4<float> _newDims{ _x, _y, Auto, Auto };
 
 					// When height not set, set to this height.
-					if (_s.settings.size.height == Inherit) _newDims.height = content.height;
+					if (_s->settings.size.height == Inherit) _newDims.height = content.height;
 
 					// using the offsets, calculate the new width by adding the ratio of
 					// toFill to the width.
-					_newDims.width = _offsets.left + _offsets.right + _s.width
-						+ _toFill * _s.settings.ratio / _ratioSum;
+					_newDims.width = _offsets.left + _offsets.right + _s->width
+						+ _toFill * _s->settings.ratio / _ratioSum;
 
 					// Set the dimensions, taking into account margin etc. incr with width
-					Vec2<float> _actual = _s.SetDimensions(_newDims);
+					Vec2<float> _actual = _s->SetDimensions(_newDims);
 					_x += _actual.width;
 
 					// Alignment only if not full height
-					if (_s.settings.size.height != Inherit)
-						if (_s.settings.align & Align::CenterY)
+					if (_s->settings.size.height != Inherit)
+						if (_s->settings.align & Align::CenterY)
 						{
-							_s.y = content.y + content.height / 2 - _s.height / 2;
-							if (_s.y - _offsets.top - content.y < m_Viewport.y)
-								m_Viewport.y = _s.y - _offsets.top - content.y;
+							_s->y = content.y + content.height / 2 - _s->height / 2;
+							if (_s->y - _offsets.top - content.y < m_Viewport.y)
+								m_Viewport.y = _s->y - _offsets.top - content.y;
 						}
-						else if (_s.settings.align & Align::Bottom)
+						else if (_s->settings.align & Align::Bottom)
 						{
-							_s.y = content.y + content.height - _s.height;
-							if (_s.y - _offsets.top - content.y < m_Viewport.y)
-								m_Viewport.y = _s.y - _offsets.top - content.y;
+							_s->y = content.y + content.height - _s->height;
+							if (_s->y - _offsets.top - content.y < m_Viewport.y)
+								m_Viewport.y = _s->y - _offsets.top - content.y;
 						}
 
 					// If we didn't add everything to width, we've reached max. Account for
 					// that by acting like this component now has a fixed size (it's max size)
 					if (_newDims.width != -1 && _actual.width != _newDims.width)
 						_ratioWidth -= _actual.width,   // By removing the width from ratio
-						_ratioSum -= _s.settings.ratio;	// And removing ratio from sum.
+						_ratioSum -= _s->settings.ratio;	// And removing ratio from sum.
 				}
 				// Otherwise just set the correct new x coord, and increment _x
 				else
 				{
-					_s.x = _x + _offsets.left;
-					_x += _s.width + _offsets.left + _offsets.right;
+					_s->x = _x + _offsets.left;
+					_x += _s->width + _offsets.left + _offsets.right;
 				}
 			}
 		}
@@ -406,11 +461,11 @@ namespace GuiCode
 		float _ratioSum = 0, _explicitHeightSum = 0, _biggestWidth = 0;
 		for (auto& _s : panels)
 		{
-			Vec2<float> _sizes = _s.SetDimensions({ -1, -1, -1, -1 });
-			if (_s.settings.ratio == 0) // If no ratio, check what height it will become
+			Vec2<float> _sizes = _s->SetDimensions({ -1, -1, -1, -1 });
+			if (_s->settings.ratio == 0) // If no ratio, check what height it will become
 				_explicitHeightSum += _sizes.height;
 			else // Otherwise add to ratio sum
-				_ratioSum += _s.settings.ratio;
+				_ratioSum += _s->settings.ratio;
 
 			// Get biggest width
 			if (_sizes.width > _biggestWidth)
@@ -428,96 +483,96 @@ namespace GuiCode
 		for (auto& _s : panels)
 		{
 			Vec4<float> _newDims{ _x, _y, Auto, Auto };
-			Vec4<float> _offsets = _s.Offsets();
+			Vec4<float> _offsets = _s->Offsets();
 
 			// When width not set, set to this width.
-			if (_s.settings.size.width == Inherit) _newDims.width = content.width;
+			if (_s->settings.size.width == Inherit) _newDims.width = content.width;
 
 			// Set the height if ratio is defined
-			if (_s.settings.ratio != 0)
-				_newDims.height = _ratioHeight * _s.settings.ratio / _ratioSum;
+			if (_s->settings.ratio != 0)
+				_newDims.height = _ratioHeight * _s->settings.ratio / _ratioSum;
 
 			// Set the dimensions, taking into account margin etc. incr with height
-			Vec2<float> _actual = _s.SetDimensions(_newDims);
+			Vec2<float> _actual = _s->SetDimensions(_newDims);
 			_y += _actual.height;
 
 			// Alignment only if not full width
-			if (_s.settings.size.width != Inherit)
-				if (_s.settings.align & Align::CenterX)
+			if (_s->settings.size.width != Inherit)
+				if (_s->settings.align & Align::CenterX)
 				{
-					_s.x = content.x + content.width / 2 - _s.width / 2;	
-					if (_s.x - _offsets.right - content.x < m_Viewport.x)
-						m_Viewport.x = _s.x - _offsets.right - content.x;
+					_s->x = content.x + content.width / 2 - _s->width / 2;	
+					if (_s->x - _offsets.right - content.x < m_Viewport.x)
+						m_Viewport.x = _s->x - _offsets.right - content.x;
 				}
-				else if (_s.settings.align & Align::Right)
+				else if (_s->settings.align & Align::Right)
 				{
-					_s.x = content.x + content.width - _s.width;
-					if (_s.x - _offsets.right - content.x < m_Viewport.x)
-						m_Viewport.x = _s.x - _offsets.right - content.x;
+					_s->x = content.x + content.width - _s->width;
+					if (_s->x - _offsets.right - content.x < m_Viewport.x)
+						m_Viewport.x = _s->x - _offsets.right - content.x;
 				}
 
 			// If we didn't add everything to height, we've reached max. Account for
 			// that by acting like this component now has a fixed size (it's max size)
-			if (_s.settings.ratio != 0 && _actual.height != _newDims.height)
+			if (_s->settings.ratio != 0 && _actual.height != _newDims.height)
 				_ratioHeight -= _actual.height,   // By removing the height from ratio
-				_ratioSum -= _s.settings.ratio; // And removing ratio from sum.
+				_ratioSum -= _s->settings.ratio; // And removing ratio from sum.
 		}
 
 		// If there is remaining space due to the max size of some components,
 		// we'll loop here until that space is <= 1.
 		float _toFill = (content.y + content.height) - _y;
-		for (int tries = 0; tries < panels.Size() && _toFill > 1; tries++)
+		for (int tries = 0; tries < panels.size() && _toFill > 1; tries++)
 		{
 			// y + padding + height = goal for x to reach, difference needs to be filled
 			_toFill = (content.y + content.height) - _y;
 			_y = content.y; // Reset y
 			for (auto& _s : panels)
 			{
-				Vec4<float> _offsets = _s.Offsets();
+				Vec4<float> _offsets = _s->Offsets();
 
 				// If the height != max height, we can add stuff
-				if (_s.settings.ratio != 0 && _s.height != _s.max.height)
+				if (_s->settings.ratio != 0 && _s->height != _s->max.height)
 				{
 					Vec4<float> _newDims{ _x, _y, Auto, Auto };
 
 					// When width not set, set to this width.
-					if (_s.settings.size.width == Inherit) _newDims.width = content.width;
+					if (_s->settings.size.width == Inherit) _newDims.width = content.width;
 
 					// using the offsets, calculate the new width by adding the ratio of
 					// toFill to the width.
-					_newDims.height = _offsets.top + _offsets.bottom + _s.height
-						+ _toFill * _s.settings.ratio / _ratioSum;
+					_newDims.height = _offsets.top + _offsets.bottom + _s->height
+						+ _toFill * _s->settings.ratio / _ratioSum;
 
 					// Set the dimensions, taking into account margin etc. incr with height
-					Vec2<float> _actual = _s.SetDimensions(_newDims);
+					Vec2<float> _actual = _s->SetDimensions(_newDims);
 					_y += _actual.height;
 
 					// Alignment only if not full width
-					if (_s.settings.size.width != Inherit)
-						if (_s.settings.align & Align::CenterX)
+					if (_s->settings.size.width != Inherit)
+						if (_s->settings.align & Align::CenterX)
 						{
-							_s.x = content.x + content.width / 2 - _s.width / 2;
-							if (_s.x - _offsets.right - content.x < m_Viewport.x)
-								m_Viewport.x = _s.x - _offsets.right - content.x;
+							_s->x = content.x + content.width / 2 - _s->width / 2;
+							if (_s->x - _offsets.right - content.x < m_Viewport.x)
+								m_Viewport.x = _s->x - _offsets.right - content.x;
 						}
-						else if (_s.settings.align & Align::Right)
+						else if (_s->settings.align & Align::Right)
 						{
-							_s.x = content.x + content.width - _s.width;
-							if (_s.x - _offsets.right - content.x < m_Viewport.x)
-								m_Viewport.x = _s.x - _offsets.right - content.x;
+							_s->x = content.x + content.width - _s->width;
+							if (_s->x - _offsets.right - content.x < m_Viewport.x)
+								m_Viewport.x = _s->x - _offsets.right - content.x;
 						}
 
 					// If we didn't add everything to height, we've reached max. Account for
 					// that by acting like this component now has a fixed size (it's max size)
-					if (_s.settings.ratio != 0 && _actual.height != _newDims.height)
+					if (_s->settings.ratio != 0 && _actual.height != _newDims.height)
 						_ratioHeight -= _actual.height,		// By removing the width from ratio
-						_ratioSum -= _s.settings.ratio;	// And removing ratio from sum.
+						_ratioSum -= _s->settings.ratio;	// And removing ratio from sum.
 				}
 				// Otherwise just set the correct new x coord, and increment _x
 				else
 				{
-					_s.y = _y + _offsets.top;
-					_y += _s.height + _offsets.top + _offsets.bottom;
+					_s->y = _y + _offsets.top;
+					_y += _s->height + _offsets.top + _offsets.bottom;
 				}
 			}
 		}
@@ -561,7 +616,7 @@ namespace GuiCode
 
 		else
 			for (auto& _s : panels)
-				_s.ForwardUpdate();
+				_s->ForwardUpdate();
 
 		RefreshLayout();
 
@@ -605,7 +660,7 @@ namespace GuiCode
 		{
 			std::list<Panel*> _panels;
 			for (auto& _panel : panels)
-				if (_panel.BoundingBox().Overlaps(BoundingBox()))
+				if (_panel->BoundingBox().Overlaps(BoundingBox()))
 					_panels.push_back(&_panel);
 
 			_panels.sort([](Panel* a, Panel* b) -> bool { return a->settings.zIndex < b->settings.zIndex; });
@@ -723,13 +778,13 @@ namespace GuiCode
 
 		// Add border to offsets
 		if (settings.border.left.width == 0) _offsets.left += settings.border.width;
-		else _offsets.left += settings.border.width;
+		else _offsets.left += settings.border.left.width;
 		if (settings.border.top.width == 0) _offsets.top += settings.border.width;
-		else _offsets.top += settings.border.width;
+		else _offsets.top += settings.border.top.width;
 		if (settings.border.right.width == 0) _offsets.right += settings.border.width;
-		else _offsets.right += settings.border.width;
+		else _offsets.right += settings.border.right.width;
 		if (settings.border.bottom.width == 0) _offsets.bottom += settings.border.width;
-		else _offsets.bottom += settings.border.width;
+		else _offsets.bottom += settings.border.bottom.width;
 
 		return _offsets;
 	}
@@ -744,9 +799,9 @@ namespace GuiCode
 			|| settings.max.width == Auto || settings.max.height == Auto)
 			for (auto& i : panels)
 			{
-				Vec4<float> _offsets = i.Offsets();
-				_maxSizes += i.size + Vec2<float>{ _offsets.left + _offsets.right, _offsets.top + _offsets.bottom },
-				_minSizes += i.size + Vec2<float>{ _offsets.left + _offsets.right, _offsets.top + _offsets.bottom };
+				Vec4<float> _offsets = i->Offsets();
+				_maxSizes += i->size + Vec2<float>{ _offsets.left + _offsets.right, _offsets.top + _offsets.bottom },
+				_minSizes += i->size + Vec2<float>{ _offsets.left + _offsets.right, _offsets.top + _offsets.bottom };
 			}
 
 		if (settings.min.width >= 0)

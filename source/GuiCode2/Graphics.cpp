@@ -340,7 +340,7 @@ namespace GuiCode
         if (m_PreviousShader != 7)
         {
             _shader.Use();
-            glBindVertexArray(line.vbo);
+            glBindVertexArray(line.vao);
         }
         m_PreviousShader = 7;
 
@@ -805,7 +805,8 @@ namespace GuiCode
 
     void OpenGL::Font(std::string_view font)
     {
-        m_CurrentFont = &m_Fonts.at(font);
+        if (m_Fonts.contains(font))
+            m_CurrentFont = &m_Fonts.at(font);
     }
 
     void OpenGL::TextAlign(int align)

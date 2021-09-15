@@ -12,7 +12,7 @@ namespace GuiCode
 		textColor(displayer.textColor),
 		selectColor(displayer.selectColor)
 	{
-		panels.Emplace({ {.ratio = 0, .size{ Auto, Auto } }, displayer });
+		panels.push_back(Panel{ {.ratio = 0, .size{ Auto, Auto } }, displayer });
 		
 		listener += [this](const MousePress& e)
 		{

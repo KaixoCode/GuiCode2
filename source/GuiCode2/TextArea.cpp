@@ -51,7 +51,7 @@ namespace GuiCode
 
 	void TextArea::Init()
 	{
-		panels.Emplace({ {.ratio = 0, .size{ Auto, Auto } }, displayer });
+		panels.push_back(Panel{ {.ratio = 0, .size{ Auto, Auto } }, displayer });
 		
 		listener += [this](const MousePress& e)
 		{
@@ -99,9 +99,9 @@ namespace GuiCode
 			ContextMenu::Close(m_Menu);
 		};
 
-		m_Menu.Emplace(m_Cut);
-		m_Menu.Emplace(m_Copy);
-		m_Menu.Emplace(m_Paste);
+		m_Menu.push_back(m_Cut);
+		m_Menu.push_back(m_Copy);
+		m_Menu.push_back(m_Paste);
 	}
 
 	void TextArea::Update() 

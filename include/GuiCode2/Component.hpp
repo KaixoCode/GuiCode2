@@ -30,6 +30,8 @@ namespace GuiCode
 	{
 	public:
 		Component();
+		Component(Component&& other) : components(other.components), cursor(other.cursor), listener(components) { Init(); }
+		Component(const Component& other) : components(other.components), cursor(other.cursor), listener(components) { Init(); }
 		virtual ~Component() {};
 
 		/**
@@ -97,8 +99,9 @@ namespace GuiCode
 		 */
 		virtual Component* Get(int state);
 
-		virtual void Render(CommandCollection& d) const {};
-		virtual void Update() {};
+		virtual void Init() {}
+		virtual void Render(CommandCollection& d) const {}
+		virtual void Update() {}
 
 		virtual void ForwardRender(CommandCollection& d);
 		virtual void ForwardUpdate();

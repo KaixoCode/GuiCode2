@@ -3,6 +3,15 @@
 
 namespace GuiCode
 {
+    template<int N, typename... Ts> using NthTypeOf =
+        typename std::tuple_element<N, std::tuple<Ts...>>::type;
+
+    template <class, template <class> class>
+    struct is_instance : public std::false_type {};
+
+    template <class T, template <class> class U>
+    struct is_instance<U<T>, U> : public std::true_type {};
+
     // Get the signature of a member function
     template<typename T>
     struct MemberSignature {};
@@ -66,6 +75,31 @@ namespace GuiCode
         }
 
         return output;
+    }
+
+    static inline std::vector<std::string_view> Split(const std::string_view str, const char delim = ',')
+    {
+        std::vector<std::string_view> result;
+
+        int indexCommaToLeftOfColumn = 0;
+        int indexCommaToRightOfColumn = -1;
+
+        for (int i = 0;i < static_cast<int>(str.size());i++)
+        {
+            if (str[i] == delim)
+            {
+                indexCommaToLeftOfColumn = indexCommaToRightOfColumn;
+                indexCommaToRightOfColumn = i;
+                int index = indexCommaToLeftOfColumn + 1;
+                int length = indexCommaToRightOfColumn - index;
+
+                std::string_view column(str.data() + index, length);
+                result.push_back(column);
+            }
+        }
+        const std::string_view finalColumn(str.data() + indexCommaToRightOfColumn + 1, str.size() - indexCommaToRightOfColumn - 1);
+        result.push_back(finalColumn);
+        return result;
     }
 
     struct Color
@@ -168,6 +202,23 @@ namespace GuiCode
         };
     };
 
+    template<typename T>
+    class Ref
+    {
+        T& m_Ref;
+    public:
+        using Type = T;
+
+        Ref(T& r)
+            : m_Ref(r)
+        {}
+
+        operator T& () { return m_Ref; }
+        operator T const& () const { return m_Ref; }
+
+        template<typename Type>
+        T& operator=(Type&& type) { m_Ref = type; return m_Ref; }
+    };
 
     /**
      * Simple Component wrapper, either contains pointer to
@@ -181,22 +232,26 @@ namespace GuiCode
         constexpr static inline size_t NO = static_cast<size_t>(-1);
         struct Object
         {
+            Object(T* ptr, size_t r)
+                : data(ptr), refs(r)
+            {}
+
             T* data;
-            size_t refs;
+            size_t refs = 1;
         };
     public:
         Pointer()
-            : m_Data(new Object(nullptr, NO))
+            : m_Data(new Object{ nullptr, NO })
         {}
 
         template<std::derived_from<T> Type>
         Pointer(Type&& c)
-            : m_Data(new Object(new Type(std::move(c)), 1))
+            : m_Data(new Object{ new Type{ std::forward<Type>(c) }, 1 })
         {}
 
         template<std::derived_from<T> Type>
         Pointer(Type& c)
-            : m_Data(new Object(&c, NO))
+            : m_Data(new Object{ &c, NO })
         {}
 
         Pointer(Pointer&& c)
@@ -238,7 +293,7 @@ namespace GuiCode
                     delete m_Data->data;
             }
 
-            m_Data->data = c.m_Data.data;
+            m_Data->data = c.m_Data->data;
             if (c.m_Data->refs != NO)
                 m_Data->refs = ++c.m_Data->refs;
 

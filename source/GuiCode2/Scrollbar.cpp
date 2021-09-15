@@ -5,7 +5,6 @@ namespace GuiCode
 	Scrollbar::Scrollbar()
 	{
 		size = { 16, 16 }; // Base width/height is 16.
-		bar.base = { 128, 128, 128 }; // scrollbar's base color
 
 		listener += [this](const MousePress& e)
 		{

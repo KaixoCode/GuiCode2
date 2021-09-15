@@ -8,6 +8,8 @@ namespace GuiCode
     template<typename T>
     struct Vec2
     {
+        using Type = T;
+        
         union { T width; T x; T r; T h; T start; };
         union { T height; T y; T g; T s; T end; };
 
@@ -60,6 +62,8 @@ namespace GuiCode
     template<typename T>
     struct Vec3
     {
+        using Type = T;
+        
         union { T width, x, r, h; };
         union { T height, y, g, s; };
         union { T depth, z, b, v; };
@@ -111,6 +115,8 @@ namespace GuiCode
     template<typename T>
     struct Vec4
     {
+        using Type = T;
+
         union { T x; T r; T h; T left; };
         union { T y; T g; T s; T top; };
         union { T z; T b; T v; T width; T right; };

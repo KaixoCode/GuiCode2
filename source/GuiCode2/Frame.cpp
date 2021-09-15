@@ -37,12 +37,7 @@ namespace GuiCode
 	{
 		d.Fill(background);
 		d.Quad(dimensions);
-
-		if (font == "")
-			return;
-
 		d.Fill(text);
-		d.Quad({ x + 6, y + 6, height - 12, height - 12 });
 		d.Quad({ x + height + menu.width + 18, y + 8, 1, height - 16 });
 		d.Quad({ x + height + 6, y + 8, 1, height - 16 });
 		d.TextAlign(textAlign);
@@ -136,7 +131,7 @@ namespace GuiCode
 		titlebar.dimensions = { padding, padding, width - 2 * padding, 30 };
 		panel.settings.size = { width - 2 * padding, height - 2 * padding - 30 };
 		panel.SetDimensions({ padding, 30 + padding, width - 2 * padding, height - 2 * padding - 30 });
-		panel.zIndex = std::numeric_limits<int>::max();
+		panel.zIndex = std::numeric_limits<float>::max();
 		Window::ForwardUpdate();
 	}
 

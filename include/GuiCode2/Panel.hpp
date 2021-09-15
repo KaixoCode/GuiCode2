@@ -3,6 +3,7 @@
 #include "GuiCode2/BasicEvents.hpp"
 #include "GuiCode2/StateColors.hpp"
 #include "GuiCode2/Scrollbar.hpp"
+#include "GuiCode2/Parser.hpp"
 
 namespace GuiCode
 {
@@ -79,10 +80,10 @@ namespace GuiCode
 			Id id;                              // Unique Id
 			float ratio = 0;                    // Ratio used to determine size in parent Panel
 			Layout layout = Layout::Row;        // Type of layout
-			struct _
+			struct OverflowStruct
 			{
-				_(Overflow o) : x(o), y(o) {}
-				_(Overflow x, Overflow y) : x(x), y(y) {}
+				OverflowStruct(Overflow o) : x(o), y(o) {}
+				OverflowStruct(Overflow x, Overflow y) : x(x), y(y) {}
 				Overflow x; // Overflow
 				Overflow y; // Overflow
 			} overflow = Overflow::Show;
@@ -91,17 +92,18 @@ namespace GuiCode
 			Border border;
 			float zIndex = 0;				      // zIndex for this Panel in parent Panel.
 			Vec2<float> size{ Inherit, Inherit }; // prefered size, will be constrained to min/max
-			Vec2<float> min{ Inherit, Inherit };        // minimum size for this Panel
-			Vec2<float> max{ Inherit, Inherit };        // maximum size for this Panel
+			Vec2<float> min{ Inherit, Inherit };  // minimum size for this Panel
+			Vec2<float> max{ Inherit, Inherit };  // maximum size for this Panel
 			int align = Align::Top | Align::Left; // alignment of panel in area given by parent
 			Color background{ 0, 0, 0, 0 };	      // background color of panel
 		};
 
 		Panel();
 		Panel(const Settings& s);
-		Panel(const Settings& s, const std::list<Panel>& d);
+		Panel(const Settings& s, const std::list<Pointer<Panel>>& d);
 		Panel(const Settings& s, const Pointer<Component>&& c);
 		Panel(const Panel& other);
+		Panel(Panel&& other);
 		Panel& operator=(const Panel& other);
 
 		/**
@@ -136,23 +138,28 @@ namespace GuiCode
 		Pointer<Component> component;
 		struct Panels
 		{
-			Panels(Panel& me, const std::list<Panel>& data = {});
+			using iterator = std::list<Pointer<Panel>>::iterator;
+			using value_type = Pointer<Panel>;
+			using pointer = Panel*;
+			using reference = Panel&;
 
-			Panel& Emplace(Panel&& panel);
+			Panels(Panel& me, const std::list<Pointer<Panel>>& data = {});
 
-			void Remove(int index);
-			void Remove(Panel& panel);
-			void Clear();
+			Panel& push_back(const Pointer<Panel>& panel);
+
+			void remove(int index);
+			void remove(Panel& panel);
+			void clear();
 
 			auto begin() { return data.begin(); }
 			auto end() { return data.end(); }
 			auto begin() const { return data.begin(); }
 			auto end() const { return data.end(); }
-			auto Size() const { return data.size(); }
+			auto size() const { return data.size(); }
 
 		private:
 			Panel& me;
-			std::list<Panel> data;
+			std::list<Pointer<Panel>> data;
 
 			friend class Panel;
 		} panels{ *this };
@@ -162,15 +169,98 @@ namespace GuiCode
 		void ForwardUpdate() override;
 		void ConstrainSize() override;
 
+		void Init() override;
+
 	private:
 		Vec4<float> m_Viewport; // Actual dimensions of the used space in this panel (used by scrollbars)
 
-		void Init();
 		void RefreshScrollbars();
-
 		void RenderBorder(CommandCollection&);
 
 		void RowLayout(Vec4<float>& content);
 		void ColumnLayout(Vec4<float>& content);
+
+
+	public:
+		// References to settings for easy assignment in parser
+		Ref<Id> m_Id = settings.id;
+		Ref<float> m_Ratio = settings.ratio;
+		Ref<Layout> m_Layout = settings.layout;
+		Ref<Settings::OverflowStruct> m_Overflow = settings.overflow;
+		Ref<Vec4<float>> m_Padding = settings.padding;
+		Ref<Vec4<float>> m_Margin = settings.margin;
+		Ref<Border> m_Border = settings.border;
+		Ref<float> m_ZIndex = settings.zIndex;
+		Ref<Vec2<float>> m_Size = settings.size;
+		Ref<Vec2<float>> m_Min = settings.min;
+		Ref<Vec2<float>> m_Max = settings.max;
+		Ref<int> m_Align = settings.align;
+		Ref<Color> m_Background = settings.background;
+	};
+
+	class PanelParser : public TagParser
+	{
+	public:
+		PanelParser()
+			: TagParser({ .name = "panel" })
+		{
+			Attribute("ratio", &Panel::m_Ratio);
+			Attribute("layout", &Panel::m_Layout);
+			Attribute("overflow", &Panel::m_Overflow);
+			Attribute("overflow.x", &Panel::Settings::OverflowStruct::x);
+			Attribute("overflow.y", &Panel::Settings::OverflowStruct::y);
+			Attribute("padding", &Panel::m_Padding);
+			Attribute("margin", &Panel::m_Margin);
+			Attribute("border", &Panel::m_Border);
+			Attribute("border.width", &Border::width);
+			Attribute("border.color", &Border::color);
+			Attribute("border.left", &Border::left);
+			Attribute("border.left.width", &Border::Side::width);
+			Attribute("border.left.color", &Border::Side::color);
+			Attribute("border.right", &Border::right);
+			Attribute("border.right.width", &Border::Side::width);
+			Attribute("border.right.color", &Border::Side::color);
+			Attribute("border.top", &Border::top);
+			Attribute("border.top.width", &Border::Side::width);
+			Attribute("border.top.color", &Border::Side::color);
+			Attribute("border.bottom", &Border::bottom);
+			Attribute("border.bottom.width", &Border::Side::width);
+			Attribute("border.bottom.color", &Border::Side::color);
+			Attribute("background", &Panel::m_Background);
+
+
+			enumMap["Row"] = (int)Layout::Row;
+			enumMap["Column"] = (int)Layout::Column;
+			enumMap["Show"] = (int)Overflow::Show;
+			enumMap["Hide"] = (int)Overflow::Hide;
+			enumMap["Scroll"] = (int)Overflow::Scroll;
+			enumMap["None"] = (int)Sizing::None;
+			enumMap["Auto"] = (int)Sizing::Auto;
+			enumMap["Inherit"] = (int)Sizing::Inherit;
+			enumMap["Left"] = (int)Align::Left;
+			enumMap["Right"] = (int)Align::Right;
+			enumMap["CenterX"] = (int)Align::CenterX;
+			enumMap["Top"] = (int)Align::Top;
+			enumMap["Bottom"] = (int)Align::Bottom;
+			enumMap["CenterY"] = (int)Align::CenterY;
+			enumMap["Center"] = (int)Align::Center;
+			enumMap["TextTop"] = (int)Align::TextTop;
+			enumMap["TextBottom"] = (int)Align::TextBottom;
+			enumMap["Baseline"] = (int)Align::Baseline;
+			enumMap["Middle"] = (int)Align::Middle;
+		}
+
+		Pointer<Component> Create() override
+		{
+			return Panel{};
+		};
+
+		void Append(Component& c, Pointer<Component>& obj) override
+		{
+			Panel* _t = dynamic_cast<Panel*>(&c);
+			Panel* _other = obj;
+			if (_t && _other)
+				_t->panels.push_back(std::move(*_other));
+		}
 	};
 }

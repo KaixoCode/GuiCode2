@@ -3,11 +3,6 @@
 
 namespace GuiCode
 {
-	void Gui::Add(const Pointer<WindowBase>& window)
-	{
-		m_Windows.push_back(window);
-	}
-
 	bool Gui::Loop()
 	{
 		LIMIT_FPS(60);
@@ -15,7 +10,13 @@ namespace GuiCode
 		{
 			auto& _w = m_Windows[i];
 			if (!_w->Loop())
-				m_Running = false;
+			{
+				if (!_w->info.hideOnClose)
+					m_Running = false;
+
+				else
+					_w->State<Visible>(Hide);
+			}
 		}
 
 		ContextMenu::Loop();

@@ -12,7 +12,20 @@ namespace GuiCode
 	class Gui
 	{
 	public:
-		void Add(const Pointer<WindowBase>& window);
+
+		template<std::derived_from<WindowBase> T>
+		T& push_back(T&& window)
+		{
+			return m_Windows.emplace_back(std::forward<T>(window));
+		}
+
+		template<std::derived_from<WindowBase> T>
+		T& push_back(T& window)
+		{
+			m_Windows.push_back(window);
+			return window;
+		}
+
 		bool Loop();
 		void Close() { m_Running = false; }
 

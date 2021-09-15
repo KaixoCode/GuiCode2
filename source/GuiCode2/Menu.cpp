@@ -41,7 +41,7 @@ namespace GuiCode
 
 	void Menu::Clear()
 	{
-		panels.Clear();
+		panels.clear();
 	}
 
 	void Menu::Update()
@@ -55,8 +55,8 @@ namespace GuiCode
 
 		if (vertical)
 		{
-			min.width = _min + (scrollbar.y.Necessary() ? scrollbar.y.width : 0) + padding.left + padding.right;
-			min.height = 39 + padding.top + padding.bottom + (scrollbar.x.Necessary() ? scrollbar.x.height : 0);
+			Component::min.width = _min + (scrollbar.y.Necessary() ? scrollbar.y.width : 0) + padding.left + padding.right;
+			Component::min.height = 39 + padding.top + padding.bottom + (scrollbar.x.Necessary() ? scrollbar.x.height : 0);
 		}
 		ConstrainSize();
 	}
@@ -68,7 +68,7 @@ namespace GuiCode
 
 		// Make sure to include menu component hitboxes
 		for (auto& i : panels)
-			if (i.component->Hitbox(pos))
+			if (i->component->Hitbox(pos))
 				return true;
 
 		return false;
@@ -96,24 +96,24 @@ namespace GuiCode
 					bool _found = false;
 					for (auto& i : panels)
 					{
-						if (_found && !i.component->State<Disabled>())
+						if (_found && !i->component->State<Disabled>())
 						{
 							_c->State<Hovering>(false);
 							_c->listener(MouseExit{});
-							i.component->State<Hovering>(true);
-							i.component->listener(MouseEnter{});
+							i->component->State<Hovering>(true);
+							i->component->listener(MouseEnter{});
 							e.Handle();
 							break;
 						}
 
-						if (i.component == _c)
+						if (i->component == _c)
 							_found = true;
 					}
 				}
 				else
 				{
-					panels.begin()->component->State<Hovering>(true);
-					panels.begin()->component->listener(MouseEnter{});
+					(*panels.begin())->component->State<Hovering>(true);
+					(*panels.begin())->component->listener(MouseEnter{});
 					e.Handle();
 				}
 			}
@@ -124,7 +124,7 @@ namespace GuiCode
 					Component* _prev = nullptr;
 					for (auto& i : panels)
 					{
-						if (i.component == _c)
+						if (i->component == _c)
 						{
 							if (_prev)
 							{
@@ -137,14 +137,14 @@ namespace GuiCode
 							break;
 						}
 
-						if (!i.component->State<Disabled>())
-							_prev = i.component;
+						if (!i->component->State<Disabled>())
+							_prev = i->component;
 					}
 				}
 				else
 				{
-					(--panels.end())->component->State<Hovering>(true);
-					(--panels.end())->component->listener(MouseEnter{});
+					(*(--panels.end()))->component->State<Hovering>(true);
+					(*(--panels.end()))->component->listener(MouseEnter{});
 					e.Handle();
 				}
 			}

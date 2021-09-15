@@ -27,9 +27,9 @@ namespace GuiCode
 		 * @return the object
 		 */
 		template<std::derived_from<Component> T>
-		T& Emplace(T&& object)
+		T& push_back(T&& object)
 		{
-			auto& panel = panels.Emplace({ {.ratio = 0,.size{ (float)(vertical ? Inherit : Auto), (float)(vertical ? Auto : Inherit) } }, std::forward<T>(object) });
+			auto& panel = panels.push_back(Panel{ {.ratio = 0,.size{ (float)(vertical ? Inherit : Auto), (float)(vertical ? Auto : Inherit) } }, std::forward<T>(object) });
 			RefreshLayout();
 			return panel.component;
 		}
@@ -40,9 +40,9 @@ namespace GuiCode
 		 * @return the object
 		 */
 		template<std::derived_from<Component> T>
-		T& Emplace(T& object)
+		T& push_back(T& object)
 		{
-			auto& panel = panels.Emplace({ {.ratio = 0,.size{ (float)(vertical ? Inherit : Auto), (float)(vertical ? Auto : Inherit) } }, object });
+			auto& panel = panels.push_back(Panel{ {.ratio = 0,.size{ (float)(vertical ? Inherit : Auto), (float)(vertical ? Auto : Inherit) } }, object });
 			RefreshLayout();
 			return panel.component;
 		}

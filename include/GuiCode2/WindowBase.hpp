@@ -19,6 +19,7 @@ namespace GuiCode
 		bool resizeable = true;
 		bool decorated = true;
 		bool noAnimations = false;
+		bool hideOnClose = false;
 	};
 
 	struct MouseInfo
@@ -31,6 +32,7 @@ namespace GuiCode
 	struct WindowInfo
 	{
 		std::string name;
+		bool hideOnClose;
 	};
 
 	class WindowBase : public Component
@@ -42,6 +44,7 @@ namespace GuiCode
 		{
 			windowId = m_WindowIdCounter++;
 			info.name = d.name;
+			info.hideOnClose = d.hideOnClose;
 		}
 
 		virtual bool Loop() = 0;
