@@ -121,6 +121,12 @@ namespace GuiCode
 	};
 
 	template<>
+	uint8_t Parsers<uint8_t>::Parse(std::string_view& c)
+	{
+		return Parsers<int>::Parse(c);
+	};
+
+	template<>
 	bool Parsers<bool>::Parse(std::string_view& c)
 	{
 		return Parsers<int>::Parse(c);

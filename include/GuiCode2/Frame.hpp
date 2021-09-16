@@ -133,7 +133,7 @@ namespace GuiCode
 		}
 	};
 
-	class FrameParser : public TagParser
+	class FrameParser : public ComponentParser
 	{
 	public:
 		FrameParser()
@@ -146,16 +146,6 @@ namespace GuiCode
 			Attribute("info", &Frame::info);
 			Attribute("info.name", &WindowInfo::name);
 			Attribute("info.hideonclose", &WindowInfo::hideOnClose);
-			Attribute("z-index", &Panel::zIndex);
-			Attribute("size", &Panel::size);
-			Attribute("size.width", &Vec2<float>::width);
-			Attribute("size.height", &Vec2<float>::height);
-			Attribute("min", &Panel::min);
-			Attribute("min.width", &Vec2<float>::width);
-			Attribute("min.height", &Vec2<float>::height);
-			Attribute("max", &Panel::max);
-			Attribute("max.width", &Vec2<float>::width);
-			Attribute("max.height", &Vec2<float>::height);
 		}
 
 		Pointer<Component> Create() override

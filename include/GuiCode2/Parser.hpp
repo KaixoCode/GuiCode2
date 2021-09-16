@@ -269,4 +269,38 @@ namespace GuiCode
 	private:
 		static inline std::map<std::string, std::unique_ptr<TagParser>> m_Parsers;
 	};
+
+	class ComponentParser : public TagParser
+	{
+	public:
+		ComponentParser()
+		{
+			settings.name = "component";
+			Attribute("z-index", &Component::zIndex);
+			Attribute("cursor", &Component::cursor);
+			Attribute("dimensions", &Component::dimensions);
+			Attribute("size", &Component::size);
+			Attribute("width", &Component::width);
+			Attribute("height", &Component::height);
+			Attribute("position", &Component::position);
+			Attribute("x", &Component::x);
+			Attribute("y", &Component::y);
+			Attribute("min", &Component::min);
+			Attribute("min.width", &Vec2<float>::width);
+			Attribute("min.height", &Vec2<float>::height);
+			Attribute("max", &Component::max);
+			Attribute("max.width", &Vec2<float>::width);
+			Attribute("max.height", &Vec2<float>::height);
+		}
+
+		Pointer<Component> Create() override
+		{
+			return new Component{ };
+		};
+
+		void Append(Component& c, Pointer<Component>& obj) override
+		{
+			c.components.push_back(obj);
+		}
+	};
 }
