@@ -4,104 +4,170 @@
 
 namespace GuiCode
 {
-	std::map<std::string, int64_t> TagParser::enumMap;
+	std::map<std::string, int64_t> TagParser::enumMap
+	{
+		{ "true", true },
+		{ "false", false },
+		{ "hovering", Hovering },
+		{ "pressed", Pressed },
+		{ "focused", Focused },
+		{ "visible", Visible },
+		{ "disabled", Disabled },
+		{ "selected", Selected },
+	};
 
 	// Some default parsers
-	template<> 
-	double Parsers<double>::Parse(const std::string& c)
-	{ 
-		return std::strtod(c.c_str(), nullptr); 
-	};
+	template<>
+	Enum Parsers<Enum>::Parse(std::string_view& c)
+	{
+		for (auto& [name, val] : TagParser::enumMap)
+			if (c.find(name) == 0)
+				return { true, val };
+
+		return { false };
+	}
 
 	template<>
-	float Parsers<float>::Parse(const std::string& c)
+	std::string_view Parsers<std::string_view>::Parse(std::string_view& c)
 	{
-		return std::strtof(c.c_str(), nullptr);
-	};
-
-	template<>
-	int Parsers<int>::Parse(const std::string& c)
-	{
-		return std::strtol(c.c_str(), nullptr, 10);
-	};
-
-	template<>
-	Color Parsers<Color>::Parse(const std::string& c)
-	{
-		std::string_view _view{ c };
-		auto _begin = _view.find_first_of("{");
-		if (_begin == std::string_view::npos)
-			_begin = 0;
-		else
-			_begin++;
-		auto _end = _view.find_last_of("}");
-		if (_end == std::string_view::npos)
-			_end = _view.size();
-
-		_view = _view.substr(_begin, _end - _begin);
-		auto views = Split(_view, ',');
-		Color res;
-		if (views.size() == 0)
+		c = c.substr(c.find_first_not_of(" "));
+		auto _find = c.find_first_of("\"");
+		if (_find == std::string_view::npos)
 		{
-			res = (int)std::strtol(c.c_str(), nullptr, 0);
-			return res;
+			return c;
 		}
 
-		if (views.size() > 0) res.r = Parsers<float>::Parse(std::string{ views[0] });
-		if (views.size() > 1) res.g = Parsers<float>::Parse(std::string{ views[1] });
-		if (views.size() > 2) res.b = Parsers<float>::Parse(std::string{ views[2] });
-		if (views.size() > 3) res.a = Parsers<float>::Parse(std::string{ views[3] });
-		else res.a = 255;
+		c = c.substr(_find + 1);
 
-		return res;
+		std::string_view _sub = c.substr(0, c.find_first_of("\""));
+		c = c.substr(_sub.size());
+
+		return _sub;
+	};
+
+	template<>
+	std::string Parsers<std::string>::Parse(std::string_view& c)
+	{
+		return std::string{ Parsers<std::string_view>::Parse(c) };
 	};
 
 	template<> 
-	Vec4<float> Parsers<Vec4<float>>::Parse(const std::string& c)
-	{
-		std::string_view _view{ c };
-		auto _begin = _view.find_first_of("{");
-		if (_begin == std::string_view::npos)
-			_begin = 0;
-		else 
-			_begin++;
-		auto _end = _view.find_first_of("}");
-		if (_end == std::string_view::npos)
-			_end = _view.size();
-
-		_view = _view.substr(_begin, _end - _begin);
-		auto views = Split(_view, ',');
-		Vec4<float> res{};
-		if (views.size() > 0) res.r = Parsers<float>::Parse(std::string{ views[0] });
-		if (views.size() > 1) res.g = Parsers<float>::Parse(std::string{ views[1] });
-		if (views.size() > 2) res.b = Parsers<float>::Parse(std::string{ views[2] });
-		if (views.size() > 3) res.a = Parsers<float>::Parse(std::string{ views[3] });
-
+	double Parsers<double>::Parse(std::string_view& c)
+	{ 
+		c = c.substr(c.find_first_not_of(" "));
+		const char* begin = c.data();
+		char* end;
+		auto res = std::strtod(c.data(), &end);
+		
+		// If res is 0, try enums
+		if (res == 0)
+		{
+			auto parsed = Parsers<Enum>::Parse(c);
+			if (parsed.success)
+			{
+				c = { end, c.size() - (end - begin) };
+				return parsed.value;
+			}
+		}
+	
+		c = { end, c.size() - (end - begin) };
 		return res;
 	};
 
 	template<>
-	Vec3<float> Parsers<Vec3<float>>::Parse(const std::string& c)
+	float Parsers<float>::Parse(std::string_view& c)
 	{
-		auto views = Split(std::string_view{ c }, ',');
-		Vec3<float> res{};
-		if (views.size() > 0) res.r = Parsers<float>::Parse(std::string{ views[0] });
-		if (views.size() > 1) res.g = Parsers<float>::Parse(std::string{ views[1] });
-		if (views.size() > 2) res.b = Parsers<float>::Parse(std::string{ views[2] });
+		c = c.substr(c.find_first_not_of(" "));
+		const char* begin = c.data();
+		char* end;
+		auto res = std::strtof(c.data(), &end);
 
+		// If res is 0, try enums
+		if (res == 0)
+		{
+			auto parsed = Parsers<Enum>::Parse(c);
+			if (parsed.success)
+			{
+				c = { end, c.size() - (end - begin) };
+				return parsed.value;
+			}
+		}
+
+		c = { end, c.size() - (end - begin) };
 		return res;
 	};
 
 	template<>
-	Vec2<float> Parsers<Vec2<float>>::Parse(const std::string& c)
+	int Parsers<int>::Parse(std::string_view& c)
 	{
-		auto views = Split(std::string_view{ c }, ',');
-		Vec2<float> res{};
-		if (views.size() > 0) res.r = Parsers<float>::Parse(std::string{ views[0] });
-		if (views.size() > 1) res.g = Parsers<float>::Parse(std::string{ views[1] });
+		c = c.substr(c.find_first_not_of(" "));
+		const char* begin = c.data();
+		char* end;
+		auto res = std::strtol(c.data(), &end, 10);
 
+		// If res is 0, try enums
+		if (res == 0)
+		{
+			auto parsed = Parsers<Enum>::Parse(c);
+			if (parsed.success)
+			{
+				c = { end, c.size() - (end - begin) };
+				return parsed.value;
+			}
+		}
+
+		c = { end, c.size() - (end - begin) };
 		return res;
 	};
+
+	template<>
+	bool Parsers<bool>::Parse(std::string_view& c)
+	{
+		return Parsers<int>::Parse(c);
+	};
+
+	template<>
+	Color Parsers<Color>::Parse(std::string_view& c)
+	{
+		try { // try rgba
+			auto [r, g, b, a] = Parsers<std::tuple<float, float, float, float>>::Parse(c);
+			return { r, g, b, a };
+		} catch(...) { }
+
+		try { // try rgb
+			auto [r, g, b] = Parsers<std::tuple<float, float, float>>::Parse(c);
+			return { r, g, b };
+		}
+		catch (...) {}
+
+		// Try hex
+		c = c.substr(c.find_first_not_of(" "));
+		const char* begin = c.data();
+		char* end;
+		auto res = std::strtol(c.data(), &end, 0);
+
+		c = { end, c.size() - (end - begin) };
+		return (int)res;
+	};
+
+	template<>
+	StateColors Parsers<StateColors>::Parse(std::string_view& c)
+	{
+		StateColors colors;
+		colors.base = Parsers<Color>::Parse(c);
+
+		try
+		{
+			while (true)
+			{
+				auto[state, color] = Parsers<std::tuple<int, Color>>::Parse(c);
+				colors.State(state, color);
+			}
+		}
+		catch (...) {}
+
+		return colors;
+	}
 
 	TagParser::TagParser(const Settings& s)
 		: settings(s)
@@ -135,6 +201,34 @@ namespace GuiCode
 		}
 	}
 
+	void TagParser::SetState(Component& c, int state, const std::string& name, const std::string& value)
+	{
+		auto _res = split(name, ".");
+		if (_res.size() == 0)
+			return;
+
+		if (_res.size() == 1)
+		{
+			if (attributes.contains(_res[0]))
+				attributes[_res[0]]->SetState(c, state, value);
+			return;
+		}
+
+		if (attributes.contains(_res[0]))
+		{
+			void* _ptr = attributes[_res[0]]->Get(c);
+			for (int i = 1; i < _res.size() - 1; i++)
+			{
+				if (attributes.contains(_res[i]))
+					_ptr = attributes[_res[i]]->Get(_ptr);
+				else
+					return;
+			}
+			if (attributes.contains(_res[_res.size() - 1]))
+				attributes[_res[_res.size() - 1]]->SetState(_ptr, state, value);
+		}
+	}
+
 	Pointer<Component> Parser::Scope::Generate()
 	{
 		if (Parser::m_Parsers.contains(name))
@@ -142,9 +236,32 @@ namespace GuiCode
 			auto& _parser = Parser::m_Parsers[name];
 			auto _obj = _parser->Create();
 
-			for (auto& [name, value] : attributes)
+			for (auto& [name, value] : insertOrder)
 			{
-				_parser->Set(_obj, name, value);
+				std::string_view _view = name;
+				std::string _name = std::string{ _view };
+				auto _subattr = _view.find_first_of(":");
+				if (_subattr != std::string_view::npos)
+				{
+					try
+					{
+						_name = _view.substr(0, _subattr);
+					
+						// Get the enum
+						_view = _view.substr(_subattr + 1);
+						Enum _state = Parsers<Enum>::Parse(_view);
+						if (!_state.success)
+							continue;
+
+						// Get the object
+						_parser->SetState(_obj, _state.value, _name, value);
+					}
+					catch (...) {}
+				}
+				else
+				{
+					_parser->Set(_obj, _name, value);
+				}
 			}
 
 			for (auto& i : sub)
@@ -175,7 +292,7 @@ namespace GuiCode
 		s = s.substr(s.find_first_not_of(" "));
 
 		while (s.find_first_not_of(">") < s.find_first_of(">"))
-			scope.attributes.emplace(ParseAttribute(s));
+			scope.Emplace(ParseAttribute(s));
 
 		s = s.substr(s.find_first_of(">") + 1);
 

@@ -20,6 +20,7 @@ namespace GuiCode
 		Menu(bool vertical = true);
 		Menu(Menu&&);
 		Menu(const Menu&);
+		Menu& operator=(const Menu& other);
 
 		/**
 		 * Add a component to this menu.
@@ -54,7 +55,8 @@ namespace GuiCode
 		Vec4<float>& padding;
 		Color& background;
 		Border& border;
-		const bool vertical = true;
+	private:
+		bool vertical = true;
 	
 	private:
 		void Init();

@@ -39,6 +39,16 @@ namespace GuiCode
 		border = other.border;
 	}
 
+
+	Menu& Menu::operator=(const Menu& other)
+	{
+		vertical = other.vertical;
+		background = other.background;
+		padding = other.padding;
+		border = other.border;
+		return *this;
+	}
+
 	void Menu::Clear()
 	{
 		panels.clear();

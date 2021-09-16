@@ -202,8 +202,8 @@ namespace GuiCode
 	{
 	public:
 		PanelParser()
-			: TagParser({ .name = "panel" })
 		{
+			settings.name = "panel";
 			Attribute("ratio", &Panel::m_Ratio);
 			Attribute("layout", &Panel::m_Layout);
 			Attribute("overflow", &Panel::m_Overflow);
@@ -226,8 +226,18 @@ namespace GuiCode
 			Attribute("border.bottom", &Border::bottom);
 			Attribute("border.bottom.width", &Border::Side::width);
 			Attribute("border.bottom.color", &Border::Side::color);
+			Attribute("z-index", &Panel::m_ZIndex);
+			Attribute("size", &Panel::m_Size);
+			Attribute("size.width", &Vec2<float>::width);
+			Attribute("size.height", &Vec2<float>::height);
+			Attribute("min", &Panel::m_Min);
+			Attribute("min.width", &Vec2<float>::width);
+			Attribute("min.height", &Vec2<float>::height);
+			Attribute("max", &Panel::m_Max);
+			Attribute("max.width", &Vec2<float>::width);
+			Attribute("max.height", &Vec2<float>::height);
+			Attribute("align", &Panel::m_Align);
 			Attribute("background", &Panel::m_Background);
-
 
 			enumMap["Row"] = (int)Layout::Row;
 			enumMap["Column"] = (int)Layout::Column;

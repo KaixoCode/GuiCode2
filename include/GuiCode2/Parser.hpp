@@ -4,10 +4,78 @@
 
 namespace GuiCode
 {
+	struct Enum { bool success; int64_t value; };
+
 	template<typename T>
 	struct Parsers
 	{
-		static T Parse(const std::string&);
+		static T Parse(std::string_view&);
+	};
+
+	template<typename ...Args>
+	struct Parsers<std::tuple<Args...>>
+	{
+		static std::tuple<Args...> Parse(std::string_view& c)
+		{
+			std::string_view _view{ c };
+			auto _begin = _view.find_first_of("{");
+			if (_begin == std::string_view::npos)
+				_begin = 0;
+			else
+				_begin++;
+			auto _end = _view.find_last_of("}");
+			if (_end == std::string_view::npos)
+				_end = _view.size();
+			_view = _view.substr(_begin, _end - _begin);
+			std::tuple<Args...> tuple;
+
+			auto a = [&]<size_t ...Is>(std::index_sequence<Is...>)
+			{
+				int _good = 2;
+				((std::get<Is>(tuple) = Parsers<NthTypeOf<Is, Args...>>::Parse(_view),
+					_view.find_first_of(",") > _view.find_first_of("}") && ((void)(_good--), true) ||
+				  (_view = _view.substr(_view.find_first_of(",") + 1), false))
+					,...);
+				return _good > 0;
+			};
+
+			if (!a(std::make_index_sequence<sizeof...(Args)>{}))
+				throw nullptr;
+
+			c = _view;
+
+			return tuple;
+		}
+	};
+
+	template<typename T>
+	struct Parsers<Vec4<T>> 
+	{
+		static Vec4<T> Parse(std::string_view& c)
+		{
+			auto [r, g, b, a] = Parsers<std::tuple<T, T, T, T>>::Parse(c);
+			return { r, g, b, a };
+		}
+	};
+
+	template<typename T>
+	struct Parsers<Vec3<T>>
+	{
+		static Vec3<T> Parse(std::string_view& c)
+		{
+			auto [r, g, b] = Parsers<std::tuple<T, T, T>>::Parse(c);
+			return { r, g, b };
+		}
+	};
+
+	template<typename T>
+	struct Parsers<Vec2<T>>
+	{
+		static Vec2<T> Parse(std::string_view& c)
+		{
+			auto [r, g] = Parsers<std::tuple<T, T>>::Parse(c);
+			return { r, g };
+		}
 	};
 
 	class TagParser
@@ -20,7 +88,9 @@ namespace GuiCode
 		{
 		public:
 			virtual void Set(void*, const std::string&) = 0;
+			virtual void SetState(void*, int, const std::string&) = 0;
 			virtual void Set(Component&, const std::string&) = 0;
+			virtual void SetState(Component&, int, const std::string&) = 0;
 			virtual void* Get(void* c) = 0;
 			virtual void* Get(Component& c) = 0;
 		};
@@ -57,6 +127,30 @@ namespace GuiCode
 				}
 			}
 
+			void SetState(Component& c, int state, const std::string& a) override
+			{
+				T* _t = dynamic_cast<T*>(&c);
+
+				// If correct types
+				if (_t != nullptr)
+				{
+					AssignState(_t, state, a);
+				}
+			}
+
+			void SetState(void* c, int state, const std::string& a) override
+			{
+				if (c == nullptr)
+					return;
+
+				T* _t = reinterpret_cast<T*>(c);
+
+				if (_t != nullptr)
+				{
+					AssignState(_t, state, a);
+				}
+			}
+
 			void* Get(void* c) override
 			{
 				if (c == nullptr)
@@ -88,15 +182,36 @@ namespace GuiCode
 			{
 				try
 				{
+					std::string_view _view = val;
 					if constexpr (is_instance<A, Ref>::value)
-						(obj->*member) = Parsers<A::Type>::Parse(val);
+						(obj->*member) = Parsers<A::Type>::Parse(_view);
 
 					else
-						(obj->*member) = Parsers<A>::Parse(val);
+						(obj->*member) = Parsers<A>::Parse(_view);
 					
 				}
 				catch (...) // If parsing failed, we catch and continue
 				{ }
+			}
+
+			void AssignState(T* obj, int state, const std::string& val)
+			{
+				try
+				{
+					std::string_view _view = val;
+					if constexpr (is_instance<A, Ref>::value)
+					{
+						if constexpr (StateType<A::Type>)
+							((A&)(obj->*member)).State(state, Parsers<Color>::Parse(_view));
+					}
+					else
+					{
+						if constexpr (StateType<A>)
+							(obj->*member).State(state, Parsers<Color>::Parse(_view));
+					}
+				}
+				catch (...) // If parsing failed, we catch and continue
+				{}
 			}
 		};
 
@@ -105,7 +220,7 @@ namespace GuiCode
 			std::string name;
 		};
 
-		TagParser(const Settings& s);
+		TagParser(const Settings& s = {});
 
 		template<typename T, typename A>
 		void Attribute(const std::string& name, A T::* member)
@@ -117,6 +232,7 @@ namespace GuiCode
 		}
 
 		void Set(Component& c, const std::string& name, const std::string& value);
+		void SetState(Component& c, int state, const std::string& name, const std::string& value);
 		virtual Pointer<Component> Create() = 0;
 		virtual void Append(Component&, Pointer<Component>&) = 0;
 
@@ -131,10 +247,12 @@ namespace GuiCode
 		{
 			std::string name;
 			std::map<std::string, std::string> attributes;
+			std::vector<std::pair<std::string, std::string>> insertOrder;
 
 			std::vector<Scope> sub;
 
 			Pointer<Component> Generate();
+			void Emplace(const std::pair<std::string, std::string>& p) { attributes.emplace(p), insertOrder.emplace_back(p); };
 		};
 
 		template<std::derived_from<TagParser> T>

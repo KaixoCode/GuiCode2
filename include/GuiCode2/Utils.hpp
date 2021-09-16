@@ -254,6 +254,16 @@ namespace GuiCode
             : m_Data(new Object{ &c, NO })
         {}
 
+        template<std::derived_from<T> Type>
+        Pointer(Type* c)
+            : m_Data(new Object{ c, 1 })
+        {}
+
+        template<std::derived_from<T> Type>
+        Pointer(Type* c, int refs)
+            : m_Data(new Object{ c, refs })
+        {}
+
         Pointer(Pointer&& c)
             : m_Data(c.m_Data)
         {
@@ -328,6 +338,7 @@ namespace GuiCode
         operator bool() const { return m_Data->data; }
 
         bool operator==(const Pointer& other) const { return other.m_Data->data == m_Data->data; }
+        bool operator==(T* other) const { return other == m_Data->data; }
 
         ~Pointer()
         {
@@ -343,6 +354,12 @@ namespace GuiCode
 
     private:
         Object* m_Data = nullptr;
+    };
+
+    template<typename T>
+    concept StateType = requires(T t, int a, Color b)
+    {
+        t.State(a, b);
     };
 }
 

@@ -23,6 +23,8 @@ namespace GuiCode
 		};
 
 		StateColors(const Settings& settings = {});
+		StateColors(const StateColors& other) { *this = other; }
+		StateColors(StateColors&& other) { *this = other; }
 		StateColors& operator=(const StateColors& other);
 		StateColors& operator=(StateColors&& other);
 

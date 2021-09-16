@@ -13,8 +13,14 @@ namespace GuiCode
 		};
 	}
 
-	Frame::TitleBar::TitleBar(std::string& title)
-		: title(title)
+	Frame::Button& Frame::Button::operator=(const Frame::Button& other)
+	{
+		type = other.type;
+		color = other.color;
+		return *this;
+	}
+
+	Frame::TitleBar::TitleBar()
 	{
 		components.push_back(close);
 		components.push_back(minimize);
@@ -22,6 +28,23 @@ namespace GuiCode
 		components.push_back(menu);
 		menu.border.width = 0;
 		menu.padding = { 0, 0, 0, 0 };
+	}
+
+	Frame::TitleBar& Frame::TitleBar::operator=(const Frame::TitleBar& other)
+	{
+		text = other.text;
+		textSize = other.textSize;
+		textAlign = other.textAlign;
+		font = other.font;
+		background = other.background;
+		if (other.close.type == "close")
+			close = other.close;
+		if (other.minimize.type == "minimize")
+			minimize = other.minimize;
+		if (other.maximize.type == "maximize")
+			maximize = other.maximize;
+		menu = other.menu;
+		return *this;
 	}
 
 	void Frame::TitleBar::Update()
@@ -43,7 +66,8 @@ namespace GuiCode
 		d.TextAlign(textAlign);
 		d.FontSize(textSize);
 		d.Font(font);
-		d.Text(title, { x + height + menu.width + 31, y + height / 2 });
+		if (title)
+			d.Text(*title, { x + height + menu.width + 31, y + height / 2 });
 	}
 
 	bool Frame::TitleBar::Hitbox(const Vec2<float>& v) const
@@ -52,12 +76,14 @@ namespace GuiCode
 	}
 	
 	Frame::Frame(const WindowData& data)
-		: Window(data), titlebar(info.name)
+		: Window(data)
 	{
+		titlebar.title = &info.name;
 		titlebar.close.callback = [this]() { State<Visible>(Close); };
 		titlebar.minimize.callback = [this]() { State<Visible>(Minimize); };
 		titlebar.maximize.callback = [this]() { State<Visible>() == Maximize ? State<Visible>(Show) : State<Visible>(Maximize); };
 
+		titlebar.close.type = "close";
 		titlebar.close.color.base = { 26, 26, 26, 255 };
 		titlebar.close.color.State<Pressed>({ 170, 0, 0, 255 });
 		titlebar.close.color.State<Hovering>({ 255, 0, 0, 255 });
@@ -74,6 +100,7 @@ namespace GuiCode
 			d.Line({ centerx - pad, centery + pad, centerx + pad, centery - pad }, 1.0);
 		};
 
+		titlebar.minimize.type = "minimize";
 		titlebar.minimize.color.base = { 26, 26, 26, 255 };
 		titlebar.minimize.color.State<Pressed>({ 64, 64, 64, 255 });
 		titlebar.minimize.color.State<Hovering>({ 78, 78, 78, 255 });
@@ -88,6 +115,7 @@ namespace GuiCode
 			d.Quad({ centerx - 5, centery, 10, 1 });
 		};
 
+		titlebar.maximize.type = "maximize";
 		titlebar.maximize.color.base = { 26, 26, 26, 255 };
 		titlebar.maximize.color.State<Pressed>({ 64, 64, 64, 255 });
 		titlebar.maximize.color.State<Hovering>({ 78, 78, 78, 255 });
@@ -154,4 +182,14 @@ namespace GuiCode
 			!titlebar.minimize.Hitbox(v) && !titlebar.maximize.Hitbox(v) && !titlebar.menu.Hitbox(v))
 			|| v.x < 8 || v.y >= height - 8 || v.x >= width - 8 || v.y < 8;
 	}
+
+
+	template<>
+	WindowInfo Parsers<WindowInfo>::Parse(std::string_view& c)
+	{
+		auto [name, hideonclose] = Parsers<std::tuple<std::string, bool>>::Parse(c);
+
+		return { name, hideonclose };
+	}
+
 }

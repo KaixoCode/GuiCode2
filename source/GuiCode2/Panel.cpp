@@ -2,53 +2,6 @@
 
 namespace GuiCode
 {
-	template<>
-	Layout Parsers<Layout>::Parse(const std::string& c)
-	{
-		return (Layout)Parsers<int>::Parse(c);
-	};
-
-	template<>
-	Overflow Parsers<Overflow>::Parse(const std::string& c)
-	{
-		return (Overflow)Parsers<int>::Parse(c);
-	};
-
-	template<>
-	Panel::Settings::OverflowStruct Parsers<Panel::Settings::OverflowStruct>::Parse(const std::string& c)
-	{
-		auto res = Parsers<Vec2<float>>::Parse(c);
-		return Panel::Settings::OverflowStruct{ (Overflow)res.x, (Overflow)res.y };
-	};
-
-	template<>
-	Border Parsers<Border>::Parse(const std::string& c)
-	{
-		std::string_view _view{ c };
-		auto _begin = _view.find_first_of("{");
-		if (_begin == std::string_view::npos)
-			_begin = 0;
-		else
-			_begin++;
-		auto _end = _view.find_last_of("}");
-		if (_end == std::string_view::npos)
-			_end = _view.size();
-
-		_view = _view.substr(_begin, _end - _begin);
-		float width = Parsers<float>::Parse(std::string{ _view.substr(0, _view.find_first_of(",")) });
-		_view = _view.substr(_view.find_first_of(",") + 1);
-		Color color = Parsers<Color>::Parse(std::string{ _view });
-
-		return Border{ width, color };
-	};
-
-	template<>
-	Border::Side Parsers<Border::Side>::Parse(const std::string& c)
-	{
-		auto res = Parsers<Border>::Parse(c);
-		return { res.width, res.color };
-	};
-
 	Panel::Panels::Panels(Panel& me, const std::list<Pointer<Panel>>& data)
 		: data(data), me(me)
 	{}
@@ -841,4 +794,38 @@ namespace GuiCode
 		if (max.height != -1 && height > max.height)
 			height = max.height;
 	}
+
+	// Parsers
+	template<>
+	Layout Parsers<Layout>::Parse(std::string_view& c)
+	{
+		return (Layout)Parsers<int>::Parse(c);
+	};
+
+	template<>
+	Overflow Parsers<Overflow>::Parse(std::string_view& c)
+	{
+		return (Overflow)Parsers<int>::Parse(c);
+	};
+
+	template<>
+	Panel::Settings::OverflowStruct Parsers<Panel::Settings::OverflowStruct>::Parse(std::string_view& c)
+	{
+		auto [x, y] = Parsers<std::tuple<Overflow, Overflow>>::Parse(c);
+		return Panel::Settings::OverflowStruct{ x, y };
+	};
+
+	template<>
+	Border Parsers<Border>::Parse(std::string_view& c)
+	{
+		auto [width, color] = Parsers<std::tuple<float, Color>>::Parse(c);
+		return Border{ width, color };
+	};
+
+	template<>
+	Border::Side Parsers<Border::Side>::Parse(std::string_view& c)
+	{
+		auto res = Parsers<Border>::Parse(c);
+		return { res.width, res.color };
+	};
 }
