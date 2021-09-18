@@ -234,6 +234,21 @@ namespace GuiCode
 			}
 		}
 
+		template<typename ...Args>
+		static inline void Call(const std::string& name, const std::string_view& other, Args&&...args)
+		{
+			std::string_view _other = other;
+			if constexpr (sizeof...(Args) == 0)
+			{
+				Parser::m_Callbacks[name]->CallWithString(nullptr, 0, _other);
+			}
+			else
+			{
+				std::any _arr[]{ std::forward<Args>(args)... };
+				Parser::m_Callbacks[name]->CallWithString(_arr, sizeof...(Args), _other);
+			}
+		}
+
 	private:
 		static inline std::map<std::string, std::unique_ptr<TagParser>> m_Parsers;
 		static inline std::map<std::string, _FunctionStorageBase*> m_Callbacks;
@@ -256,10 +271,11 @@ namespace GuiCode
 				_begin = 0;
 			else
 				_begin++;
-			auto _end = _view.find_last_of("}");
-			if (_end == std::string_view::npos)
-				_end = _view.size();
-			_view = _view.substr(_begin, _end - _begin);
+			//auto _end = _view.find_last_of("}");
+			//if (_end == std::string_view::npos)
+			//	_end = _view.size();
+			_view = _view.substr(_begin);
+			int _beginSize = _view.size();
 			std::tuple<Args...> tuple;
 
 			auto a = [&]<size_t ...Is>(std::index_sequence<Is...>)
@@ -275,7 +291,10 @@ namespace GuiCode
 			if (!a(std::make_index_sequence<sizeof...(Args)>{}))
 				throw nullptr;
 
-			c = _view;
+			c = c.substr(_begin + _beginSize - _view.size());
+			auto end = c.find_first_of("}");
+			if (end != std::string_view::npos)
+				c = c.substr(end + 1);
 
 			return tuple;
 		}

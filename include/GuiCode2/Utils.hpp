@@ -429,7 +429,7 @@ namespace GuiCode
         {
              (((Is == s) // If index is amount that needs to be dropped
                 && (CallSeq2(data,        // Send our type erased array of void*
-                    Parsers<DropN<Is, std::tuple<Args...>>::Type>::Parse(view), // Parse the last couple from Args from string
+                    Parsers<DropN<Is, std::tuple<std::decay_t<Args>...>>::Type>::Parse(view), // Parse the last couple from Args from string
                     std::make_index_sequence<Is>{},                   // Create sequence for the parsed arguments
                     std::make_index_sequence<sizeof...(Args) - Is>{}) // Create sequence for the void* arguments
                     , false)), ...
