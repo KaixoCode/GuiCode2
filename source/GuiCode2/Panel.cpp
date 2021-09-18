@@ -63,17 +63,12 @@ namespace GuiCode
 
 	Panel::Id::Id(const Id& other)
 		: m_Id(other.m_Id)
-	{
-		if (other.m_Used)
-			throw std::exception("You can't assign an id more than once");
-		other.m_Used = true;
-	}
+	{}
 
 	Panel::Id& Panel::Id::operator=(const Id& other)
 	{
-		if (other.m_Used)
-			throw std::exception("You can't assign an id more than once");
 		m_Id = other.m_Id;
+		return *this;
 	}
 
 	Panel::Panel()
@@ -94,35 +89,27 @@ namespace GuiCode
 		Init();
 	}
 
-	Panel::Panel(const Settings& s, const Pointer<Component>&& c)
-		: settings(s), component(std::forward<const Pointer<Component>&&>(c))
-	{
-		Init();
-	}
-
-	Panel::Panel(const Panel& other)
-		: settings(other.settings),
-		component(other.component),
-		panels(*this, other.panels.data)
+	Panel::Panel(const Settings& s, const Pointer<Component>& c)
+		: settings(s), component(c)
 	{
 		Init();
 	}
 
 	Panel::Panel(Panel&& other)
-		: settings(other.settings),
-		component(other.component),
-		panels(*this, other.panels.data)
+		: settings(std::move(other.settings)),
+		component(std::move(other.component)),
+		panels(*this, std::move(other.panels.data))
 	{
 		Init();
 	}
 
-	Panel& Panel::operator=(const Panel& other)
+	Panel& Panel::operator=(Panel&& other)
 	{
 		components.clear();
 
-		settings = other.settings;
-		component = other.component;
-		panels.data = other.panels.data;
+		settings = std::move(other.settings);
+		component = std::move(other.component);
+		panels.data = std::move(other.panels.data);
 
 		if (component)
 			components.push_back(*component);
@@ -132,9 +119,6 @@ namespace GuiCode
 				components.push_back(*i->component);
 			else
 				components.push_back(*i);
-
-		scrollbar.x.zIndex = std::numeric_limits<float>::max();
-		scrollbar.y.zIndex = std::numeric_limits<float>::max();
 
 		components.push_back(scrollbar.x);
 		components.push_back(scrollbar.y);
@@ -172,7 +156,7 @@ namespace GuiCode
 		};
 	}
 
-	Panel* Panel::Find(Id& id)
+	Panel* Panel::Find(const Id& id)
 	{
 		if (settings.id == id)
 			return this;
@@ -806,6 +790,12 @@ namespace GuiCode
 	Overflow Parsers<Overflow>::Parse(std::string_view& c)
 	{
 		return (Overflow)Parsers<int>::Parse(c);
+	};
+
+	template<>
+	Panel::Id Parsers<Panel::Id>::Parse(std::string_view& c)
+	{
+		return Parsers<int>::Parse(c);
 	};
 
 	template<>

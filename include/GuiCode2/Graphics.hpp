@@ -63,6 +63,7 @@ namespace GuiCode
     protected:
         static inline std::map<std::string_view, GuiCode::Font> m_Fonts;
     public:
+        static inline std::string DefaultFont = "segoeui";
 
         virtual void Render() = 0;
         virtual void SetProjection(const glm::mat4& proj);

@@ -51,7 +51,7 @@ namespace GuiCode
 
 	void TextArea::Init()
 	{
-		panels.push_back(Panel{ {.ratio = 0, .size{ Auto, Auto } }, displayer });
+		panels.push_back(new Panel{ {.ratio = 0, .size{ Auto, Auto } }, displayer });
 		
 		listener += [this](const MousePress& e)
 		{

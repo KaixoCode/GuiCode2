@@ -58,10 +58,10 @@ namespace GuiCode
 		{}
 		
 		// Don't copy anything, since callbacks may contain a this-pointer
-		EventListener(const EventListener&) {}
 		EventListener(EventListener&&) {}
-		EventListener& operator=(const EventListener&) { return *this; };
+		EventListener(const EventListener&) = delete;
 		EventListener& operator=(EventListener&&) { return *this; };
+		EventListener& operator=(const EventListener&) = delete;
 
 		/**
 		 * Type erasure using inheritance, base class contains Call

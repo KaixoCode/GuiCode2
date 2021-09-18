@@ -14,7 +14,7 @@ namespace GuiCode
 	}
 
 	Button::Group::Group()
-		: Pointer<GroupBase>(GroupBase{})
+		: Pointer<GroupBase>(new GroupBase{})
 	{}
 
 	Button::Button(const Settings& settings)
@@ -22,14 +22,6 @@ namespace GuiCode
 	{
 		// Add this button to its group.
 		this->settings.group->group.push_back(this);
-		Init();
-	}
-
-	Button::Button(const Button& other)
-		: settings(other.settings)
-	{
-		// Add this button to its group.
-		settings.group->group.push_back(this);
 		Init();
 	}
 
@@ -41,10 +33,24 @@ namespace GuiCode
 		Init();
 	}
 
+	Button& Button::operator=(Button&& other) 
+	{
+		// Remove this from current group, and assign new group
+		settings.group->group.erase(std::remove(settings.group->group.begin(), settings.group->group.end(), this));
+		settings = std::move(other.settings); 
+
+		// Remove moved one from their group and add this
+		settings.group->group.erase(std::remove(settings.group->group.begin(), settings.group->group.end(), &other));
+		settings.group->group.push_back(this);
+		Component::operator=(std::move(other));
+		return *this; 
+	}
+
 	Button::~Button()
 	{
 		// Remove this button from its group.
-		std::remove(settings.group->group.begin(), settings.group->group.end(), this);
+		if (settings.group)
+			settings.group->group.erase(std::remove(settings.group->group.begin(), settings.group->group.end(), this));
 	}
 
 	void Button::Init()
@@ -172,5 +178,32 @@ namespace GuiCode
 				}
 			}
 		};
+	}
+
+	/**
+	 * Parsers
+	 */
+
+	template<>
+	Button::Type Parsers<Button::Type>::Parse(std::string_view& c)
+	{
+		return (Button::Type)Parsers<int>::Parse(c);
+	};
+
+	ButtonParser::ButtonParser()
+	{
+		settings.name = "button";
+		Attribute("type", &Button::m_Type);
+		Attribute("callback", &Button::m_Callback);
+
+		enumMap["Click"] = Button::Click;
+		enumMap["Toggle"] = Button::Toggle;
+		enumMap["Hover"] = Button::Hover;
+		enumMap["Radio"] = Button::Radio;
+	}
+
+	Pointer<Component> ButtonParser::Create() 
+	{
+		return new Button{};
 	}
 }

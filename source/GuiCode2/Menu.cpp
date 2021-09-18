@@ -10,9 +10,12 @@ namespace GuiCode
 	{
 		Init();
 		background = { 26, 26, 26, 255 };
-		padding = { 4, 4, 4, 4 };
-		border.width = 1;
-		border.color = { 64, 64, 64, 255 };
+		if (vertical)
+		{
+			padding = { 4, 4, 4, 4 };
+			border.width = 1;
+			border.color = { 64, 64, 64, 255 };
+		}
 	}
 
 	Menu::Menu(Menu&& other)
@@ -27,25 +30,10 @@ namespace GuiCode
 		border = other.border;
 	}
 
-	Menu::Menu(const Menu& other)
-		: vertical(other.vertical),
-		border(settings.border),
-		background(settings.background),
-		padding(settings.padding)
-	{
-		Init();
-		background = other.background;
-		padding = other.padding;
-		border = other.border;
-	}
-
-
-	Menu& Menu::operator=(const Menu& other)
+	Menu& Menu::operator=(Menu&& other)
 	{
 		vertical = other.vertical;
-		background = other.background;
-		padding = other.padding;
-		border = other.border;
+		Panel::operator=(std::move(other));
 		return *this;
 	}
 
@@ -197,6 +185,13 @@ namespace GuiCode
 		Init();
 	}
 
+	MenuButton& MenuButton::operator=(MenuButton&& other)
+	{
+		settings = std::move(other.settings);
+		Button::operator=(std::move(other));
+		return *this;
+	}
+
 	void MenuButton::Init()
 	{
 		height = 20;
@@ -273,6 +268,14 @@ namespace GuiCode
 		return MenuButton::Hitbox(pos) || menu.Hitbox(pos - Vec2<float>{ x + width, y });
 	}
 
+	MenuBarButton& MenuBarButton::operator=(MenuBarButton&& other)
+	{
+		padding = std::move(other.padding);
+		menu = std::move(other.menu);
+		MenuButton::operator=(std::move(other));
+		return *this;
+	}
+
 	void MenuBarButton::Init()
 	{
 		Button::settings.type = Toggle;
@@ -321,6 +324,7 @@ namespace GuiCode
 	void Divider::Update()
 	{
 		height = settings.padding.top + settings.padding.bottom + settings.stroke;
+		width = settings.padding.left + settings.padding.right + settings.stroke;
 	}
 
 	void Divider::Render(CommandCollection& d) const
@@ -328,4 +332,105 @@ namespace GuiCode
 		d.Fill(settings.color);
 		d.Quad({ x + settings.padding.left, y + settings.padding.top, width - settings.padding.left - settings.padding.right, settings.stroke });
 	}
+
+	/**
+	 * Parsers
+	 */
+
+	MenuButtonParser::MenuButtonParser()
+	{
+		Parser::Link<ButtonParser>();
+		settings.name = "menu-button";
+		Attribute("name", &MenuButton::m_Name);
+		Attribute("color", &MenuButton::m_Color);
+		Attribute("border-color", &MenuButton::m_BorderColor);
+		Attribute("border-width", &MenuButton::m_BorderWidth);
+		Attribute("text-size", &MenuButton::m_TextSize);
+		Attribute("text-color", &MenuButton::m_TextColor);
+		Attribute("select-square", &MenuButton::m_Select);
+		Attribute("font", &MenuButton::m_Font);
+	}
+
+	SubMenuButtonParser::SubMenuButtonParser()
+	{
+		settings.name = "sub-menu-button";
+		alias["button"] = "menu-button";
+		alias["menu"] = "sub-menu-button";
+	}
+
+	MenuBarButtonParser::MenuBarButtonParser()
+	{
+		settings.name = "menu-bar-button";
+		alias["button"] = "menu-button";
+		alias["menu"] = "sub-menu-button";
+	}
+
+	DividerParser::DividerParser()
+	{
+		settings.name = "divider";
+		Attribute("padding", &Divider::m_Padding);
+		Attribute("stroke", &Divider::m_Stroke);
+		Attribute("color", &Divider::m_Color);
+	}
+
+	MenuParser::MenuParser()
+	{
+		Parser::Link<DividerParser>();
+		Parser::Link<MenuButtonParser>();
+		Parser::Link<MenuBarButtonParser>();
+		Parser::Link<SubMenuButtonParser>();
+		settings.name = "menu";
+		alias["button"] = "menu-button";
+		alias["menu"] = "sub-menu-button";
+		Attribute("vertical", &Menu::vertical);
+		Attribute("padding", &Menu::m_Padding);
+		Attribute("background", &Menu::m_Background);
+		Attribute("border", &Menu::m_Border);
+		Attribute("border.width", &Border::width);
+		Attribute("border.color", &Border::color);
+		Attribute("border.left", &Border::left);
+		Attribute("border.left.width", &Border::Side::width);
+		Attribute("border.left.color", &Border::Side::color);
+		Attribute("border.right", &Border::right);
+		Attribute("border.right.width", &Border::Side::width);
+		Attribute("border.right.color", &Border::Side::color);
+		Attribute("border.top", &Border::top);
+		Attribute("border.top.width", &Border::Side::width);
+		Attribute("border.top.color", &Border::Side::color);
+		Attribute("border.bottom", &Border::bottom);
+		Attribute("border.bottom.width", &Border::Side::width);
+		Attribute("border.bottom.color", &Border::Side::color);
+	}
+
+	MenuBarParser::MenuBarParser()
+	{
+		settings.name = "menu-bar";
+		alias["button"] = "menu-bar-button";
+		alias["menu"] = "sub-menu-button";
+	}
+
+	void MenuParser::Append(Component& c, Pointer<Component>&& obj)
+	{
+		if (Menu* _t = dynamic_cast<Menu*>(&c))
+			_t->push_back(std::move(obj));
+	}
+
+	void MenuBarButtonParser::Append(Component& c, Pointer<Component>&& obj)
+	{
+		if (MenuBarButton* _t = dynamic_cast<MenuBarButton*>(&c))
+			_t->menu.push_back(std::move(obj));
+	}
+
+	void SubMenuButtonParser::Append(Component& c, Pointer<Component>&& obj)
+	{
+		if (SubMenuButton* _t = dynamic_cast<SubMenuButton*>(&c))
+			_t->menu.push_back(std::move(obj));
+	}
+
+	Pointer<Component> SubMenuButtonParser::Create() { return new SubMenuButton{}; }
+	Pointer<Component> MenuButtonParser::Create() { return new MenuButton{}; }
+	Pointer<Component> MenuBarButtonParser::Create() { return new MenuBarButton{}; }
+	Pointer<Component> DividerParser::Create() { return new Divider{}; }
+	Pointer<Component> MenuParser::Create() { return new Menu{}; }
+	Pointer<Component> MenuBarParser::Create() { return new Menu{ false }; }
 }

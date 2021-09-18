@@ -246,8 +246,10 @@ namespace GuiCode
 
         template<std::derived_from<T> Type>
         Pointer(Type&& c)
-            : m_Data(new Object{ new Type{ std::forward<Type>(c) }, 1 })
-        {}
+            : m_Data(new Object{ new Type{ std::move(c) }, 1 })
+        {
+            std::cout << "MOVE" << std::endl;
+        }
 
         template<std::derived_from<T> Type>
         Pointer(Type& c)
@@ -264,11 +266,11 @@ namespace GuiCode
             : m_Data(new Object{ c, refs })
         {}
 
-        Pointer(Pointer&& c)
-            : m_Data(c.m_Data)
+        template<typename Type> requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
+        Pointer(Pointer<Type>&& c)
+            : m_Data(new Object{ dynamic_cast<T*>(c.m_Data->data), c.m_Data->refs })
         {
-            if (c.m_Data->refs != NO)
-                c.m_Data->refs++;
+            c.Invalidate();
         }
 
         Pointer(const Pointer& c)
@@ -284,28 +286,35 @@ namespace GuiCode
             {
                 m_Data->refs--;
                 if (m_Data->refs == 0)
+                {
                     delete m_Data->data;
+                    delete m_Data;
+                }
             }
 
-            m_Data->data = c.m_Data->data;
-            if (c.m_Data->refs != NO)
-                m_Data->refs = ++c.m_Data->refs;
+            m_Data = c.m_Data;
+            if (m_Data->refs != NO)
+                m_Data->refs++;
 
             return *this;
         }
 
-        Pointer& operator=(Pointer&& c)
+        template<typename Type> requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
+        Pointer& operator=(Pointer<Type>&& c)
         {
             if (m_Data->refs != NO)
             {
                 m_Data->refs--;
                 if (m_Data->refs == 0)
+                {
                     delete m_Data->data;
+                    delete m_Data;
+                }
             }
 
-            m_Data->data = c.m_Data->data;
-            if (c.m_Data->refs != NO)
-                m_Data->refs = ++c.m_Data->refs;
+            m_Data->data = dynamic_cast<T*>(c.m_Data->data);
+            m_Data->refs = c.m_Data->refs;
+            c.Invalidate();
 
             return *this;
         }
@@ -335,13 +344,17 @@ namespace GuiCode
         operator T* () { return m_Data->data; }
         operator const T* () const { return m_Data->data; }
 
-        operator bool() const { return m_Data->data; }
+        operator bool() { return m_Data && m_Data->data; }
+        operator bool() const { return m_Data && m_Data->data; }
 
         bool operator==(const Pointer& other) const { return other.m_Data->data == m_Data->data; }
         bool operator==(T* other) const { return other == m_Data->data; }
 
         ~Pointer()
         {
+            if (!m_Data)
+                return;
+
             if (m_Data->refs != NO)
                 m_Data->refs--;
 
@@ -352,8 +365,20 @@ namespace GuiCode
             }
         }
 
+        /**
+         * Invalidates this pointer, does not clear memory.
+         */
+        void Invalidate()
+        {
+            delete m_Data;
+            m_Data = nullptr;
+        }
+
     private:
         Object* m_Data = nullptr;
+
+        template<typename T>
+        friend class Pointer;
     };
 
     template<typename T>
@@ -361,6 +386,181 @@ namespace GuiCode
     {
         t.State(a, b);
     };
+
+    template<size_t N, typename Arg>
+    struct DropN;
+
+    template<size_t N, typename Arg, typename ...Args> requires (N > 0)
+    struct DropN<N, std::tuple<Arg, Args...>> : public DropN<N - 1, std::tuple<Args...>>
+    {};
+
+    template<typename ...Args>
+    struct DropN<0, std::tuple<Args...>>
+    {
+        using Type = std::tuple<Args...>;
+    };
+
+    struct _FunctionStorageBase {
+        _FunctionStorageBase() { m_RefCount++; }
+        virtual ~_FunctionStorageBase() { }
+
+        inline _FunctionStorageBase* Clone() { m_RefCount++; return this; }
+        virtual bool Lambda() const { return false; }
+        virtual void CallWithString(void**, int s, std::string_view&) {};
+
+        size_t m_RefCount = 0;
+    };
+
+    // Binder without type info about what kind of functor it contains, only return and arg types.
+    template<typename Return, typename ...Args>
+    struct _FunctionStorageCaller : public _FunctionStorageBase {
+        virtual Return Call(Args&&...) = 0;
+        virtual void CallWithString(void** data, int s, std::string_view& view) override
+        {
+            CallSeq(data, // Given arguments from code
+                s,        // Amount of given arguments from code
+                view,     // Remaining arguments in a string_view
+                std::make_index_sequence<sizeof...(Args)>{}); 
+        }
+
+    private:
+        template<size_t ...Is>
+        void CallSeq(void** data, int s, std::string_view& view, std::index_sequence<Is...>)
+        {
+            (((Is == sizeof...(Args) - s) // If index is amount that needs to be dropped
+                && (CallSeq2(data,        // Send our type erased array of void*
+                    Parsers<DropN<Is, std::tuple<Args...>>::Type>::Parse(view), // Parse the last couple from Args from string
+                    std::make_index_sequence<Is>{},                             // Create sequence for the parsed arguments
+                    std::make_index_sequence<sizeof...(Args) - Is>{})           // Create sequence for the void* arguments
+                    , false)), ...
+                );
+        }
+
+        template<typename ...Tys, size_t ...Is, size_t ...Ts>
+        void CallSeq2(void** data, std::tuple<Tys...>&& tuple, std::index_sequence<Is...>, std::index_sequence<Ts...>)
+        {
+            Call(std::forward<NthTypeOf<Ts, Args...>>(((NthTypeOf<Ts, Args...>*)data)[Ts])..., // Pack expand void* and cast them
+                std::forward<NthTypeOf<Is, Tys...>>(std::get<Is>(tuple))...);                  // Pack expand parsed arguments from tuple
+        }
+    };
+
+    // Full binder contains all the type info, which allows the Finalize method to cast 
+    // all void pointers back to their original types, to then call the lambda/function pointer
+    template<typename, typename> struct _TypedFunctionStorage;
+    template<typename T, typename Return, typename ...Args>
+    struct _TypedFunctionStorage<T, Return(Args...)> : public _FunctionStorageCaller<Return, Args...> {
+        _TypedFunctionStorage(const T& fun)
+            : function(fun) {}
+
+        virtual Return Call(Args&&...args) override { return function(static_cast<Args&&>(args)...); };
+        T function;
+    };
+
+    template<typename, typename> struct _MemberFunctionStorage;
+    template<typename T, typename Return, typename ...Args>
+    struct _MemberFunctionStorage<T, Return(Args...)> : public _FunctionStorageCaller<Return, Args...> {
+        _MemberFunctionStorage(Return(T::* function)(Args...), T& obj)
+            : obj(obj), function(function) {}
+
+        virtual Return Call(Args&&...args) override { return (obj.*function)(static_cast<Args&&>(args)...); };
+        T& obj;
+        Return(T::* function)(Args...);
+    };
+
+    template<typename T>
+    struct Function;
+
+    // Main partial application Function class
+    template<typename Return, typename ...Args>
+    struct Function<Return(Args...)> {
+        using FunType = Return(*)(Args...);
+
+        Function() {}
+
+        template<typename T>
+        Function(Return(T::* a)(Args...), T& t)
+            : m_Storage(new _MemberFunctionStorage<T, Return(Args...)>{ a, t }) 
+        {}
+
+        // Capturing lambda constructor
+        template<typename T, typename = typename LambdaSignature<T>::type>
+        Function(const T& t)
+            : m_Storage(new _TypedFunctionStorage<T, typename LambdaSignature<T>::type>{ t }) 
+        {}
+
+        // Function pointer constructor
+        Function(FunType t)
+            : m_Storage(new _TypedFunctionStorage<FunType, Return(Args...)>{ t })
+        {}
+
+        Function(const Function<Return(Args...)>& f)
+            : m_Storage(f.m_Storage)
+        {
+            if (m_Storage)
+                m_Storage->m_RefCount++;
+        }
+
+        Function(Function<Return(Args...)>&& f) 
+            : m_Storage(f.m_Storage)
+        {
+            f.m_Storage = nullptr;
+        }
+
+        Function& operator=(const Function<Return(Args...)>& f) 
+        {
+            Clean();
+            m_Storage = f.m_Storage;
+            if (m_Storage)
+                m_Storage->m_RefCount++;
+            return *this;
+        }
+
+        Function& operator=(Function<Return(Args...)>&& f) 
+        {
+            Clean();
+            m_Storage = f.m_Storage;
+            f.m_Storage = nullptr;
+            return *this;
+        }
+
+        ~Function() 
+        {
+            Clean();
+        }
+
+        void Clean()
+        {
+            if (!m_Storage)
+                return;
+
+            m_Storage->m_RefCount--;
+            if (m_Storage->m_RefCount == 0)
+                delete m_Storage, m_Storage = nullptr;
+        }
+
+        inline Return operator()(Args ...args) const 
+        {
+            return m_Storage->Call(static_cast<Args&&>(args)...);
+        }
+
+        inline operator bool() const { return m_Storage; }
+
+        _FunctionStorageCaller<Return, Args...>* m_Storage = nullptr;
+    };
+
+    // Function constructor deduction guide for function pointers
+    template <class Ret, class ...Args>
+    Function(Ret(Args...))->Function<Ret(Args...)>;
+
+    // Function constructor deduction guide for member functions
+    template <class Ret, class T, class ...Args>
+    Function(Ret(T::* a)(Args...), T&)->Function<Ret(Args...)>;
+
+    // Function constructor deduction guide for lambdas
+    template <class _Fx>
+    Function(_Fx)->Function<typename std::_Deduce_signature<_Fx>::type>;
+
+
 }
 
 namespace std

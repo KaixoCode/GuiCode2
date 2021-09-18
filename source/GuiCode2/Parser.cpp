@@ -22,8 +22,10 @@ namespace GuiCode
 	{
 		for (auto& [name, val] : TagParser::enumMap)
 			if (c.find(name) == 0)
+			{
+				c = c.substr(name.size());
 				return { true, val };
-
+			}
 		return { false };
 	}
 
@@ -33,9 +35,7 @@ namespace GuiCode
 		c = c.substr(c.find_first_not_of(" "));
 		auto _find = c.find_first_of("\"");
 		if (_find == std::string_view::npos)
-		{
 			return c;
-		}
 
 		c = c.substr(_find + 1);
 
@@ -110,10 +110,7 @@ namespace GuiCode
 		{
 			auto parsed = Parsers<Enum>::Parse(c);
 			if (parsed.success)
-			{
-				c = { end, c.size() - (end - begin) };
 				return parsed.value;
-			}
 		}
 
 		c = { end, c.size() - (end - begin) };
@@ -246,7 +243,7 @@ namespace GuiCode
 			{
 				std::string_view _view = name;
 				std::string _name = std::string{ _view };
-				auto _subattr = _view.find_first_of(":");
+				auto _subattr = _view.find_first_of(":"); // If it has state specifier
 				if (_subattr != std::string_view::npos)
 				{
 					try
@@ -272,10 +269,14 @@ namespace GuiCode
 
 			for (auto& i : sub)
 			{
-				Pointer<Component> _res = i.Generate();
-				_parser->Append(_obj, _res);
-			}
+				// Use aliased name if exists
+				if (_parser->alias.contains(i.name))
+					i.name = _parser->alias[i.name];
 
+				auto a = i.Generate();
+				if (a)
+					_parser->Append(_obj, std::move(a));
+			}
 			return _obj;
 		}
 
@@ -339,4 +340,33 @@ namespace GuiCode
 
 		return { name, value };
 	}
+
+
+	ComponentParser::ComponentParser()
+	{
+		settings.name = "component";
+		Attribute("z-index", &Component::zIndex);
+		Attribute("cursor", &Component::cursor);
+		Attribute("dimensions", &Component::dimensions);
+		Attribute("size", &Component::size);
+		Attribute("width", &Component::width);
+		Attribute("height", &Component::height);
+		Attribute("position", &Component::position);
+		Attribute("x", &Component::x);
+		Attribute("y", &Component::y);
+		Attribute("min", &Component::min);
+		Attribute("min.width", &Vec2<float>::width);
+		Attribute("min.height", &Vec2<float>::height);
+		Attribute("max", &Component::max);
+		Attribute("max.width", &Vec2<float>::width);
+		Attribute("max.height", &Vec2<float>::height);
+	}
+
+	Pointer<Component> ComponentParser::Create() { return new Component{ }; }
+
+	void ComponentParser::Append(Component& c, Pointer<Component>&& obj)
+	{
+		c.components.push_back(std::move(obj));
+	}
+	
 }

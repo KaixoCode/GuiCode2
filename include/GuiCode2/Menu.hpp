@@ -9,6 +9,48 @@
 namespace GuiCode
 {
 	/**
+	 * Parsers
+	 */
+	struct MenuButtonParser : public ButtonParser
+	{
+		MenuButtonParser();
+		Pointer<Component> Create() override;
+	};
+
+	struct SubMenuButtonParser : public MenuButtonParser
+	{
+		SubMenuButtonParser();
+		Pointer<Component> Create() override;
+		void Append(Component& c, Pointer<Component>&& obj);
+	};
+
+	struct MenuBarButtonParser : public MenuButtonParser
+	{
+		MenuBarButtonParser();
+		Pointer<Component> Create() override;
+		void Append(Component& c, Pointer<Component>&& obj);
+	};
+
+	struct DividerParser : public ComponentParser
+	{
+		DividerParser();
+		Pointer<Component> Create() override;
+	};
+
+	struct MenuParser : public ComponentParser
+	{
+		MenuParser();
+		Pointer<Component> Create() override;
+		void Append(Component& c, Pointer<Component>&& obj);
+	};
+
+	struct MenuBarParser : public MenuParser
+	{
+		MenuBarParser();
+		Pointer<Component> Create() override;
+	};
+
+	/**
 	 * Basic menu, makes use of a Panel to layout.
 	 */
 	class Menu : public Panel
@@ -19,33 +61,19 @@ namespace GuiCode
 	public:
 		Menu(bool vertical = true);
 		Menu(Menu&&);
-		Menu(const Menu&);
-		Menu& operator=(const Menu& other);
+		Menu(const Menu&) = delete;
+		Menu& operator=(Menu&& other);
+		Menu& operator=(const Menu& other) = delete;
 
 		/**
 		 * Add a component to this menu.
 		 * @param object
 		 * @return the object
 		 */
-		template<std::derived_from<Component> T>
-		T& push_back(T&& object)
+		void push_back(Pointer<Component>&& object)
 		{
-			auto& panel = panels.push_back(Panel{ {.ratio = 0,.size{ (float)(vertical ? Inherit : Auto), (float)(vertical ? Auto : Inherit) } }, std::forward<T>(object) });
+			auto& panel = panels.push_back(new Panel{ {.ratio = 0,.size{ (float)(vertical ? Inherit : Auto), (float)(vertical ? Auto : Inherit) } }, std::move(object) });
 			RefreshLayout();
-			return panel.component;
-		}
-
-		/**
-		 * Add a component to this menu.
-		 * @param object
-		 * @return the object
-		 */
-		template<std::derived_from<Component> T>
-		T& push_back(T& object)
-		{
-			auto& panel = panels.push_back(Panel{ {.ratio = 0,.size{ (float)(vertical ? Inherit : Auto), (float)(vertical ? Auto : Inherit) } }, object });
-			RefreshLayout();
-			return panel.component;
 		}
 
 		void Clear();
@@ -57,9 +85,13 @@ namespace GuiCode
 		Border& border;
 	private:
 		bool vertical = true;
-	
+		Ref<Vec4<float>> m_Padding = padding;
+		Ref<Color> m_Background = background;
+		Ref<Border> m_Border = border;
+
 	private:
 		void Init();
+		friend class MenuParser;
 	};
 
 	/**
@@ -87,7 +119,7 @@ namespace GuiCode
 				.transition = 10
 			} };
 
-			struct
+			struct Border
 			{
 				float width = 1;
 				StateColors color{ {
@@ -119,7 +151,7 @@ namespace GuiCode
 				}
 			} };
 
-			std::string_view font = "segoeui";
+			std::string font = GraphicsBase::DefaultFont;
 
 			void Link(Component* c) { select.Link(c), color.Link(c), border.color.Link(c), text.color.Link(c); }
 		};
@@ -127,6 +159,7 @@ namespace GuiCode
 		MenuButton(const Settings& settings = {});
 		MenuButton(MenuButton&& other);
 		MenuButton(const MenuButton& other);
+		MenuButton& operator=(MenuButton&& other);
 
 		void Update() override;
 		void Render(CommandCollection& d) const override;
@@ -135,6 +168,18 @@ namespace GuiCode
 
 	private:
 		void Init();
+		
+		Ref<std::string> m_Name = settings.name;
+		Ref<StateColors> m_Color = settings.color;
+		Ref<Settings::Border> m_Border = settings.border;
+		Ref<float> m_BorderWidth = settings.border.width;
+		Ref<StateColors> m_BorderColor = settings.border.color;
+		Ref<float> m_TextSize = settings.text.size;
+		Ref<StateColors> m_TextColor = settings.text.color;
+		Ref<StateColors> m_Select = settings.select;
+		Ref<std::string> m_Font = settings.font;
+		friend class MenuButtonParser;
+		friend class MenuBarButtonParser;
 	};
 
 	/**
@@ -156,12 +201,16 @@ namespace GuiCode
 		void Init();
 	};
 
+	/**
+	 * Menu-bar-button is used in the MenuBar in a frame.
+	 */
 	class MenuBarButton : public MenuButton
 	{
 	public:
 		MenuBarButton(const Settings& settings = {}) : MenuButton(settings) { Init(); }
 		MenuBarButton(MenuBarButton&& other) : MenuButton(std::forward<MenuBarButton>(other)) { Init(); }
 		MenuBarButton(const MenuBarButton& other) : MenuButton(other) { Init(); }
+		MenuBarButton& operator=(MenuBarButton&& other);
 
 		void Update() override;
 		void Render(CommandCollection& d) const override;
@@ -187,5 +236,12 @@ namespace GuiCode
 
 		void Update() override;
 		void Render(CommandCollection& d) const override;
+
+	private:
+		Ref<Vec4<float>> m_Padding = settings.padding;
+		Ref<float> m_Stroke = settings.stroke;
+		Ref<Color> m_Color = settings.color;
+
+		friend class DividerParser;
 	};
 }

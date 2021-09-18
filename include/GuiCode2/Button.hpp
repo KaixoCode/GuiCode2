@@ -2,9 +2,19 @@
 #include "GuiCode2/Component.hpp"
 #include "GuiCode2/BasicEvents.hpp"
 #include "GuiCode2/Key.hpp"
+#include "GuiCode2/Parser.hpp"
 
 namespace GuiCode
 {
+	/**
+	 * Parsers
+	 */
+	struct ButtonParser : public ComponentParser
+	{
+		ButtonParser();
+		Pointer<Component> Create() override;
+	};
+
 	/**
 	 * Base for a button, does not contain any graphics.
 	 */
@@ -17,7 +27,7 @@ namespace GuiCode
 		};
 
 	public:
-		using Callback = std::function<void(bool)>;
+		using Callback = Function<void(bool)>;
 		struct Group : private Pointer<GroupBase> { Group(); friend class Button; };
 
 		enum Type
@@ -34,14 +44,21 @@ namespace GuiCode
 		};
 
 		Button(const Settings& settings = Settings{});
-		Button(const Button& other);
 		Button(Button&& other);
-
+		Button(const Button& other) = delete;
 		~Button();
+		Button& operator=(Button&& other);
+		Button& operator=(const Button&) = delete;
 
 		Settings settings;
 
 	private:
+		Ref<Group> m_Group = settings.group;
+		Ref<Type> m_Type = settings.type;
+		Ref<Callback> m_Callback = settings.callback;
+		Ref<Key> m_Combo = settings.combo;
+
 		void Init();
+		friend class ButtonParser;
 	};
 }

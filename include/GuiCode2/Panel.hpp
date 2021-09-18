@@ -57,6 +57,7 @@ namespace GuiCode
 		/**
 		 * Panel id class, generates unique id to be used in a panel.
 		 */
+		struct Settings;
 		struct Id
 		{
 			Id();
@@ -65,10 +66,11 @@ namespace GuiCode
 			Id& operator=(const Id& other);
 			bool operator==(const Id& other) const { return other.m_Id == m_Id; }
 
+			Id(int id) : m_Id(id) {};
 		private:
 			static inline int m_Counter = 0;
 			int m_Id;
-			mutable bool m_Used = false;
+			friend class GuiCode::Panel::Settings;
 		};
 
 		/**
@@ -77,7 +79,7 @@ namespace GuiCode
 		 */
 		struct Settings
 		{
-			Id id;                              // Unique Id
+			Id id{ -1 };                        // Unique Id
 			float ratio = 0;                    // Ratio used to determine size in parent Panel
 			Layout layout = Layout::Row;        // Type of layout
 			struct OverflowStruct
@@ -101,10 +103,11 @@ namespace GuiCode
 		Panel();
 		Panel(const Settings& s);
 		Panel(const Settings& s, const std::list<Pointer<Panel>>& d);
-		Panel(const Settings& s, const Pointer<Component>&& c);
-		Panel(const Panel& other);
+		Panel(const Settings& s, const Pointer<Component>& c);
 		Panel(Panel&& other);
-		Panel& operator=(const Panel& other);
+		Panel(const Panel& other) = delete;
+		Panel& operator=(Panel&& other);
+		Panel& operator=(const Panel& other) = delete;
 
 		/**
 		 * Set the dimensions of this panel using the rectangle. This function
@@ -127,7 +130,7 @@ namespace GuiCode
 		 * @param id id
 		 * @return panel or nullptr if no panel found
 		 */
-		Panel* Find(Id& id);
+		Panel* Find(const Id& id);
 
 		/**
 		 * Recalculates the layout.
@@ -204,6 +207,7 @@ namespace GuiCode
 		PanelParser()
 		{
 			settings.name = "panel";
+			Attribute("id", &Panel::m_Id);
 			Attribute("ratio", &Panel::m_Ratio);
 			Attribute("layout", &Panel::m_Layout);
 			Attribute("overflow", &Panel::m_Overflow);
@@ -262,15 +266,17 @@ namespace GuiCode
 
 		Pointer<Component> Create() override
 		{
-			return Panel{};
+			return new Panel{};
 		};
 
-		void Append(Component& c, Pointer<Component>& obj) override
+		void Append(Component& c, Pointer<Component>&& obj) override
 		{
 			Panel* _t = dynamic_cast<Panel*>(&c);
-			Panel* _other = obj;
+			Panel* _other = obj; // Dynamic casts to Panel
 			if (_t && _other)
-				_t->panels.push_back(std::move(*_other));
+			{
+				_t->panels.push_back(std::move(obj));
+			}
 		}
 	};
 }

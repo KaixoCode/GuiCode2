@@ -29,10 +29,13 @@ namespace GuiCode
 	class Component : public Dimensions
 	{
 	public:
+		static inline int COUNTER = 0;
 		Component();
-		Component(Component&& other) : components(other.components), cursor(other.cursor), listener(components) { Init(); }
-		Component(const Component& other) : components(other.components), cursor(other.cursor), listener(components) { Init(); }
-		virtual ~Component() {};
+		Component(Component&& other);
+		Component(const Component&) = delete;
+		Component& operator=(Component&&);
+		Component& operator=(const Component&) = delete;
+		virtual ~Component() { COUNTER--; };
 
 		/**
 		 * List of pointers to components that are registered to 

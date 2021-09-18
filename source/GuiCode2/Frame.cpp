@@ -13,7 +13,7 @@ namespace GuiCode
 		};
 	}
 
-	Frame::Button& Frame::Button::operator=(const Frame::Button& other)
+	Frame::Button& Frame::Button::operator=(Frame::Button&& other)
 	{
 		type = other.type;
 		color = other.color;
@@ -30,20 +30,20 @@ namespace GuiCode
 		menu.padding = { 0, 0, 0, 0 };
 	}
 
-	Frame::TitleBar& Frame::TitleBar::operator=(const Frame::TitleBar& other)
+	Frame::TitleBar& Frame::TitleBar::operator=(Frame::TitleBar&& other)
 	{
-		text = other.text;
-		textSize = other.textSize;
-		textAlign = other.textAlign;
-		font = other.font;
-		background = other.background;
+		text = std::move(other.text);
+		textSize = std::move(other.textSize);
+		textAlign = std::move(other.textAlign);
+		font = std::move(other.font);
+		background = std::move(other.background);
 		if (other.close.type == "close")
-			close = other.close;
+			close = std::move(other.close);
 		if (other.minimize.type == "minimize")
-			minimize = other.minimize;
+			minimize = std::move(other.minimize);
 		if (other.maximize.type == "maximize")
-			maximize = other.maximize;
-		menu = other.menu;
+			maximize = std::move(other.maximize);
+		menu = std::move(other.menu);
 		return *this;
 	}
 
@@ -183,6 +183,9 @@ namespace GuiCode
 			|| v.x < 8 || v.y >= height - 8 || v.x >= width - 8 || v.y < 8;
 	}
 
+	/**
+	 * Parsers
+	 */
 
 	template<>
 	WindowInfo Parsers<WindowInfo>::Parse(std::string_view& c)
@@ -192,4 +195,84 @@ namespace GuiCode
 		return { name, hideonclose };
 	}
 
+	TitleBarButtonParser::TitleBarButtonParser()
+	{
+		settings.name = "titlebar-button";
+		Attribute("color", &Frame::Button::color);
+		Attribute("type", &Frame::Button::type);
+	}
+
+	TitleBarParser::TitleBarParser()
+	{
+		Parser::Link<MenuBarParser>();
+		Parser::Link<TitleBarButtonParser>();
+		settings.name = "titlebar";
+		alias["menu"] = "menu-bar-button";
+		Attribute("background", &Frame::TitleBar::background);
+		Attribute("text", &Frame::TitleBar::text);
+		Attribute("text-size", &Frame::TitleBar::textSize);
+		Attribute("text-align", &Frame::TitleBar::textAlign);
+		Attribute("font", &Frame::TitleBar::font);
+	}
+
+	FrameParser::FrameParser()
+	{
+		Parser::Link<TitleBarParser>();
+		Parser::Link<PanelParser>();
+		settings.name = "frame";
+		Attribute("background", &Frame::background);
+		Attribute("border", &Frame::border);
+		Attribute("info", &Frame::info);
+		Attribute("info.name", &WindowInfo::name);
+		Attribute("info.hideonclose", &WindowInfo::hideOnClose);
+	}
+
+	void TitleBarParser::Append(Component& c, Pointer<Component>&& obj)
+	{
+		Frame::TitleBar* _t = dynamic_cast<Frame::TitleBar*>(&c);
+		if (!_t)
+			return;
+
+		Frame::Button* _other1 = obj;
+		if (_other1)
+		{
+			if (_other1->type == "close")
+				_t->close = std::move(*_other1);
+			if (_other1->type == "minimize")
+				_t->minimize = std::move(*_other1);
+			if (_other1->type == "maximize")
+				_t->maximize = std::move(*_other1);
+			return;
+		}
+
+		MenuBarButton* _other3 = obj;
+		{
+			_t->menu.push_back(std::move(obj));
+		}
+	}
+
+	void FrameParser::Append(Component& c, Pointer<Component>&& obj)
+	{
+		Frame* _t = dynamic_cast<Frame*>(&c);
+		if (!_t)
+			return;
+
+		Frame::TitleBar* _other1 = obj;
+		if (_other1)
+		{
+			_t->titlebar = std::move(*_other1);
+			return;
+		}
+
+		Panel* _other2 = obj;
+		if (_other2)
+		{
+			_t->panel = std::move(*_other2);
+			return;
+		}
+	}
+
+	Pointer<Component> TitleBarButtonParser::Create() { return new Frame::Button{ }; }
+	Pointer<Component> TitleBarParser::Create() { return new Frame::TitleBar{ }; }
+	Pointer<Component> FrameParser::Create() { return new Frame{ {} }; }
 }

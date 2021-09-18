@@ -6,83 +6,27 @@ namespace GuiCode
 {
 	struct Enum { bool success; int64_t value; };
 
+	/**
+	 * Direct string parsers, must be implemented for
+	 * all types that can be parsed.
+	 */
 	template<typename T>
 	struct Parsers
 	{
 		static T Parse(std::string_view&);
 	};
 
-	template<typename ...Args>
-	struct Parsers<std::tuple<Args...>>
-	{
-		static std::tuple<Args...> Parse(std::string_view& c)
-		{
-			std::string_view _view{ c };
-			auto _begin = _view.find_first_of("{");
-			if (_begin == std::string_view::npos)
-				_begin = 0;
-			else
-				_begin++;
-			auto _end = _view.find_last_of("}");
-			if (_end == std::string_view::npos)
-				_end = _view.size();
-			_view = _view.substr(_begin, _end - _begin);
-			std::tuple<Args...> tuple;
-
-			auto a = [&]<size_t ...Is>(std::index_sequence<Is...>)
-			{
-				int _good = 2;
-				((std::get<Is>(tuple) = Parsers<NthTypeOf<Is, Args...>>::Parse(_view),
-					_view.find_first_of(",") > _view.find_first_of("}") && ((void)(_good--), true) ||
-				  (_view = _view.substr(_view.find_first_of(",") + 1), false))
-					,...);
-				return _good > 0;
-			};
-
-			if (!a(std::make_index_sequence<sizeof...(Args)>{}))
-				throw nullptr;
-
-			c = _view;
-
-			return tuple;
-		}
-	};
-
-	template<typename T>
-	struct Parsers<Vec4<T>> 
-	{
-		static Vec4<T> Parse(std::string_view& c)
-		{
-			auto [r, g, b, a] = Parsers<std::tuple<T, T, T, T>>::Parse(c);
-			return { r, g, b, a };
-		}
-	};
-
-	template<typename T>
-	struct Parsers<Vec3<T>>
-	{
-		static Vec3<T> Parse(std::string_view& c)
-		{
-			auto [r, g, b] = Parsers<std::tuple<T, T, T>>::Parse(c);
-			return { r, g, b };
-		}
-	};
-
-	template<typename T>
-	struct Parsers<Vec2<T>>
-	{
-		static Vec2<T> Parse(std::string_view& c)
-		{
-			auto [r, g] = Parsers<std::tuple<T, T>>::Parse(c);
-			return { r, g };
-		}
-	};
-
+	/**
+	 * base class for a tag parser, can be extended to 
+	 * parse any class.
+	 */
 	class TagParser
 	{
 	public:
-
 		static std::map<std::string, int64_t> enumMap;
+
+		// Name aliases that only work inside this tag
+		std::map<std::string, std::string> alias; 
 		
 		class AttributeBase
 		{
@@ -202,7 +146,7 @@ namespace GuiCode
 					if constexpr (is_instance<A, Ref>::value)
 					{
 						if constexpr (StateType<A::Type>)
-							((A&)(obj->*member)).State(state, Parsers<Color>::Parse(_view));
+							((typename A::Type&)(obj->*member)).State(state, Parsers<Color>::Parse(_view));
 					}
 					else
 					{
@@ -222,6 +166,11 @@ namespace GuiCode
 
 		TagParser(const Settings& s = {});
 
+		/**
+		 * Add an attribute to this tag.
+		 * @param name name
+		 * @param member pointer-to-member of the member that this attribute relates to
+		 */
 		template<typename T, typename A>
 		void Attribute(const std::string& name, A T::* member)
 		{
@@ -234,12 +183,15 @@ namespace GuiCode
 		void Set(Component& c, const std::string& name, const std::string& value);
 		void SetState(Component& c, int state, const std::string& name, const std::string& value);
 		virtual Pointer<Component> Create() = 0;
-		virtual void Append(Component&, Pointer<Component>&) = 0;
+		virtual void Append(Component&, Pointer<Component>&&) {};
 
 		Settings settings;
 		std::map<std::string, std::unique_ptr<AttributeBase>> attributes;
 	};
 
+	/**
+	 * Parser will parse a string and spit out a pointer to the component it generated.
+	 */
 	class Parser
 	{
 	public:
@@ -266,41 +218,121 @@ namespace GuiCode
 		static Scope ParseScope(std::string_view& s);
 		static std::pair<std::string, std::string> ParseAttribute(std::string_view& s);
 
+		template<typename T>
+		static inline void Callback(const std::string& name, const T& f)
+		{
+			if constexpr (is_instance<T, Function>::value)
+			{
+				m_Callbacks.emplace(name, f.m_Storage);
+				f.m_Storage->m_RefCount++;
+			}
+			else
+			{
+				Function a = f;
+				m_Callbacks.emplace(name, a.m_Storage);
+				a.m_Storage->m_RefCount++;
+			}
+		}
+
 	private:
 		static inline std::map<std::string, std::unique_ptr<TagParser>> m_Parsers;
+		static inline std::map<std::string, _FunctionStorageBase*> m_Callbacks;
+
+		template<typename>
+		friend class Parsers;
 	};
 
-	class ComponentParser : public TagParser
+	/**
+	 * Direct Parsers standard types implementations.
+	 */
+	template<typename ...Args>
+	struct Parsers<std::tuple<Args...>>
 	{
-	public:
-		ComponentParser()
+		static std::tuple<Args...> Parse(std::string_view& c)
 		{
-			settings.name = "component";
-			Attribute("z-index", &Component::zIndex);
-			Attribute("cursor", &Component::cursor);
-			Attribute("dimensions", &Component::dimensions);
-			Attribute("size", &Component::size);
-			Attribute("width", &Component::width);
-			Attribute("height", &Component::height);
-			Attribute("position", &Component::position);
-			Attribute("x", &Component::x);
-			Attribute("y", &Component::y);
-			Attribute("min", &Component::min);
-			Attribute("min.width", &Vec2<float>::width);
-			Attribute("min.height", &Vec2<float>::height);
-			Attribute("max", &Component::max);
-			Attribute("max.width", &Vec2<float>::width);
-			Attribute("max.height", &Vec2<float>::height);
-		}
+			std::string_view _view{ c };
+			auto _begin = _view.find_first_of("{");
+			if (_begin == std::string_view::npos)
+				_begin = 0;
+			else
+				_begin++;
+			auto _end = _view.find_last_of("}");
+			if (_end == std::string_view::npos)
+				_end = _view.size();
+			_view = _view.substr(_begin, _end - _begin);
+			std::tuple<Args...> tuple;
 
-		Pointer<Component> Create() override
-		{
-			return new Component{ };
-		};
+			auto a = [&]<size_t ...Is>(std::index_sequence<Is...>)
+			{
+				int _good = 2;
+				((std::get<Is>(tuple) = Parsers<NthTypeOf<Is, Args...>>::Parse(_view),
+					_view.find_first_of(",") > _view.find_first_of("}") && ((void)(_good--), true) ||
+					(_view = _view.substr(_view.find_first_of(",") + 1), false))
+					, ...);
+				return _good > 0;
+			};
 
-		void Append(Component& c, Pointer<Component>& obj) override
-		{
-			c.components.push_back(obj);
+			if (!a(std::make_index_sequence<sizeof...(Args)>{}))
+				throw nullptr;
+
+			c = _view;
+
+			return tuple;
 		}
+	};
+
+	template<typename T>
+	struct Parsers<Vec4<T>>
+	{
+		static Vec4<T> Parse(std::string_view& c)
+		{
+			auto [r, g, b, a] = Parsers<std::tuple<T, T, T, T>>::Parse(c);
+			return { r, g, b, a };
+		}
+	};
+
+	template<typename T>
+	struct Parsers<Vec3<T>>
+	{
+		static Vec3<T> Parse(std::string_view& c)
+		{
+			auto [r, g, b] = Parsers<std::tuple<T, T, T>>::Parse(c);
+			return { r, g, b };
+		}
+	};
+
+	template<typename T>
+	struct Parsers<Vec2<T>>
+	{
+		static Vec2<T> Parse(std::string_view& c)
+		{
+			auto [r, g] = Parsers<std::tuple<T, T>>::Parse(c);
+			return { r, g };
+		}
+	};
+
+	template<typename Ret, typename ...Args>
+	struct Parsers<Function<Ret(Args...)>>
+	{
+		static Function<Ret(Args...)> Parse(std::string_view& c)
+		{
+			std::string name = std::string{ c.substr(0, c.find_first_of("(")) };
+			auto args = c.substr(c.find_first_of("(") + 1);
+			std::string _res = std::string{ args.substr(0, args.find_first_of(")")) };
+
+			return [=](Args... arg)
+			{ 
+				void* _arr[]{ ((void*)&arg)... };
+				std::string_view myArgs = _res;
+				Parser::m_Callbacks[name]->CallWithString(_arr, sizeof...(Args), myArgs);
+			};
+		}
+	};
+
+	struct ComponentParser : public TagParser
+	{
+		ComponentParser();
+		Pointer<Component> Create() override;
+		void Append(Component& c, Pointer<Component>&& obj) override;
 	};
 }
