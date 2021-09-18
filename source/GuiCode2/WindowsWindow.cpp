@@ -478,12 +478,35 @@ namespace GuiCode
             _self->MouseWheelCallback(_amount, _keymod, _xPos - _x, _yPos - _y);
             break;
         }
+        case WM_MOVING:
+        {
+            for (auto& i : ContextMenu::m_WindowPool)
+            {
+                if (i.owner == _self)
+                {
+                    std::cout << "CLOSE" << std::endl;
+                    i.CloseNow();
+                    i.Loop();
+                }
+            }
+            break;
+        }
         case WM_EXITSIZEMOVE:
         case WM_SIZE:
         case WM_SIZING:
         {
             RECT _rect;
             int _width = 0, _height = 0;
+
+            for (auto& i : ContextMenu::m_WindowPool)
+            {
+                if (i.owner == _self)
+                {
+                    std::cout << "CLOSE" << std::endl;
+                    i.CloseNow();
+                    i.Loop();
+                }
+            }
 
             if (::GetWindowRect(hWnd, &_rect))
             {

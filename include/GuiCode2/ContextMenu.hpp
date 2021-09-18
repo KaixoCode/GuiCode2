@@ -16,6 +16,7 @@ namespace GuiCode
 
 		void Update() override;
 		void Close();
+		void CloseNow();
 
 		WindowBase* owner = nullptr;
 		bool hideOnClick = false;

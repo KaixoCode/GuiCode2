@@ -39,7 +39,7 @@ namespace GuiCode
 
 		c = c.substr(_find + 1);
 
-		std::string_view _sub = c.substr(0, c.find_first_of("\""));
+		std::string_view _sub = c.substr(0, c.find_first_of("\"") - 1);
 		c = c.substr(_sub.size());
 
 		return _sub;
@@ -293,15 +293,19 @@ namespace GuiCode
 		s = s.substr(s.find_first_of("<") + 1);
 		s = s.substr(s.find_first_not_of(" "));
 		Scope scope;
-		scope.name = s.substr(0, std::min(s.find_first_of(" "), s.find_first_of(">")));
+		scope.name = s.substr(0, std::min({ s.find_first_of(" "), s.find_first_of(">"), s.find_first_of("/") }));
 
-		s = s.substr(std::min(s.find_first_of(" "), s.find_first_of(">")));
+		s = s.substr(std::min({ s.find_first_of(" "), s.find_first_of(">"), s.find_first_of("/") }));
 		s = s.substr(s.find_first_not_of(" "));
 
-		while (s.find_first_not_of(">") < s.find_first_of(">"))
+		while (s.find_first_not_of(">") < std::min(s.find_first_of(">"), s.find_first_of("/")))
 			scope.Emplace(ParseAttribute(s));
 
+		bool _singular = s.find_first_of(">") == s.find_first_of("/") + 1;
+
 		s = s.substr(s.find_first_of(">") + 1);
+		if (_singular)
+			return scope;
 
 		while (s.find_first_of("<") != s.find_first_of("/") - 1)
 			scope.sub.emplace_back(ParseScope(s));
@@ -331,7 +335,7 @@ namespace GuiCode
 		}
 		else
 		{
-			auto b = s.substr(0, s.find_first_of(">"));
+			auto b = s.substr(0, std::min(s.find_first_of(">"), s.find_first_of("/")));
 			b = b.substr(1, b.find_last_not_of(" ") - 1);
 			s = s.substr(b.size() + 2);
 			s = s.substr(s.find_first_not_of(" "));

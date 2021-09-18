@@ -18,26 +18,29 @@ namespace GuiCode
 			size = (*components.begin())->size;
 
 		if (m_ShouldClose)
-		{
-			if (components.size())
-			{
-				Component& _c = *components.begin();
-				if (_c.State<Focused>())
-				{
-					_c.State<Focused>(false);
-					_c.listener(Unfocus{});
-				}
-				components.clear();
-			}
-			State<Visible>(Hide);
-			owner = nullptr;
-			m_ShouldClose = false;
-		}
+			CloseNow();
 	}
 
 	void ContextFrame::Close()
 	{
 		m_ShouldClose = true;
+	}
+
+	void ContextFrame::CloseNow()
+	{
+		if (components.size())
+		{
+			Component& _c = *components.begin();
+			if (_c.State<Focused>())
+			{
+				_c.State<Focused>(false);
+				_c.listener(Unfocus{});
+			}
+			components.clear();
+		}
+		State<Visible>(Hide);
+		owner = nullptr;
+		m_ShouldClose = false;
 	}
 
 	void ContextMenu::Open(Component& c, const Vec2<float> position, bool hideOnClick)

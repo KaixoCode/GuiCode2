@@ -193,16 +193,22 @@ namespace GuiCode
 			Vec2<float> _scrollTranslate{ 0, 0 };
 			Vec2<float> _scrollbarOffsets{ 0, 0 };
 
-			if (settings.overflow.y != Overflow::Show)
+			if (settings.overflow.x != Overflow::Show)
 				if (scrollbar.x.Necessary())
-					_scrollTranslate.x = -scrollbar.x.value,
-					_scrollbarOffsets.y = scrollbar.x.height;
+				{
+					_scrollTranslate.x = -scrollbar.x.value;
+
+					if (settings.overflow.x == Overflow::Scroll)
+						_scrollbarOffsets.y = scrollbar.x.height;
+				}
 
 			if (settings.overflow.y != Overflow::Show)
 				if (scrollbar.y.Necessary())
-					_scrollTranslate.y = -scrollbar.y.value,
-					_scrollbarOffsets.x = scrollbar.y.width;
-
+				{
+					_scrollTranslate.y = -scrollbar.y.value;
+					if (settings.overflow.y == Overflow::Scroll)
+						_scrollbarOffsets.x = scrollbar.y.width;
+				}
 			Vec4<float> _content;
 			_content.x = x + settings.padding.left + _scrollTranslate.x;
 			_content.y = y + settings.padding.top + _scrollTranslate.y;

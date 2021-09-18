@@ -322,7 +322,7 @@ namespace GuiCode
 
 			return [=](Args... arg)
 			{ 
-				void* _arr[]{ ((void*)&arg)... };
+				std::any _arr[]{ arg... };
 				std::string_view myArgs = _res;
 				Parser::m_Callbacks[name]->CallWithString(_arr, sizeof...(Args), myArgs);
 			};

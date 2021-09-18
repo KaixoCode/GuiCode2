@@ -78,7 +78,8 @@ namespace GuiCode
 		settings.max.width = 500;
 		settings.ratio = 1;
 		settings.layout = vertical ? Layout::Column : Layout::Row;
-		settings.overflow = Overflow::Scroll;
+		settings.overflow.x = vertical ? Overflow::Hide : Overflow::Scroll;
+		settings.overflow.y = vertical ? Overflow::Scroll : Overflow::Hide;
 		settings.size.width = vertical ? Inherit : Auto;
 		settings.size.height = vertical ? Auto : Inherit;
 		listener += [&](const KeyPress& e)
@@ -203,7 +204,7 @@ namespace GuiCode
 		// Set the minimum width of this menu button to fit all text.
 		float _minWidth = 0;
 		_minWidth += GraphicsBase::StringWidth(settings.name, settings.font, settings.text.size);
-		_minWidth += GraphicsBase::StringWidth(settings.combo.ToString(), settings.font, settings.text.size);
+		_minWidth += GraphicsBase::StringWidth(Button::settings.combo.ToString(), settings.font, settings.text.size);
 		_minWidth += height + 36;
 		min.width = _minWidth;
 	}
@@ -227,10 +228,10 @@ namespace GuiCode
 		d.FontSize(settings.text.size);
 		d.Font(settings.font);
 		d.Text(settings.name, { x + height + 3, y + height / 2 });
-		if (settings.combo)
+		if (Button::settings.combo)
 		{
 			d.TextAlign(Align::Middle | Align::Right);
-			d.Text(settings.combo.ToString(), { x + width - 9, y + height / 2 });
+			d.Text(Button::settings.combo.ToString(), { x + width - 9, y + height / 2 });
 		}
 	}
 
@@ -343,7 +344,9 @@ namespace GuiCode
 		settings.name = "menu-button";
 		Attribute("name", &MenuButton::m_Name);
 		Attribute("color", &MenuButton::m_Color);
+		Attribute("color.transition", &StateColors::transition);
 		Attribute("border-color", &MenuButton::m_BorderColor);
+		Attribute("border-color.transition", &StateColors::transition);
 		Attribute("border-width", &MenuButton::m_BorderWidth);
 		Attribute("text-size", &MenuButton::m_TextSize);
 		Attribute("text-color", &MenuButton::m_TextColor);
@@ -404,6 +407,7 @@ namespace GuiCode
 
 	MenuBarParser::MenuBarParser()
 	{
+		Parser::Link<MenuParser>();
 		settings.name = "menu-bar";
 		alias["button"] = "menu-bar-button";
 		alias["menu"] = "sub-menu-button";

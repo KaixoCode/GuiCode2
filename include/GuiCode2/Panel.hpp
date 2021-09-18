@@ -277,6 +277,10 @@ namespace GuiCode
 			{
 				_t->panels.push_back(std::move(obj));
 			}
+			else
+			{
+				_t->panels.push_back(new Panel{ {.ratio = 1}, std::move(obj) });
+			}
 		}
 	};
 }

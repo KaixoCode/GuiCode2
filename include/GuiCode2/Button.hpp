@@ -7,17 +7,9 @@
 namespace GuiCode
 {
 	/**
-	 * Parsers
-	 */
-	struct ButtonParser : public ComponentParser
-	{
-		ButtonParser();
-		Pointer<Component> Create() override;
-	};
-
-	/**
 	 * Base for a button, does not contain any graphics.
 	 */
+	class ButtonParser;
 	class Button : public Component
 	{
 		struct GroupBase
@@ -28,7 +20,15 @@ namespace GuiCode
 
 	public:
 		using Callback = Function<void(bool)>;
-		struct Group : private Pointer<GroupBase> { Group(); friend class Button; };
+		struct Group : public Pointer<GroupBase> 
+		{ 
+			Group(); 
+			Group& operator=(const Group& other);
+			
+		private:
+			Button* me = nullptr;
+			friend class Button; 
+		};
 
 		enum Type
 		{
@@ -61,4 +61,16 @@ namespace GuiCode
 		void Init();
 		friend class ButtonParser;
 	};
+
+	/**
+	 * Parsers
+	 */
+	struct ButtonParser : public ComponentParser
+	{
+		static inline std::map<std::string, Button::Group> buttonGroupMap;
+		ButtonParser();
+		Pointer<Component> Create() override;
+	};
+
+
 }

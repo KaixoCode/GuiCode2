@@ -156,7 +156,7 @@ namespace GuiCode
 			void Link(Component* c) { select.Link(c), color.Link(c), border.color.Link(c), text.color.Link(c); }
 		};
 
-		MenuButton(const Settings& settings = {});
+		MenuButton(const Settings& settings = { });
 		MenuButton(MenuButton&& other);
 		MenuButton(const MenuButton& other);
 		MenuButton& operator=(MenuButton&& other);

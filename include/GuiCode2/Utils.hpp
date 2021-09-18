@@ -406,7 +406,7 @@ namespace GuiCode
 
         inline _FunctionStorageBase* Clone() { m_RefCount++; return this; }
         virtual bool Lambda() const { return false; }
-        virtual void CallWithString(void**, int s, std::string_view&) {};
+        virtual void CallWithString(std::any*, int s, std::string_view&) {};
 
         size_t m_RefCount = 0;
     };
@@ -415,7 +415,7 @@ namespace GuiCode
     template<typename Return, typename ...Args>
     struct _FunctionStorageCaller : public _FunctionStorageBase {
         virtual Return Call(Args&&...) = 0;
-        virtual void CallWithString(void** data, int s, std::string_view& view) override
+        virtual void CallWithString(std::any* data, int s, std::string_view& view) override
         {
             CallSeq(data, // Given arguments from code
                 s,        // Amount of given arguments from code
@@ -425,22 +425,23 @@ namespace GuiCode
 
     private:
         template<size_t ...Is>
-        void CallSeq(void** data, int s, std::string_view& view, std::index_sequence<Is...>)
+        void CallSeq(std::any* data, int s, std::string_view& view, std::index_sequence<Is...>)
         {
-            (((Is == sizeof...(Args) - s) // If index is amount that needs to be dropped
+             (((Is == s) // If index is amount that needs to be dropped
                 && (CallSeq2(data,        // Send our type erased array of void*
                     Parsers<DropN<Is, std::tuple<Args...>>::Type>::Parse(view), // Parse the last couple from Args from string
-                    std::make_index_sequence<Is>{},                             // Create sequence for the parsed arguments
-                    std::make_index_sequence<sizeof...(Args) - Is>{})           // Create sequence for the void* arguments
+                    std::make_index_sequence<Is>{},                   // Create sequence for the parsed arguments
+                    std::make_index_sequence<sizeof...(Args) - Is>{}) // Create sequence for the void* arguments
                     , false)), ...
                 );
         }
 
         template<typename ...Tys, size_t ...Is, size_t ...Ts>
-        void CallSeq2(void** data, std::tuple<Tys...>&& tuple, std::index_sequence<Is...>, std::index_sequence<Ts...>)
+        void CallSeq2(std::any* data, std::tuple<Tys...>&& tuple, std::index_sequence<Is...>, std::index_sequence<Ts...>)
         {
-            Call(std::forward<NthTypeOf<Ts, Args...>>(((NthTypeOf<Ts, Args...>*)data)[Ts])..., // Pack expand void* and cast them
-                std::forward<NthTypeOf<Is, Tys...>>(std::get<Is>(tuple))...);                  // Pack expand parsed arguments from tuple
+            if constexpr (sizeof...(Ts) == sizeof...(Tys))
+            Call(std::forward<NthTypeOf<Is, Args...>>((std::any_cast<NthTypeOf<Is, Args...>>(data[Is])))..., // Pack expand void* and cast them
+                std::forward<NthTypeOf<Ts, Tys...>>(std::get<Ts>(tuple))...);                   // Pack expand parsed arguments from tuple
         }
     };
 
