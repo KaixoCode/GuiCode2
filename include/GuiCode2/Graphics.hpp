@@ -67,8 +67,8 @@ namespace GuiCode
 
         virtual void Render() = 0;
         virtual void SetProjection(const glm::mat4& proj);
-        virtual void LoadFont(const std::string& path, const char* name);
-        virtual void LoadFont(const char* name);
+        static void LoadFont(const std::string& path, const char* name);
+        static void LoadFont(const char* name);
 
         static inline float CharWidth(const char c, const std::string_view& font, float size)
         {

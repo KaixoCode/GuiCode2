@@ -3,6 +3,12 @@
 
 namespace GuiCode
 {
+    template<typename T>
+    constexpr static inline bool contains(std::vector<T>& v, const T& t)
+    {
+        return std::find(v.begin(), v.end(), t) != v.end();
+    };
+    
     template<int N, typename... Ts> using NthTypeOf =
         typename std::tuple_element<N, std::tuple<Ts...>>::type;
 
@@ -221,9 +227,9 @@ namespace GuiCode
     };
 
     /**
-     * Simple Component wrapper, either contains pointer to
-     * heap allocated Component object, or a reference to an
-     * existing Component object. Automatically deletes object
+     * Simple pointer wrapper, either contains pointer to
+     * heap allocated object, or a reference to an
+     * existing object. Automatically deletes object
      * when there are 0 references left.
      */
     template<typename T>

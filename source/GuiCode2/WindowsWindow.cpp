@@ -484,8 +484,7 @@ namespace GuiCode
             {
                 if (i.owner == _self)
                 {
-                    std::cout << "CLOSE" << std::endl;
-                    i.CloseNow();
+                    i.Close();
                     i.Loop();
                 }
             }
@@ -502,8 +501,7 @@ namespace GuiCode
             {
                 if (i.owner == _self)
                 {
-                    std::cout << "CLOSE" << std::endl;
-                    i.CloseNow();
+                    i.Close();
                     i.Loop();
                 }
             }

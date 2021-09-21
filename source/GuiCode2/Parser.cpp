@@ -283,9 +283,20 @@ namespace GuiCode
 		return {};
 	}
 		
-	Parser::Scope Parser::Parse(std::string_view s)
+	std::vector<Parser::Scope> Parser::Parse(std::string_view s)
 	{
-		return ParseScope(s);
+		std::vector<Parser::Scope> _scopes;
+		
+		try
+		{
+			while (true)
+			{
+				_scopes.push_back(ParseScope(s));
+			}
+		}
+		catch (...) {}
+
+		return _scopes;
 	}
 
 	Parser::Scope Parser::ParseScope(std::string_view& s)

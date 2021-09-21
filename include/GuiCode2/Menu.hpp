@@ -70,10 +70,11 @@ namespace GuiCode
 		 * @param object
 		 * @return the object
 		 */
-		void push_back(Pointer<Component>&& object)
+		Pointer<Component>& push_back(Pointer<Component>&& object)
 		{
 			auto& panel = panels.push_back(new Panel{ {.ratio = 0,.size{ (float)(vertical ? Inherit : Auto), (float)(vertical ? Auto : Inherit) } }, std::move(object) });
 			RefreshLayout();
+			return panel.component;
 		}
 
 		void Clear();

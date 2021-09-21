@@ -214,7 +214,7 @@ namespace GuiCode
 			m_Parsers.emplace(_ptr->settings.name, std::move(_ptr));
 		}
 
-		static Scope Parse(std::string_view s);
+		static std::vector<Scope> Parse(std::string_view s);
 		static Scope ParseScope(std::string_view& s);
 		static std::pair<std::string, std::string> ParseAttribute(std::string_view& s);
 
