@@ -3,17 +3,29 @@
 namespace GuiCode
 {
 	TextBox::TextBox()
-		: Panel{ {.ratio = 1, .overflow = { Overflow::Hide, Overflow::Hide }} },
-		align(displayer.align),
-		container(displayer.container),
-		font(displayer.font),
-		fontSize(displayer.fontSize),
-		placeholder(displayer.placeholder),
-		textColor(displayer.textColor),
-		selectColor(displayer.selectColor)
+		: Panel{ {.ratio = 0, .overflow = { Overflow::Hide, Overflow::Hide }} }
+	{
+		Init();
+	}
+
+	TextBox::TextBox(TextBox&& other)
+		: Panel{ {.ratio = 0, .overflow = { Overflow::Hide, Overflow::Hide }} },
+		displayer(other.displayer)
+	{
+		Init();
+	}
+
+	TextBox::TextBox(const TextBox& other)
+		: Panel{ {.ratio = 0, .overflow = { Overflow::Hide, Overflow::Hide }} },
+		displayer(other.displayer)
+	{
+		Init();
+	}
+
+	void TextBox::Init()
 	{
 		panels.push_back(new Panel{ {.ratio = 0, .size{ Auto, Auto } }, displayer });
-		
+
 		listener += [this](const MousePress& e)
 		{
 			m_Mouse = e.pos - position;
@@ -48,7 +60,7 @@ namespace GuiCode
 	{
 		displayer.min = size;
 		displayer.height = height;
-		displayer.lineHeight = displayer.height;
+		displayer.lineHeight = displayer.height / fontSize;
 		displayer.wrap = Wrap::None;
 
 		if (m_Update)
@@ -82,5 +94,40 @@ namespace GuiCode
 			scrollbar.x.value = pos.x - 2;
 
 		scrollbar.x.ConstrainValue();
+	}
+
+	void Text::Update()
+	{
+		TextBox::Update();
+		Panel::settings.min.width = GraphicsBase::StringWidth(content, font, fontSize) + 4;
+		editable = false;
+	}
+
+	TextBoxParser::TextBoxParser()
+	{
+		settings.name = "textbox";
+		Attribute("align", &TextBox::m_Align);
+		Attribute("font-size", &TextBox::m_FontSize);
+		Attribute("font", &TextBox::m_Font);
+		Attribute("placeholder", &TextBox::m_Placeholder);
+		Attribute("text-color", &TextBox::m_TextColor);
+		Attribute("select-color", &TextBox::m_SelectColor);
+		Attribute("editable", &TextBox::m_Editable);
+		Attribute("content", &TextBox::m_Content);
+	}
+
+	Pointer<Component> TextBoxParser::Create()
+	{
+		return new TextBox{};
+	}
+
+	TextParser::TextParser()
+	{
+		settings.name = "text";
+	}
+
+	Pointer<Component> TextParser::Create()
+	{
+		return new Text{};
 	}
 }

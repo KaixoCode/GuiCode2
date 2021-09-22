@@ -243,25 +243,25 @@ namespace GuiCode
 			Attribute("align", &Panel::m_Align);
 			Attribute("background", &Panel::m_Background);
 
-			enumMap["Row"] = (int)Layout::Row;
-			enumMap["Column"] = (int)Layout::Column;
-			enumMap["Show"] = (int)Overflow::Show;
-			enumMap["Hide"] = (int)Overflow::Hide;
-			enumMap["Scroll"] = (int)Overflow::Scroll;
-			enumMap["None"] = (int)Sizing::None;
-			enumMap["Auto"] = (int)Sizing::Auto;
-			enumMap["Inherit"] = (int)Sizing::Inherit;
-			enumMap["Left"] = (int)Align::Left;
-			enumMap["Right"] = (int)Align::Right;
-			enumMap["CenterX"] = (int)Align::CenterX;
-			enumMap["Top"] = (int)Align::Top;
-			enumMap["Bottom"] = (int)Align::Bottom;
-			enumMap["CenterY"] = (int)Align::CenterY;
-			enumMap["Center"] = (int)Align::Center;
-			enumMap["TextTop"] = (int)Align::TextTop;
-			enumMap["TextBottom"] = (int)Align::TextBottom;
-			enumMap["Baseline"] = (int)Align::Baseline;
-			enumMap["Middle"] = (int)Align::Middle;
+			enumMap["row"] = (int)Layout::Row;
+			enumMap["column"] = (int)Layout::Column;
+			enumMap["show"] = (int)Overflow::Show;
+			enumMap["hide"] = (int)Overflow::Hide;
+			enumMap["scroll"] = (int)Overflow::Scroll;
+			enumMap["none"] = (int)Sizing::None;
+			enumMap["auto"] = (int)Sizing::Auto;
+			enumMap["inherit"] = (int)Sizing::Inherit;
+			enumMap["left"] = (int)Align::Left;
+			enumMap["right"] = (int)Align::Right;
+			enumMap["center-x"] = (int)Align::CenterX;
+			enumMap["top"] = (int)Align::Top;
+			enumMap["bottom"] = (int)Align::Bottom;
+			enumMap["center-y"] = (int)Align::CenterY;
+			enumMap["center"] = (int)Align::Center;
+			enumMap["text-top"] = (int)Align::TextTop;
+			enumMap["text-bottom"] = (int)Align::TextBottom;
+			enumMap["baseline"] = (int)Align::Baseline;
+			enumMap["middle"] = (int)Align::Middle;
 		}
 
 		Pointer<Component> Create() override
@@ -279,7 +279,7 @@ namespace GuiCode
 			}
 			else
 			{
-				_t->panels.push_back(new Panel{ {.ratio = 1}, std::move(obj) });
+				_t->panels.push_back(new Panel{ {.size{ Auto, Auto }}, std::move(obj) });
 			}
 		}
 	};

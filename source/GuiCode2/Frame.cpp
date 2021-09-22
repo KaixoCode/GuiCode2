@@ -61,8 +61,11 @@ namespace GuiCode
 		d.Fill(background);
 		d.Quad(dimensions);
 		d.Fill(text);
-		d.Quad({ x + height + menu.width + 18, y + 8, 1, height - 16 });
-		d.Quad({ x + height + 6, y + 8, 1, height - 16 });
+		if (menu.Panel::panels.size())
+		{
+			d.Quad({ x + height + menu.width + 18, y + 8, 1, height - 16 });
+			d.Quad({ x + height + 6, y + 8, 1, height - 16 });
+		}
 		d.TextAlign(textAlign);
 		d.FontSize(textSize);
 		d.Font(font);

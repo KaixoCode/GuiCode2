@@ -208,7 +208,7 @@ namespace GuiCode
                 UpdateCursor(Cursor::Arrow);
         }
 
-        if (_visible)
+        if (_visible && graphics)
         {
             graphics->collection.Clip({ -1, -1, width + 2, height + 2 });
             graphics->collection.Viewport({ 0, 0, width, height });
@@ -484,7 +484,7 @@ namespace GuiCode
             {
                 if (i.owner == _self)
                 {
-                    i.Close();
+                    i.CloseNow();
                     i.Loop();
                 }
             }
@@ -501,7 +501,7 @@ namespace GuiCode
             {
                 if (i.owner == _self)
                 {
-                    i.Close();
+                    i.CloseNow();
                     i.Loop();
                 }
             }
@@ -615,7 +615,8 @@ namespace GuiCode
         dimensions = { (float)x, (float)y, (float)width, (float)height };
         m_PrevDims = { (float)x, (float)y, (float)width, (float)height };
 
-        graphics->SetProjection(glm::ortho(0.0f, (float)std::max(width, 5), 0.0f, (float)std::max(height, 5)));
+        if (graphics)
+            graphics->SetProjection(glm::ortho(0.0f, (float)std::max(width, 5), 0.0f, (float)std::max(height, 5)));
         
         WindowsLoop();
     }

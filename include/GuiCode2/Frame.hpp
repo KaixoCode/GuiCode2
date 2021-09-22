@@ -78,6 +78,14 @@ namespace GuiCode
 		};
 
 		Frame(const WindowData& data);
+		Frame& operator=(Frame&& other)
+		{
+			background = std::move(other.background);
+			border = std::move(other.border);
+			titlebar = std::move(other.titlebar);
+			panel = std::move(other.panel);
+			return *this;
+		}
 
 		Color background{ 13, 13, 13, 255 };
 		Color border{ 64, 64, 64 };

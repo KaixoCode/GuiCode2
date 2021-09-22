@@ -635,9 +635,9 @@ namespace GuiCode
 			else if (e.keycode == Key::Right)
 				container.selection = container.selection.Highest();
 			else if (e.keycode == Key::Up)
-				container.selection = PositionToIndex({ m_TypeX, -lineHeight + IndexToPosition(container.selection.Lowest()).y });
+				container.selection = PositionToIndex({ m_TypeX, -fontSize * lineHeight + IndexToPosition(container.selection.Lowest()).y });
 			else if (e.keycode == Key::Down)
-				container.selection = PositionToIndex({ m_TypeX, lineHeight + IndexToPosition(container.selection.Highest()).y });
+				container.selection = PositionToIndex({ m_TypeX, fontSize * lineHeight + IndexToPosition(container.selection.Highest()).y });
 			
 			container.ConstrainSelection();
 			return;
@@ -651,9 +651,9 @@ namespace GuiCode
 			else if (e.keycode == Key::Right)
 				index = container.CtrlRight();
 			else if (e.keycode == Key::Up)
-				index = PositionToIndex({ m_TypeX, -lineHeight + IndexToPosition(container.selection.start).y });
+				index = PositionToIndex({ m_TypeX, -fontSize * lineHeight + IndexToPosition(container.selection.start).y });
 			else if (e.keycode == Key::Down)
-				index = PositionToIndex({ m_TypeX, lineHeight + IndexToPosition(container.selection.start).y });
+				index = PositionToIndex({ m_TypeX, fontSize * lineHeight + IndexToPosition(container.selection.start).y });
 		}
 
 		// Otherwise just normal _index adjusting
@@ -664,9 +664,9 @@ namespace GuiCode
 			else if (e.keycode == Key::Right)
 				index++;
 			else if (e.keycode == Key::Up)
-				index = PositionToIndex({ m_TypeX, -lineHeight + IndexToPosition(container.selection.start).y });
+				index = PositionToIndex({ m_TypeX, -fontSize * lineHeight + IndexToPosition(container.selection.start).y });
 			else if (e.keycode == Key::Down)
-				index = PositionToIndex({ m_TypeX, lineHeight + IndexToPosition(container.selection.start).y });
+				index = PositionToIndex({ m_TypeX, fontSize * lineHeight + IndexToPosition(container.selection.start).y });
 		}
 
 		if (!(e.mod & EventMods::Shift))
@@ -682,5 +682,31 @@ namespace GuiCode
 	void TextDisplayer::UpdateTypeX()
 	{
 		m_TypeX = IndexToPosition(container.selection.start).x;
+	}
+
+	/**
+	 * Parser
+	 */
+
+	TextDisplayerParser::TextDisplayerParser()
+	{
+		settings.name = "text-displayer";
+		Attribute("wrap", &TextDisplayer::wrap);
+		Attribute("align", &TextDisplayer::align);
+		Attribute("line-height", &TextDisplayer::lineHeight);
+		Attribute("font-size", &TextDisplayer::fontSize);
+		Attribute("font", &TextDisplayer::font);
+		Attribute("placeholder", &TextDisplayer::placeholder);
+		Attribute("text-color", &TextDisplayer::textColor);
+		Attribute("select-color", &TextDisplayer::selectColor);
+		Attribute("editable", &TextDisplayer::m_Editable);
+		Attribute("content", &TextDisplayer::m_Content);
+		enumMap["word"] = (int)Wrap::Word;
+		enumMap["character"] = (int)Wrap::Character;
+	}
+
+	Pointer<Component> TextDisplayerParser::Create()
+	{
+		return new TextDisplayer{};
 	}
 }

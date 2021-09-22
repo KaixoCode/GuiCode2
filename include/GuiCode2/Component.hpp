@@ -100,7 +100,7 @@ namespace GuiCode
 		 * @param state state
 		 * @return nullptr if none found
 		 */
-		virtual Component* Get(int state);
+		virtual Pointer<Component> Get(int state);
 
 		virtual void Init() {}
 		virtual void Render(CommandCollection& d) const {}

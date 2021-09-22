@@ -2,49 +2,22 @@
 
 namespace GuiCode
 {
+	TextArea::TextArea()
+		: Panel{ {.ratio = 1, .overflow = Overflow::Scroll } }
+	{
+		Init();
+	}
+
 	TextArea::TextArea(TextArea&& other)
 		: Panel{ {.ratio = 1, .overflow = Overflow::Scroll } },
-		displayer(other.displayer),
-		align(displayer.align),
-		container(displayer.container),
-		font(displayer.font),
-		fontSize(displayer.fontSize),
-		lineHeight(displayer.lineHeight),
-		placeholder(displayer.placeholder),
-		textColor(displayer.textColor),
-		selectColor(displayer.selectColor),
-		wrap(displayer.wrap)
+		displayer(other.displayer)
 	{
 		Init();
 	}
 
 	TextArea::TextArea(const TextArea& other)
 		: Panel{ {.ratio = 1, .overflow = Overflow::Scroll } },
-		displayer(other.displayer),
-		align(displayer.align),
-		container(displayer.container),
-		font(displayer.font),
-		fontSize(displayer.fontSize),
-		lineHeight(displayer.lineHeight),
-		placeholder(displayer.placeholder),
-		textColor(displayer.textColor),
-		selectColor(displayer.selectColor),
-		wrap(displayer.wrap)
-	{
-		Init();
-	}
-
-	TextArea::TextArea()
-		: Panel{ {.ratio = 1, .overflow = Overflow::Scroll } },
-		align(displayer.align),
-		container(displayer.container),
-		font(displayer.font),
-		fontSize(displayer.fontSize),
-		lineHeight(displayer.lineHeight),
-		placeholder(displayer.placeholder),
-		textColor(displayer.textColor),
-		selectColor(displayer.selectColor),
-		wrap(displayer.wrap)
+		displayer(other.displayer)
 	{
 		Init();
 	}
@@ -155,5 +128,31 @@ namespace GuiCode
 
 		scrollbar.x.ConstrainValue();
 		scrollbar.y.ConstrainValue();
+	}
+
+	template<>
+	Wrap Parsers<Wrap>::Parse(std::string_view& c)
+	{
+		return (Wrap)Parsers<int>::Parse(c);
+	};
+
+	TextAreaParser::TextAreaParser()
+	{
+		settings.name = "textarea";
+		Attribute("wrap", &TextArea::m_Wrap);
+		Attribute("align", &TextArea::m_Align);
+		Attribute("line-height", &TextArea::m_LineHeight);
+		Attribute("font-size", &TextArea::m_FontSize);
+		Attribute("font", &TextArea::m_Font);
+		Attribute("placeholder", &TextArea::m_Placeholder);
+		Attribute("text-color", &TextArea::m_TextColor);
+		Attribute("select-color", &TextArea::m_SelectColor);
+		Attribute("editable", &TextArea::m_Editable);
+		Attribute("content", &TextArea::m_Content);
+	}
+
+	Pointer<Component> TextAreaParser::Create()
+	{
+		return new TextArea{};
 	}
 }

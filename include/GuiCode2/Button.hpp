@@ -71,6 +71,4 @@ namespace GuiCode
 		ButtonParser();
 		Pointer<Component> Create() override;
 	};
-
-
 }

@@ -9,9 +9,10 @@ namespace GuiCode
     {
     public:
         WindowsWindow(const WindowData&);
-
-
-
+        ~WindowsWindow()
+        {
+            glfwDestroyWindow(m_Window);
+        }
 
 
         HWND GetWin32Handle() const { return glfwGetWin32Window(m_Window); }
