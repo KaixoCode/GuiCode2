@@ -54,6 +54,7 @@ namespace GuiCode
 		minimize.dimensions = { x + width - 46 * 3, y, 46, 30 };
 		menu.height = height;
 		menu.position = { x + height + 12, y };
+		menu.State<Visible>(menu.Panel::panels.size() != 0);
 	}
 
 	void Frame::TitleBar::Render(CommandCollection& d) const
@@ -61,7 +62,7 @@ namespace GuiCode
 		d.Fill(background);
 		d.Quad(dimensions);
 		d.Fill(text);
-		if (menu.Panel::panels.size())
+		if (menu.State<Visible>())
 		{
 			d.Quad({ x + height + menu.width + 18, y + 8, 1, height - 16 });
 			d.Quad({ x + height + 6, y + 8, 1, height - 16 });
@@ -69,8 +70,9 @@ namespace GuiCode
 		d.TextAlign(textAlign);
 		d.FontSize(textSize);
 		d.Font(font);
+		float _offset = menu.State<Visible>() ? menu.width + 31 : 6;
 		if (title)
-			d.Text(*title, { x + height + menu.width + 31, y + height / 2 });
+			d.Text(*title, { x + height + _offset, y + height / 2 });
 	}
 
 	bool Frame::TitleBar::Hitbox(const Vec2<float>& v) const

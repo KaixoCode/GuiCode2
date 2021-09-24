@@ -51,6 +51,7 @@ namespace GuiCode
 	 * A Panel contains settings for creating scroll areas
 	 * and complex layouts.
 	 */
+	class PanelParser;
 	class Panel : public Component
 	{
 	public:
@@ -174,6 +175,16 @@ namespace GuiCode
 
 		void Init() override;
 
+		Id& id = settings.id;
+		float& ratio = settings.ratio;
+		Layout& layout = settings.layout;
+		Settings::OverflowStruct& overflow = settings.overflow;
+		Vec4<float>& padding = settings.padding;
+		Vec4<float>& margin = settings.margin;
+		Border& border = settings.border;
+		int& align = settings.align;
+		Color& background = settings.background;
+
 	private:
 		Vec4<float> m_Viewport; // Actual dimensions of the used space in this panel (used by scrollbars)
 
@@ -183,9 +194,6 @@ namespace GuiCode
 		void RowLayout(Vec4<float>& content);
 		void ColumnLayout(Vec4<float>& content);
 
-
-	public:
-		// References to settings for easy assignment in parser
 		Ref<Id> m_Id = settings.id;
 		Ref<float> m_Ratio = settings.ratio;
 		Ref<Layout> m_Layout = settings.layout;
@@ -199,6 +207,7 @@ namespace GuiCode
 		Ref<Vec2<float>> m_Max = settings.max;
 		Ref<int> m_Align = settings.align;
 		Ref<Color> m_Background = settings.background;
+		friend class PanelParser;
 	};
 
 	class PanelParser : public TagParser

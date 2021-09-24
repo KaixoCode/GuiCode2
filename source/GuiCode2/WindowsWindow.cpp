@@ -420,8 +420,12 @@ namespace GuiCode
                 if (_w->owner == nullptr)
                     break;
                 bool _any = false;
+                bool _close = _w->hideOnClick;
                 for (auto& i : ContextMenu::m_WindowPool)
                 {
+                    if (i.owner == _w->owner)
+                        _close |= i.hideOnClick;
+
                     if (i.owner == _w->owner && GetFocus() == i.GetWin32Handle())
                     {
                         _any = true;
@@ -435,9 +439,14 @@ namespace GuiCode
                     for (auto& i : ContextMenu::m_WindowPool)
                     {
                         if (i.owner == _w->owner)
+                        {
                             i.m_EventQueue.push(std::make_unique<Unfocus>());
+                            if (_close)
+                                i.Close();
+                        }
                     }
-
+                    if (_close)
+                        _w->Close();
                 }
             }
 

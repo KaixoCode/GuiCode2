@@ -250,7 +250,7 @@ namespace GuiCode
             : m_Data(new Object{ nullptr, NO })
         {}
 
-        template<std::derived_from<T> Type>
+        template<typename Type> requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
         Pointer(Type&& c)
             : m_Data(new Object{ new Type{ std::move(c) }, 1 })
         {
@@ -274,9 +274,17 @@ namespace GuiCode
 
         template<typename Type> requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
         Pointer(Pointer<Type>&& c)
-            : m_Data(new Object{ dynamic_cast<T*>(c.m_Data->data), c.m_Data->refs })
+            : m_Data(reinterpret_cast<Object*>(c.m_Data))
         {
             c.Invalidate();
+        }
+
+        template<typename Type> requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
+        Pointer(const Pointer<Type>& c)
+            : m_Data(reinterpret_cast<Object*>(c.m_Data))
+        {
+            if (c.m_Data->refs != NO)
+                c.m_Data->refs++;
         }
 
         Pointer(const Pointer& c)
@@ -288,7 +296,7 @@ namespace GuiCode
 
         Pointer& operator=(const Pointer& c)
         {
-            if (m_Data->refs != NO)
+            if (m_Data && m_Data->refs != NO)
             {
                 m_Data->refs--;
                 if (m_Data->refs == 0)
@@ -308,7 +316,7 @@ namespace GuiCode
         template<typename Type> requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
         Pointer& operator=(Pointer<Type>&& c)
         {
-            if (m_Data->refs != NO)
+            if (m_Data && m_Data->refs != NO)
             {
                 m_Data->refs--;
                 if (m_Data->refs == 0)
@@ -318,8 +326,7 @@ namespace GuiCode
                 }
             }
 
-            m_Data->data = dynamic_cast<T*>(c.m_Data->data);
-            m_Data->refs = c.m_Data->refs;
+            m_Data = reinterpret_cast<Object*>(c.m_Data);
             c.Invalidate();
 
             return *this;
@@ -376,7 +383,7 @@ namespace GuiCode
          */
         void Invalidate()
         {
-            delete m_Data;
+            //delete m_Data;
             m_Data = nullptr;
         }
 
