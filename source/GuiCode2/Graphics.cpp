@@ -564,7 +564,7 @@ namespace GuiCode
         if (m_PreviousShader != 3)
         {
             _shader.Use();
-            glBindVertexArray(ellipse.vbo);    
+            glBindVertexArray(ellipse.vao);    
         }
         m_PreviousShader = 3;
 
@@ -629,12 +629,12 @@ namespace GuiCode
         if (m_PreviousShader != 2)
         {
             _shader.Use();
-            glBindVertexArray(triangle.vbo);
+            glBindVertexArray(triangle.vao);
         }
         m_PreviousShader = 2;
 
         glm::mat4 _model{ 1.0f };
-        _model = glm::translate(_model, glm::vec3{ dim.x, dim.y, 0 });
+        _model = glm::translate(_model, glm::vec3{ dim.x, dim.y + dim.w, 0 });
         _model = glm::scale(_model, glm::vec3{ dim.z, dim.w, 1 });
         if (rotation != 0) // Rotate only if necessary
             _model = glm::rotate(_model, glm::radians(rotation), glm::vec3{ 0, 0, 1 });

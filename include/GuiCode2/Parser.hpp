@@ -207,6 +207,12 @@ namespace GuiCode
 			void Emplace(const std::pair<std::string, std::string>& p) { attributes.emplace(p), insertOrder.emplace_back(p); };
 		};
 
+		struct Variable
+		{
+			std::string name;
+			std::string value;
+		};
+
 		template<std::derived_from<TagParser> T>
 		static inline void Link()
 		{
@@ -215,6 +221,8 @@ namespace GuiCode
 		}
 
 		static std::vector<Scope> Parse(std::string_view s);
+		static std::string ExtractVariables(std::string_view& s);
+		static Variable ParseVariable(std::string_view& s);
 		static Scope ParseScope(std::string_view& s);
 		static std::pair<std::string, std::string> ParseAttribute(std::string_view& s);
 

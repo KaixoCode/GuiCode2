@@ -233,16 +233,48 @@ namespace GuiCode
 			if (settings.size.width == Auto)
 			{
 				float _width = 0;
-				for (auto& i : panels)
-					_width += i->width + i->settings.margin.left + i->settings.margin.right;
+				if (settings.layout == Layout::Column)
+				{
+					for (auto& i : panels)
+					{
+						if (i->settings.size.width == Inherit)
+							continue;
+
+						float _w = i->width + i->settings.margin.left + i->settings.margin.right;
+						if (_w > _width)
+							_width = _w;
+					}
+				}
+				else
+				{
+					for (auto& i : panels)
+						_width += i->width + i->settings.margin.left + i->settings.margin.right;
+				}
+
 				width = _width + settings.padding.left + settings.padding.right;
 			}
 
 			if (settings.size.height == Auto)
 			{
 				float _height = 0;
-				for (auto& i : panels)
-					_height += i->height + i->settings.margin.top + i->settings.margin.bottom;
+				if (settings.layout == Layout::Row)
+				{
+					for (auto& i : panels)
+					{
+						if (i->settings.size.height == Inherit)
+							continue;
+
+						float _h = i->height + i->settings.margin.top + i->settings.margin.bottom;
+						if (_h > _height)
+							_height = _h;
+					}
+				}
+				else
+				{
+					for (auto& i : panels)
+						_height += i->height + i->settings.margin.top + i->settings.margin.bottom;
+				}
+
 				height = _height + settings.padding.top + settings.padding.bottom;
 			}
 
@@ -552,6 +584,7 @@ namespace GuiCode
 	void Panel::ForwardUpdate()
 	{
 		Update();
+
 		scrollbar.x.ForwardUpdate();
 		scrollbar.y.ForwardUpdate();
 		
@@ -560,11 +593,14 @@ namespace GuiCode
 
 		else
 			for (auto& _s : panels)
-				_s->ForwardUpdate();
-
+				_s->RefreshLayout();
+		
 		RefreshLayout();
-
 		RefreshScrollbars();
+
+		if (!component)
+			for (auto& _s : panels)
+				_s->ForwardUpdate(); // TODO: fix this redundancy of calling twice.
 
 		scrollbar.x.State<Visible>(scrollbar.x.Necessary() && settings.overflow.x == Overflow::Scroll);
 		scrollbar.y.State<Visible>(scrollbar.y.Necessary() && settings.overflow.y == Overflow::Scroll);

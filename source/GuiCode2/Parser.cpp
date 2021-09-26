@@ -286,7 +286,10 @@ namespace GuiCode
 	std::vector<Parser::Scope> Parser::Parse(std::string_view s)
 	{
 		std::vector<Parser::Scope> _scopes;
-		
+
+		auto _str = ExtractVariables(s);
+		s = _str;
+
 		try
 		{
 			while (true)
@@ -297,6 +300,54 @@ namespace GuiCode
 		catch (...) {}
 
 		return _scopes;
+	}
+
+	std::string Parser::ExtractVariables(std::string_view& s)
+	{
+		std::vector<Variable> _variables;
+		std::string _str = std::string{ s };
+		try
+		{
+			while (true)
+			{
+				if (_variables.size())
+				{
+					auto& _prev = *(--_variables.end());
+					_str = std::regex_replace(_str, std::regex{ _prev.name }, _prev.value);
+				}
+				std::string_view _view = _str;
+				auto _var = ParseVariable(_view);
+				_str = _view;
+				_variables.emplace_back(_var);
+			}
+		}
+		catch (...) {}
+
+		return _str;
+	}
+
+
+	Parser::Variable Parser::ParseVariable(std::string_view& s)
+	{
+		// let apple = <button attr="val">;
+		// let juice = <attr3="pizza">;
+		// let carrot = { 45, 45, 0, 0 };
+		auto _start = s.find("let ", 0, 4);
+		if (_start == std::string_view::npos)
+			throw nullptr;
+
+		auto _end = s.find(";");
+		auto _var = s.substr(_start + 4, _end - _start - 4);
+		std::string _name = std::string{ _var.substr(0, _var.find_first_of("=")) };
+		std::string _value = std::string{ _var.substr(_var.find_first_of("=") + 1) };
+		s = s.substr(_end + 1);
+
+		trim(_name);
+		trim(_value);
+
+		return { _name, _value };
+
+		// <apple attr2="carrot" juice> -> <button attr="val" attr2="carrot" attr3="pizza">
 	}
 
 	Parser::Scope Parser::ParseScope(std::string_view& s)
@@ -329,19 +380,16 @@ namespace GuiCode
 	std::pair<std::string, std::string> Parser::ParseAttribute(std::string_view& s)
 	{
 		std::string name, value;
-		auto a = s.substr(0, s.find_first_of("="));
-		name = a.substr(0, a.find_last_not_of(" ") + 1);
+		name = s.substr(0, s.find_first_of("="));
+		trim(name);
 
 		s = s.substr(s.find_first_of("=") + 1);
 		s = s.substr(s.find_first_not_of(" "));
 		if (s.find_first_of("=") < s.find_first_of(">"))
 		{
 			auto b = s.substr(0, s.find_first_of("="));
-			b = b.substr(0, b.find_last_not_of(" "));
-			b = b.substr(0, b.find_last_of(" "));
-			b = b.substr(1, b.find_last_not_of(" ") - 1);
+			b = b.substr(1, b.find_last_of("\"") - 1);
 			s = s.substr(b.size() + 2);
-			s = s.substr(s.find_first_not_of(" "));
 			value = b;
 		}
 		else

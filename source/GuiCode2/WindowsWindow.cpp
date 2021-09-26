@@ -441,11 +441,11 @@ namespace GuiCode
                         if (i.owner == _w->owner)
                         {
                             i.m_EventQueue.push(std::make_unique<Unfocus>());
-                            if (_close)
+                            //if (_close)
                                 i.Close();
                         }
                     }
-                    if (_close)
+                    //if (_close)
                         _w->Close();
                 }
             }

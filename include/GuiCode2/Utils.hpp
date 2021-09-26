@@ -3,6 +3,44 @@
 
 namespace GuiCode
 {
+    // trim from start (in place)
+    static inline void ltrim(std::string& s) {
+        s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+            return !std::isspace(ch);
+            }));
+    }
+
+    // trim from end (in place)
+    static inline void rtrim(std::string& s) {
+        s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+            return !std::isspace(ch);
+            }).base(), s.end());
+    }
+
+    // trim from both ends (in place)
+    static inline void trim(std::string& s) {
+        ltrim(s);
+        rtrim(s);
+    }
+
+    // trim from start (copying)
+    static inline std::string ltrim_copy(std::string s) {
+        ltrim(s);
+        return s;
+    }
+
+    // trim from end (copying)
+    static inline std::string rtrim_copy(std::string s) {
+        rtrim(s);
+        return s;
+    }
+
+    // trim from both ends (copying)
+    static inline std::string trim_copy(std::string s) {
+        trim(s);
+        return s;
+    }
+
     template<typename T>
     constexpr static inline bool contains(std::vector<T>& v, const T& t)
     {
@@ -232,44 +270,57 @@ namespace GuiCode
      * existing object. Automatically deletes object
      * when there are 0 references left.
      */
+    namespace Test
+    {
+        static inline size_t instances = 0;
+    }
     template<typename T>
     class Pointer
     {
-        constexpr static inline size_t NO = static_cast<size_t>(-1);
         struct Object
         {
-            Object(T* ptr, size_t r)
-                : data(ptr), refs(r)
-            {}
+            Object(T* ptr, size_t r, bool del)
+                : data(ptr), refs(r), del(del)
+            {
+                //Test::instances++;
+            }
+
+            Object(const Object& other)
+                : data(other.data), refs(other.refs)
+            {
+                //Test::instances++;
+            }
+
+            Object(Object&& other)
+                : data(other.data), refs(other.refs)
+            {
+                //Test::instances++;
+            }
+
+            ~Object()
+            {
+                //Test::instances--;
+                if (del && data)
+                    delete data;
+            }
 
             T* data;
             size_t refs = 1;
+            bool del = false;
         };
     public:
         Pointer()
-            : m_Data(new Object{ nullptr, NO })
+            : m_Data(new Object{ nullptr, 1, false })
         {}
 
         template<typename Type> requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
-        Pointer(Type&& c)
-            : m_Data(new Object{ new Type{ std::move(c) }, 1 })
-        {
-            std::cout << "MOVE" << std::endl;
-        }
-
-        template<std::derived_from<T> Type>
         Pointer(Type& c)
-            : m_Data(new Object{ &c, NO })
+            : m_Data(new Object{ dynamic_cast<T*>(&c), 1, false })
         {}
 
-        template<std::derived_from<T> Type>
+        template<typename Type> requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
         Pointer(Type* c)
-            : m_Data(new Object{ c, 1 })
-        {}
-
-        template<std::derived_from<T> Type>
-        Pointer(Type* c, int refs)
-            : m_Data(new Object{ c, refs })
+            : m_Data(new Object{ dynamic_cast<T*>(c), 1, true })
         {}
 
         template<typename Type> requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
@@ -283,32 +334,32 @@ namespace GuiCode
         Pointer(const Pointer<Type>& c)
             : m_Data(reinterpret_cast<Object*>(c.m_Data))
         {
-            if (c.m_Data->refs != NO)
-                c.m_Data->refs++;
+            c.m_Data->refs++;
+        }
+
+        Pointer(Pointer&& c)
+            : m_Data(c.m_Data)
+        {
+            c.Invalidate();
         }
 
         Pointer(const Pointer& c)
             : m_Data(c.m_Data)
         {
-            if (c.m_Data->refs != NO)
-                c.m_Data->refs++;
+            c.m_Data->refs++;
         }
 
         Pointer& operator=(const Pointer& c)
         {
-            if (m_Data && m_Data->refs != NO)
+            if (m_Data)
             {
                 m_Data->refs--;
                 if (m_Data->refs == 0)
-                {
-                    delete m_Data->data;
                     delete m_Data;
-                }
             }
 
             m_Data = c.m_Data;
-            if (m_Data->refs != NO)
-                m_Data->refs++;
+            m_Data->refs++;
 
             return *this;
         }
@@ -316,14 +367,11 @@ namespace GuiCode
         template<typename Type> requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
         Pointer& operator=(Pointer<Type>&& c)
         {
-            if (m_Data && m_Data->refs != NO)
+            if (m_Data)
             {
                 m_Data->refs--;
                 if (m_Data->refs == 0)
-                {
-                    delete m_Data->data;
                     delete m_Data;
-                }
             }
 
             m_Data = reinterpret_cast<Object*>(c.m_Data);
@@ -351,6 +399,12 @@ namespace GuiCode
         template<std::derived_from<T> Type>
         operator const Type* () const { return dynamic_cast<Type*>(m_Data->data); }
 
+        template<std::derived_from<T> Type>
+        Type& Get() { return *dynamic_cast<Type*>(m_Data->data); }
+        
+        template<std::derived_from<T> Type>
+        const Type& Get() const { return *dynamic_cast<Type*>(m_Data->data); }
+
         operator T& () { return *m_Data->data; }
         operator const T& () const { return *m_Data->data; }
 
@@ -368,14 +422,9 @@ namespace GuiCode
             if (!m_Data)
                 return;
 
-            if (m_Data->refs != NO)
-                m_Data->refs--;
-
+            m_Data->refs--;
             if (m_Data->refs == 0)
-            {
-                delete m_Data->data;
                 delete m_Data;
-            }
         }
 
         /**
@@ -433,7 +482,7 @@ namespace GuiCode
             CallSeq(data, // Given arguments from code
                 s,        // Amount of given arguments from code
                 view,     // Remaining arguments in a string_view
-                std::make_index_sequence<sizeof...(Args)>{}); 
+                std::make_index_sequence<sizeof...(Args) + 1>{}); 
         }
 
     private:

@@ -261,7 +261,7 @@ namespace GuiCode
 		d.FontSize(settings.text.size);
 		d.Font(settings.font);
 		d.Text(settings.name, { x + height + 3, y + height / 2 });
-		d.Triangle({ x + width - 9, y + height / 2 - 6, 6, 6 }, 45 * 3);
+		d.Triangle({ x + width - 8, y + height / 2, 4, 8 }, 0.0f);
 	}
 
 	bool SubMenuButton::Hitbox(const Vec2<float>& pos) const

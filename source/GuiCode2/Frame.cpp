@@ -213,6 +213,7 @@ namespace GuiCode
 		Parser::Link<TitleBarButtonParser>();
 		settings.name = "titlebar";
 		alias["menu"] = "menu-bar-button";
+		alias["button"] = "titlebar-button";
 		Attribute("background", &Frame::TitleBar::background);
 		Attribute("text", &Frame::TitleBar::text);
 		Attribute("text-size", &Frame::TitleBar::textSize);
