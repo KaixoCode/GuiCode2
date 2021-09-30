@@ -568,8 +568,8 @@ namespace GuiCode
 		scrollbar.x.range.start = m_Viewport.x;
 		scrollbar.x.range.end = m_Viewport.x + m_Viewport.width - width;
 		scrollbar.x.visibleRange = width;
-		// scrollbar.x.position = { x, y + height - scrollbar.x.height };
-		scrollbar.x.position = { x, y + height };
+		scrollbar.x.position = { x, y + height - scrollbar.x.height };
+		//scrollbar.x.position = { x, y + height };
 		scrollbar.x.width = width - _scrollbarOffsets.x;
 		scrollbar.x.axis = Scrollbar::Horizontal;
 
