@@ -9,14 +9,12 @@ namespace GuiCode
 		COUNTER++;
 		State<Visible>(true);
 		InitListeners();
-		Init();
 	}
 
 	Component::Component(Component&& other)
 		: components(other.components), cursor(other.cursor), 
 		listener(components) 
 	{
-		Init(); 
 		COUNTER++; 
 		std::cout << "Move" << std::endl; 
 	}

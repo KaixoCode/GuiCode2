@@ -102,7 +102,6 @@ namespace GuiCode
 		 */
 		virtual Pointer<Component> Get(int state);
 
-		virtual void Init() {}
 		virtual void Render(CommandCollection& d) const {}
 		virtual void Update() {}
 

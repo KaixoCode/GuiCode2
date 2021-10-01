@@ -174,7 +174,7 @@ namespace GuiCode
 		void ForwardUpdate() override;
 		void ConstrainSize() override;
 
-		void Init() override;
+		void Init();
 
 		Id& id = settings.id;
 		float& ratio = settings.ratio;
