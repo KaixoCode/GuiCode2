@@ -17,6 +17,11 @@ namespace GuiCode
 		return _panel;
 	}
 
+	void Panel::Panels::pop_back()
+	{
+		remove(data.size() - 1);
+	}
+
 	void Panel::Panels::remove(int index)
 	{
 		int _index = 0;

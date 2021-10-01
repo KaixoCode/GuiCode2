@@ -150,6 +150,7 @@ namespace GuiCode
 			Panels(Panel& me, const std::list<Pointer<Panel>>& data = {});
 
 			Panel& push_back(const Pointer<Panel>& panel);
+			void pop_back();
 
 			void remove(int index);
 			void remove(Panel& panel);
