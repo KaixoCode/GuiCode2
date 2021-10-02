@@ -479,6 +479,7 @@ namespace GuiCode
         virtual Return Call(Args&&...) = 0;
         virtual void CallWithString(std::any* data, int s, std::string_view& view) override
         {
+            if constexpr ((std::is_copy_assignable_v<Args> && ...))
             CallSeq(data, // Given arguments from code
                 s,        // Amount of given arguments from code
                 view,     // Remaining arguments in a string_view
