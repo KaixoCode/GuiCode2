@@ -12,7 +12,8 @@ namespace GuiCode
 	enum State
 	{
 		NoValue = 0, 
-		Hovering, Focused, Pressed, Visible, Disabled, Selected
+		Hovering, Focused, Pressed, Visible, Disabled, Selected,
+		LastState
 	};
 
 	enum Cursor

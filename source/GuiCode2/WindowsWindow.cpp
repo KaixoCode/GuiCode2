@@ -202,7 +202,7 @@ namespace GuiCode
             ForwardUpdate();
 
             auto _c = Get(Hovering);
-            if (_c)
+            if (_c && _c->cursor != Cursor::Arrow)
                 UpdateCursor(_c->cursor);
             else
                 UpdateCursor(Cursor::Arrow);

@@ -351,6 +351,9 @@ namespace GuiCode
 
         Pointer& operator=(const Pointer& c)
         {
+            if (m_Data == c.m_Data)
+                return *this;
+
             if (m_Data)
             {
                 m_Data->refs--;
@@ -468,7 +471,7 @@ namespace GuiCode
 
         inline _FunctionStorageBase* Clone() { m_RefCount++; return this; }
         virtual bool Lambda() const { return false; }
-        virtual void CallWithString(std::any*, int s, std::string_view&) {};
+        virtual std::any CallWithString(std::any*, int s, std::string_view&) = 0;
 
         size_t m_RefCount = 0;
     };
@@ -477,33 +480,60 @@ namespace GuiCode
     template<typename Return, typename ...Args>
     struct _FunctionStorageCaller : public _FunctionStorageBase {
         virtual Return Call(Args&&...) = 0;
-        virtual void CallWithString(std::any* data, int s, std::string_view& view) override
+        virtual std::any CallWithString(std::any* data, int s, std::string_view& view) override
         {
             if constexpr ((std::is_copy_assignable_v<Args> && ...))
-            CallSeq(data, // Given arguments from code
-                s,        // Amount of given arguments from code
-                view,     // Remaining arguments in a string_view
-                std::make_index_sequence<sizeof...(Args) + 1>{}); 
+            {
+                if constexpr (std::is_same_v<Return, void>)
+                {
+                    CallSeq(data, // Given arguments from code
+                        s,        // Amount of given arguments from code
+                        view,     // Remaining arguments in a string_view
+                        std::make_index_sequence<sizeof...(Args) + 1>{});
+                    return nullptr;
+                }
+                else
+                {
+                    return CallSeq(data, // Given arguments from code
+                        s,        // Amount of given arguments from code
+                        view,     // Remaining arguments in a string_view
+                        std::make_index_sequence<sizeof...(Args) + 1>{});
+                }
+            }
+            return nullptr;
         }
 
     private:
         template<size_t ...Is>
-        void CallSeq(std::any* data, int s, std::string_view& view, std::index_sequence<Is...>)
+        Return CallSeq(std::any* data, int s, std::string_view& view, std::index_sequence<Is...>)
         {
-             (((Is == s) // If index is amount that needs to be dropped
-                && (CallSeq2(data,        // Send our type erased array of void*
-                    Parsers<DropN<Is, std::tuple<std::decay_t<Args>...>>::Type>::Parse(view), // Parse the last couple from Args from string
-                    std::make_index_sequence<Is>{},                   // Create sequence for the parsed arguments
-                    std::make_index_sequence<sizeof...(Args) - Is>{}) // Create sequence for the void* arguments
-                    , false)), ...
-                );
+            if constexpr (std::is_same_v<void, Return>)
+                (((Is == s) // If index is amount that needs to be dropped
+                    && (CallSeq2(data,        // Send our type erased array of void*
+                        Parsers<DropN<Is, std::tuple<std::decay_t<Args>...>>::Type>::Parse(view), // Parse the last couple from Args from string
+                        std::make_index_sequence<Is>{},                   // Create sequence for the parsed arguments
+                        std::make_index_sequence<sizeof...(Args) - Is>{}) // Create sequence for the void* arguments
+                        , false)), ...
+                    );
+            else
+            {
+                Return _value;
+                (((Is == s) // If index is amount that needs to be dropped
+                    && (_value = CallSeq2(data,        // Send our type erased array of void*
+                        Parsers<DropN<Is, std::tuple<std::decay_t<Args>...>>::Type>::Parse(view), // Parse the last couple from Args from string
+                        std::make_index_sequence<Is>{},                   // Create sequence for the parsed arguments
+                        std::make_index_sequence<sizeof...(Args) - Is>{}) // Create sequence for the void* arguments
+                        , false)), ...
+                    );
+                return _value;
+            }
         }
 
         template<typename ...Tys, size_t ...Is, size_t ...Ts>
-        void CallSeq2(std::any* data, std::tuple<Tys...>&& tuple, std::index_sequence<Is...>, std::index_sequence<Ts...>)
+        Return CallSeq2(std::any* data, std::tuple<Tys...>&& tuple, std::index_sequence<Is...>, std::index_sequence<Ts...>)
         {
             if constexpr (sizeof...(Ts) == sizeof...(Tys))
-            Call(std::forward<NthTypeOf<Is, Args...>>((std::any_cast<NthTypeOf<Is, Args...>>(data[Is])))..., // Pack expand void* and cast them
+            return Call(std::forward<NthTypeOf<Is, Args...>>((std::any_cast<NthTypeOf<Is, Args...>>(data[Is])))..., // Pack expand void* and cast them
                 std::forward<NthTypeOf<Ts, Tys...>>(std::get<Ts>(tuple))...);                   // Pack expand parsed arguments from tuple
         }
     };
@@ -547,9 +577,9 @@ namespace GuiCode
         {}
 
         // Capturing lambda constructor
-        template<typename T, typename = typename LambdaSignature<T>::type>
+        template<typename T>
         Function(const T& t)
-            : m_Storage(new _TypedFunctionStorage<T, typename LambdaSignature<T>::type>{ t }) 
+            : m_Storage(new _TypedFunctionStorage<T, Return(Args...)>{ t })
         {}
 
         // Function pointer constructor

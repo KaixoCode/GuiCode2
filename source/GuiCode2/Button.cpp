@@ -226,9 +226,68 @@ namespace GuiCode
 			return ButtonParser::buttonGroupMap.emplace(_res, Button::Group{}).first->second;
 	};
 
+	NormalButton::NormalButton(const Settings& settings)
+		: Button({ settings.group, settings.type, settings.callback, settings.combo })
+	{
+		this->settings = settings;
+		Init();
+	}
+
+	NormalButton::NormalButton(NormalButton&& other)
+		: Button({ other.settings.group, other.settings.type, other.settings.callback, other.settings.combo })
+	{
+		settings = other.settings;
+		Init();
+	}
+
+	NormalButton::NormalButton(const NormalButton& other)
+		: Button({ other.settings.group, other.settings.type, other.settings.callback, other.settings.combo })
+	{
+		settings = other.settings;
+		Init();
+	}
+
+	NormalButton& NormalButton::operator=(NormalButton&& other)
+	{
+		settings = std::move(other.settings);
+		Button::operator=(std::move(other));
+		return *this;
+	}
+
+	void NormalButton::Init()
+	{
+		height = 20;
+		settings.Link(this);
+	}
+
+	void NormalButton::Update()
+	{
+		// Set the minimum width of this menu button to fit all text.
+		float _minWidth = 0;
+		_minWidth += GraphicsBase::StringWidth(settings.name, settings.font, settings.text.size);
+		_minWidth += GraphicsBase::StringWidth(Button::settings.combo.ToString(), settings.font, settings.text.size);
+		_minWidth += height + 36;
+		min.width = _minWidth;
+	}
+
+	void NormalButton::Render(CommandCollection& d) const
+	{
+		d.Fill(settings.border.color.Current());
+		d.Quad(dimensions);
+
+		d.Fill(settings.color.Current());
+		d.Quad({ x + settings.border.width, y + settings.border.width, width - 2 * settings.border.width, height - 2 * settings.border.width });
+
+		d.Fill(settings.text.color.Current());
+		d.TextAlign(Align::Center);
+		d.FontSize(settings.text.size);
+		d.Font(settings.font);
+		d.Text(settings.name, { x + width / 2, y + height / 2 });
+	}
+
 	ButtonParser::ButtonParser()
 	{
-		settings.name = "button";
+		settings.name = "";
 		Attribute("type", &Button::m_Type);
 		Attribute("callback", &Button::m_Callback);
 		Attribute("group", &Button::m_Group);
@@ -284,8 +343,28 @@ namespace GuiCode
 		enumMap["F11"] = Key::F11;
 	}
 
+	NormalButtonParser::NormalButtonParser()
+	{
+		Parser::Link<ButtonParser>();
+		settings.name = "button";
+		Attribute("name", &NormalButton::m_Name);
+		Attribute("color", &NormalButton::m_Color);
+		Attribute("color.transition", &StateColors::transition);
+		Attribute("border-color", &NormalButton::m_BorderColor);
+		Attribute("border-color.transition", &StateColors::transition);
+		Attribute("border-width", &NormalButton::m_BorderWidth);
+		Attribute("font-size", &NormalButton::m_TextSize);
+		Attribute("text-color", &NormalButton::m_TextColor);
+		Attribute("font", &NormalButton::m_Font);
+	}
+
 	Pointer<Component> ButtonParser::Create() 
 	{
 		return new Button{};
+	}
+
+	Pointer<Component> NormalButtonParser::Create()
+	{
+		return new NormalButton{};
 	}
 }

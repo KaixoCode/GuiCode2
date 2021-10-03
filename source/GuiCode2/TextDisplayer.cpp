@@ -8,7 +8,7 @@ namespace GuiCode
 	{
 		Init();
 
-		min = { 50, 50 };
+		min = { 5, 5 };
 		size = min;
 	}
 

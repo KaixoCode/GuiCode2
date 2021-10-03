@@ -75,11 +75,11 @@ namespace GuiCode
 	{
 		for (auto& i : components)
 		{
-			if (i->State(state))
-				return i;
-
 			if (auto _c = i->Get(state))
 				return _c;
+		
+			if (i->State(state))
+				return i;
 		}
 
 		return {};

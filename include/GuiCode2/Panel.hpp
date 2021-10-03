@@ -131,7 +131,26 @@ namespace GuiCode
 		 * @param id id
 		 * @return panel or nullptr if no panel found
 		 */
-		Panel* Find(const Id& id);
+		Pointer<Panel> Find(const Id& id);
+
+		template<std::derived_from<Component> T>
+		Pointer<Component> Find()
+		{
+			if (T* _c = component)
+				return component;
+
+			for (auto& i : panels)
+			{
+				if constexpr (std::derived_from<T, Panel>)
+					if (T* _c = i)
+						return i;
+
+				auto _r = i->Find<T>();
+				if (T* _c = _r)
+					return _r;
+			}
+			return {};
+		}
 
 		/**
 		 * Recalculates the layout.
@@ -289,7 +308,14 @@ namespace GuiCode
 			}
 			else
 			{
-				_t->panels.push_back(new Panel{ {.size{ Auto, Auto }}, std::move(obj) });
+				_t->component = std::move(obj);
+				//float _w = Auto;
+				//float _h = Auto;
+				//if (_t->settings.size.width == Inherit)
+				//	_w = Inherit;
+				//if (_t->settings.size.height == Inherit)
+				//	_h = Inherit;
+				//_t->panels.push_back(new Panel{ {.size{_w, _h} }, std::move(obj)});
 			}
 		}
 	};

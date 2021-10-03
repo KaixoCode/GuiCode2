@@ -57,8 +57,8 @@ namespace GuiCode
 		 */
 		Color Current() const;
 
-		Color base;       // Base color, when no state is present
-		float transition; // Transition time in milliseconds
+		Color base{ 0, 0, 0, 0 }; // Base color, when no state is present
+		float transition = 100;   // Transition time in milliseconds
 
 	private:
 		Component* m_Link;

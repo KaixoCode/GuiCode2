@@ -161,16 +161,18 @@ namespace GuiCode
 		};
 	}
 
-	Panel* Panel::Find(const Id& id)
+	Pointer<Panel> Panel::Find(const Id& id)
 	{
-		if (settings.id == id)
-			return this;
-
 		for (auto& i : panels)
-			if (Panel* _div = i->Find(id))
-				return _div;
+		{
+			if (i->id == id)
+				return i;
 
-		return nullptr;
+			if (Pointer<Panel> _div = i->Find(id))
+				return _div;
+		}
+
+		return {};
 	}
 
 	void Panel::RefreshLayout()

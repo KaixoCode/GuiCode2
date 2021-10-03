@@ -176,6 +176,9 @@ namespace GuiCode
 		{
 			auto _res = split(name, ".");
 			auto _final = _res[_res.size() - 1];
+			
+			if (attributes.contains(_final))
+				attributes.erase(_final); 
 
 			attributes.emplace(_final, std::make_unique<AttributeTyped<T, A>>(member));
 		}
@@ -347,11 +350,16 @@ namespace GuiCode
 			auto args = c.substr(c.find_first_of("(") + 1);
 			std::string _res = std::string{ args.substr(0, args.find_first_of(")")) };
 
-			return [=](Args... arg)
+			return [=](Args... arg) -> Ret
 			{ 
 				std::any _arr[]{ arg... };
 				std::string_view myArgs = _res;
-				Parser::m_Callbacks[name]->CallWithString(_arr, sizeof...(Args), myArgs);
+				std::any _value = Parser::m_Callbacks[name]->CallWithString(_arr, sizeof...(Args), myArgs);
+				if constexpr (std::is_same_v<Ret, void>)
+					return;
+
+				else
+					return std::any_cast<Ret>(_value);
 			};
 		}
 	};

@@ -200,6 +200,11 @@ namespace GuiCode
 
 	private:
 		void Init();
+
+		Ref<Vec4<float>> m_MenuPadding = menu.padding;
+		Ref<Color> m_MenuBackground = menu.background;
+		Ref<Border> m_MenuBorder = menu.border;
+		friend class SubMenuButtonParser;
 	};
 
 	/**
@@ -221,6 +226,11 @@ namespace GuiCode
 
 	private:
 		void Init();
+
+		Ref<Vec4<float>> m_MenuPadding = menu.padding;
+		Ref<Color> m_MenuBackground = menu.background;
+		Ref<Border> m_MenuBorder = menu.border;
+		friend class MenuBarButtonParser;
 	};
 
 	class Divider : public Component

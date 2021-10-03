@@ -724,15 +724,17 @@ namespace GuiCode
         GuiCode::Font::CharMap* _charMap = &m_CurrentFont->Size(std::round(m_FontSize));
 
         // Calculate the total width if we need it.
-        std::vector<float> _totalWidth{ 0.f };
+        //std::vector<float> _totalWidth{ 0.f };
+        float _totalWidth = 0.0f;
         int _index = 0;
         if (m_TextAlign & Align::Right || m_TextAlign & Align::CenterX)
             for (int i = 0; i < str.size(); i++)
             {
-                if (str[i] == '\n')
-                    _index++, _totalWidth.push_back(0.f);
-                else
-                    _totalWidth[_index] += _charMap->Char(str[i]).advance >> 6;
+                //if (str[i] == '\n')
+                //    _index++, _totalWidth.push_back(0.f);
+                //else
+                //    _totalWidth[_index] += _charMap->Char(str[i]).advance >> 6;
+                _totalWidth += _charMap->Char(str[i]).advance >> 6;
             }
         // Bind the 3d texture for this charmap
         glActiveTexture(GL_TEXTURE0);
@@ -765,9 +767,11 @@ namespace GuiCode
                     y -= _charMap->Ascender() + _charMap->Descender();
 
                 if (m_TextAlign & Align::CenterX)
-                    x -= 0.5 * _totalWidth[_index] * _scale;
+                //    x -= 0.5 * _totalWidth[_index] * _scale;
+                    x -= 0.5 * _totalWidth * _scale;
                 else if (m_TextAlign & Align::Right)
-                    x -= _totalWidth[_index] * _scale;
+                //    x -= _totalWidth[_index] * _scale;
+                    x -= _totalWidth * _scale;
 
                 _index++;
                 if (x == '\n')

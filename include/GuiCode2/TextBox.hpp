@@ -5,7 +5,7 @@
 
 namespace GuiCode
 {
-	struct TextBoxParser : public ComponentParser
+	struct TextBoxParser : public PanelParser
 	{
 		TextBoxParser();
 		Pointer<Component> Create() override;

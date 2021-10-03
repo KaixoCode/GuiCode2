@@ -3,6 +3,7 @@
 #include "GuiCode2/BasicEvents.hpp"
 #include "GuiCode2/Key.hpp"
 #include "GuiCode2/Parser.hpp"
+#include "GuiCode2/StateColors.hpp"
 
 namespace GuiCode
 {
@@ -62,6 +63,82 @@ namespace GuiCode
 		friend class ButtonParser;
 	};
 
+	class NormalButton : public Button
+	{
+	public:
+		struct Settings
+		{
+			Button::Group group;
+			Button::Type type = Click;
+			Button::Callback callback;
+			Key combo;
+
+			std::string name = "Button";
+
+			StateColors color{ {
+				.base{ 38, 38, 38, 0 },
+				.colors{
+					{ Disabled, { 0, 0, 0, 0 } },
+					{ Pressed, 0x414141 },
+					{ Hovering, 0x262626 },
+				},
+				.transition = 100
+			} };
+
+			struct Border
+			{
+				float width = 1;
+				StateColors color{ {
+					.base{ 118, 118, 118, 0 },
+					.colors{
+						{ Disabled, { 0, 0, 0, 0 } },
+						{ Pressed, 0x919191 },
+						{ Hovering, 0x767676 },
+					},
+					.transition = 100
+				} };
+			} border;
+
+			struct
+			{
+				float size = 12;
+				StateColors color{ {
+					.base = 0xE0E0E0,
+					.colors{
+						{ Disabled, 0xA0A0A0 }
+					}
+				} };
+			} text;
+
+			std::string font = GraphicsBase::DefaultFont;
+
+			void Link(Component* c) { color.Link(c), border.color.Link(c), text.color.Link(c); }
+		};
+
+		NormalButton(const Settings& settings = { });
+		NormalButton(NormalButton&& other);
+		NormalButton(const NormalButton& other);
+		NormalButton& operator=(NormalButton&& other);
+
+		void Update() override;
+		void Render(CommandCollection& d) const override;
+
+		Settings settings;
+
+	private:
+		void Init();
+
+		Ref<std::string> m_Name = settings.name;
+		Ref<StateColors> m_Color = settings.color;
+		Ref<Settings::Border> m_Border = settings.border;
+		Ref<float> m_BorderWidth = settings.border.width;
+		Ref<StateColors> m_BorderColor = settings.border.color;
+		Ref<float> m_TextSize = settings.text.size;
+		Ref<StateColors> m_TextColor = settings.text.color;
+		Ref<std::string> m_Font = settings.font;
+		friend class NormalButtonParser;
+	};
+
 	/**
 	 * Parsers
 	 */
@@ -69,6 +146,12 @@ namespace GuiCode
 	{
 		static inline std::map<std::string, Button::Group> buttonGroupMap;
 		ButtonParser();
+		Pointer<Component> Create() override;
+	};
+
+	struct NormalButtonParser : public ButtonParser
+	{
+		NormalButtonParser();
 		Pointer<Component> Create() override;
 	};
 }

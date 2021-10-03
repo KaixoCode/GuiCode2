@@ -359,6 +359,9 @@ namespace GuiCode
 		settings.name = "sub-menu-button";
 		alias["button"] = "menu-button";
 		alias["menu"] = "sub-menu-button";
+		Attribute("menu-border", &SubMenuButton::m_MenuBorder);
+		Attribute("menu-padding", &SubMenuButton::m_MenuPadding);
+		Attribute("menu-background", &SubMenuButton::m_MenuBackground);
 	}
 
 	MenuBarButtonParser::MenuBarButtonParser()
@@ -366,6 +369,9 @@ namespace GuiCode
 		settings.name = "menu-bar-button";
 		alias["button"] = "menu-button";
 		alias["menu"] = "sub-menu-button";
+		Attribute("menu-border", &MenuBarButton::m_MenuBorder);
+		Attribute("menu-padding", &MenuBarButton::m_MenuPadding);
+		Attribute("menu-background", &MenuBarButton::m_MenuBackground);
 	}
 
 	DividerParser::DividerParser()

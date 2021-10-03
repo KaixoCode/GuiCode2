@@ -25,6 +25,7 @@ namespace GuiCode
 	void TextBox::Init()
 	{
 		panels.push_back(new Panel{ {.ratio = 0, .size{ Auto, Auto } }, displayer });
+		cursor = Cursor::IBeam;
 
 		listener += [this](const MousePress& e)
 		{
@@ -60,7 +61,7 @@ namespace GuiCode
 	{
 		displayer.min = size;
 		displayer.height = height;
-		displayer.lineHeight = displayer.height / fontSize;
+		displayer.lineHeight = height / fontSize;
 		displayer.wrap = Wrap::None;
 
 		if (m_Update)
@@ -106,7 +107,7 @@ namespace GuiCode
 	TextBoxParser::TextBoxParser()
 	{
 		settings.name = "textbox";
-		Attribute("align", &TextBox::m_Align);
+		Attribute("text-align", &TextBox::m_Align);
 		Attribute("font-size", &TextBox::m_FontSize);
 		Attribute("font", &TextBox::m_Font);
 		Attribute("placeholder", &TextBox::m_Placeholder);

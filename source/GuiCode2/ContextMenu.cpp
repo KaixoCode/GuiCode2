@@ -43,7 +43,7 @@ namespace GuiCode
 		m_ShouldClose = false;
 	}
 
-	void ContextMenu::Open(Component& c, const Vec2<float> position, bool hideOnClick)
+	void ContextMenu::Open(const Pointer<Component>& c, const Vec2<float> position, bool hideOnClick)
 	{
 		ContextFrame* _theChosenOne = nullptr;
 		for (auto& _window : m_WindowPool)
@@ -56,24 +56,32 @@ namespace GuiCode
 		if (!_theChosenOne)
 			_theChosenOne = &m_WindowPool.emplace_back();
 
+		Pointer _c = c;
 		_theChosenOne->position = offset + position;
-		_theChosenOne->size = c.size;
+		_theChosenOne->size = c->size;
 		_theChosenOne->components.push_back(c);
 		_theChosenOne->owner = WindowBase::currentWindow;
 		_theChosenOne->hideOnClick = hideOnClick;
-		if (!c.State<Focused>())
+		if (!_c->State<Focused>())
 		{
-			c.State<Focused>(true);
-			c.listener(Focus{});
+			_c->State<Focused>(true);
+			_c->listener(Focus{});
 		}
 		_theChosenOne->State<Visible>(Show);
 	}
 
-	void ContextMenu::Close(Component& c)
+	void ContextMenu::Close(const Pointer<Component>& c)
 	{
 		for (auto& _window : m_WindowPool)
 			if (_window.components.size() && &*_window.components.begin() == &c)
 				_window.Close();
+	}
+
+	void ContextMenu::CloseNow(const Pointer<Component>& c)
+	{
+		for (auto& _window : m_WindowPool)
+			if (_window.components.size() && &*_window.components.begin() == &c)
+				_window.CloseNow();
 	}
 
 	void ContextMenu::Loop()

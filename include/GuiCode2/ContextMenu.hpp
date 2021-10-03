@@ -36,13 +36,14 @@ namespace GuiCode
 		 * @param c the component
 		 * @param position the position relative to the current window
 		 */
-		static void Open(Component& c, const Vec2<float> position, bool hideOnClick = false);
+		static void Open(const Pointer<Component>& c, const Vec2<float> position, bool hideOnClick = false);
 
 		/**
 		 * Close the ContextFrame that is displaying the component.
 		 * @param c the component
 		 */
-		static void Close(Component& c);
+		static void Close(const Pointer<Component>& c);
+		static void CloseNow(const Pointer<Component>& c);
 		static void Loop();
 
 	private:

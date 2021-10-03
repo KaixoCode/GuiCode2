@@ -20,6 +20,7 @@ namespace GuiCode
 	template<>
 	Enum Parsers<Enum>::Parse(std::string_view& c)
 	{
+		int a = c.size();
 		for (auto& [name, val] : TagParser::enumMap)
 			if (c.find(name) == 0)
 			{
@@ -64,10 +65,7 @@ namespace GuiCode
 		{
 			auto parsed = Parsers<Enum>::Parse(c);
 			if (parsed.success)
-			{
-				c = { end, c.size() - (end - begin) };
 				return parsed.value;
-			}
 		}
 	
 		c = { end, c.size() - (end - begin) };
@@ -87,10 +85,7 @@ namespace GuiCode
 		{
 			auto parsed = Parsers<Enum>::Parse(c);
 			if (parsed.success)
-			{
-				c = { end, c.size() - (end - begin) };
 				return parsed.value;
-			}
 		}
 
 		c = { end, c.size() - (end - begin) };
