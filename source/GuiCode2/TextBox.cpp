@@ -1,4 +1,5 @@
 #include "GuiCode2/TextBox.hpp"
+#include "GuiCode2/Key.hpp"
 
 namespace GuiCode
 {
@@ -26,6 +27,16 @@ namespace GuiCode
 	{
 		panels.push_back(new Panel{ {.ratio = 0, .size{ Auto, Auto } }, displayer });
 		cursor = Cursor::IBeam;
+
+		displayer.listener += [this](const KeyPress& e)
+		{
+			if (e.keycode == Key::Enter)
+			{
+				State<Focused>(false);
+				listener(Unfocus{});
+				e.Handle();
+			}
+		};
 
 		listener += [this](const MousePress& e)
 		{

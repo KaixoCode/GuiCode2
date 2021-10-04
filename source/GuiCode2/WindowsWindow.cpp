@@ -46,6 +46,7 @@ namespace GuiCode
     WindowsWindow::WindowsWindow(const WindowData& data)
         : WindowBase(data)
     {
+        m_PrevVisibility = data.state;
         dimensions = data.dimensions.dimensions;
         
         if (m_WindowCount == 0 && !glfwInit())

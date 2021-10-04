@@ -14,13 +14,13 @@ namespace GuiCode
 	public:
 
 		template<std::derived_from<WindowBase> T>
-		T& push_back(T&& window)
+		T& push_back(Pointer<T>&& window)
 		{
 			return m_Windows.emplace_back(std::forward<T>(window));
 		}
 
 		template<std::derived_from<WindowBase> T>
-		T& push_back(T& window)
+		T& push_back(Pointer<T>& window)
 		{
 			m_Windows.push_back(window);
 			return window;

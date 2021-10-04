@@ -52,7 +52,7 @@ namespace GuiCode
 
 		listener += [this](const KeyPress& e)
 		{
-			if (!State<Focused>())
+			if (!State<Focused>() || e.Handled())
 				return;
 
 			m_Timer = 60;
@@ -68,7 +68,7 @@ namespace GuiCode
 
 		listener += [this](const KeyType& e)
 		{
-			if (!State<Focused>())
+			if (!State<Focused>() || e.Handled())
 				return;
 
 			m_Timer = 60;

@@ -5,7 +5,7 @@ namespace GuiCode
 {
 	enum WindowState
 	{
-		Hide, Show, Minimize, Maximize, Close
+		Hide = 1, Show, Minimize, Maximize, Close
 	};
 
 	class WindowBase;

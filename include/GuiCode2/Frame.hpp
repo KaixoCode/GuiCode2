@@ -78,6 +78,8 @@ namespace GuiCode
 		};
 
 		Frame(const WindowData& data);
+		Frame(const Frame&) = delete;
+		Frame(Frame&&) = delete;
 		Frame& operator=(Frame&& other)
 		{
 			background = std::move(other.background);
