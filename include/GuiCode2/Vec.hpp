@@ -37,6 +37,11 @@ namespace GuiCode
             return x >= o.x && x <= o.x + o.width && y > o.y && y < o.y + o.height;
         }
 
+        bool InRange(float v) const
+        {
+            return v >= start && v <= end;
+        }
+
         template <size_t I>
         auto& get()&
         {
