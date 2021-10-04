@@ -774,8 +774,8 @@ namespace GuiCode
                     x -= _totalWidth * _scale;
 
                 _index++;
-                if (x == '\n')
-                    y += m_LineHeight * m_FontSize;
+                //if (x == '\n')
+                //    y += m_LineHeight * m_FontSize;
             }
 
             Font::CharMap::Character& _ch = _charMap->Char(_c);
