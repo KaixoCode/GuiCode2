@@ -49,6 +49,7 @@ namespace GuiCode
 			float Height() { return m_Ascender - m_Descender; }
 			float Ascender() { return m_Ascender; }
 			float Descender() { return m_Descender; }
+			float Middle() { return (m_Size + m_Descender) / 2; }
 
 			unsigned int texture;
 

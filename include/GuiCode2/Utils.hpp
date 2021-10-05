@@ -482,8 +482,8 @@ namespace GuiCode
         virtual Return Call(Args&&...) = 0;
         virtual std::any CallWithString(std::any* data, int s, std::string_view& view) override
         {
-            if constexpr ((std::is_copy_assignable_v<Args> && ...))
-            {
+            //if constexpr ((std::is_copy_assignable_v<Args> && ...))
+            //{
                 if constexpr (std::is_same_v<Return, void>)
                 {
                     CallSeq(data, // Given arguments from code
@@ -499,7 +499,7 @@ namespace GuiCode
                         view,     // Remaining arguments in a string_view
                         std::make_index_sequence<sizeof...(Args) + 1>{});
                 }
-            }
+            //}
             return nullptr;
         }
 

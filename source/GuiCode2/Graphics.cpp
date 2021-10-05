@@ -758,7 +758,7 @@ namespace GuiCode
 
                 // Alignment
                 if (m_TextAlign & Align::Middle)
-                    y -= -_charMap->Descender();
+                    y -= _charMap->Middle();
                 else if (m_TextAlign & Align::TextBottom)
                     y -= _charMap->Descender();
                 else if (m_TextAlign & Align::Baseline)
