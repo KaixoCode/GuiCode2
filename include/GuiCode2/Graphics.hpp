@@ -62,13 +62,14 @@ namespace GuiCode
         static inline int m_GraphicsIdCounter = 0;
     protected:
         static inline std::map<std::string_view, GuiCode::Font> m_Fonts;
+        static inline std::set<std::string_view> m_Trieds;
     public:
         static inline std::string DefaultFont = "segoeui";
 
         virtual void Render() = 0;
         virtual void SetProjection(const glm::mat4& proj);
-        static void LoadFont(const std::string& path, const char* name);
-        static void LoadFont(const char* name);
+        static void LoadFont(const std::string& path, const std::string& name);
+        static bool LoadFont(const std::string& name);
 
         static inline float CharWidth(const char c, const std::string_view& font, float size)
         {

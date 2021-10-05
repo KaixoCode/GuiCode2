@@ -43,9 +43,19 @@ namespace GuiCode
     int WindowsWindow::m_WindowCount = 0;
     WindowsWindow* WindowsWindow::m_MainWindow = nullptr;
 
+    WindowsWindow::WindowsWindow()
+        : WindowBase()
+    {}
+
     WindowsWindow::WindowsWindow(const WindowData& data)
-        : WindowBase(data)
+        : WindowBase()
     {
+        InitializeWindow(data);
+    }
+
+    void WindowsWindow::InitializeWindow(const WindowData& data)
+    {
+        WindowBase::InitializeWindow(data);
         m_PrevVisibility = data.state;
         dimensions = data.dimensions.dimensions;
         
@@ -181,16 +191,17 @@ namespace GuiCode
         else if (placement.showCmd == SW_SHOWMINIMIZED) _visible = Minimize;
         State<Visible>(_visible);
         
+        bool _shouldDraw = _visible == Maximize || _visible == Show;
 
         // Only change context if it's necessary, because this seems to
         // have a relatively high impact on the CPU usage.
-        if (_currentId != windowId && _visible)
+        if (_currentId != windowId && _shouldDraw)
         {
             _currentId = windowId;
             glfwMakeContextCurrent(m_Window);
         }
 
-        if (_visible)
+        if (_shouldDraw)
         {
             //    if (RightClickMenu::Get().GetWin32Handle() != GetWin32Handle() && RightClickMenu::Get().Opened())
             //        m_MousePressed = Event::MouseButton::NONE;
@@ -209,7 +220,7 @@ namespace GuiCode
                 UpdateCursor(Cursor::Arrow);
         }
 
-        if (_visible && graphics)
+        if (_shouldDraw && graphics)
         {
             graphics->collection.Clip({ -1, -1, width + 2, height + 2 });
             graphics->collection.Viewport({ 0, 0, width, height });
@@ -427,7 +438,7 @@ namespace GuiCode
                     if (i.owner == _w->owner)
                         _close |= i.hideOnClick;
 
-                    if (i.owner == _w->owner && GetFocus() == i.GetWin32Handle())
+                    if (i.owner == _w->owner && (i.GetWin32Handle() == nullptr || GetFocus() == i.GetWin32Handle()))
                     {
                         _any = true;
                         break;

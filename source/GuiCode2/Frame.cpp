@@ -80,8 +80,19 @@ namespace GuiCode
 		return Component::Hitbox(v) && !(v.x < 8 || v.x >= width - 8 || v.y < 8);
 	}
 	
+	Frame::Frame()
+		: Window()
+	{
+		Init();
+	}
+
 	Frame::Frame(const WindowData& data)
 		: Window(data)
+	{
+		Init();
+	}
+
+	void Frame::Init()
 	{
 		titlebar.title = &info.name;
 		titlebar.close.callback = [this]() { State<Visible>(Close); };

@@ -77,6 +77,7 @@ namespace GuiCode
 			std::string* title = nullptr;
 		};
 
+		Frame();
 		Frame(const WindowData& data);
 		Frame(const Frame&) = delete;
 		Frame(Frame&&) = delete;
@@ -99,5 +100,8 @@ namespace GuiCode
 
 	protected:
 		bool BorderHitbox(const Vec2<float>& v) const override;
+
+	private:
+		void Init();
 	};
 }

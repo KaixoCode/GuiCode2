@@ -45,6 +45,7 @@
 #include <dwmapi.h>
 #include <unknwn.h>
 #include <windowsx.h>
+#include <ShlObj_core.h>
 
 // Rarely updated local headers
 #include "GuiCode2/Vec.hpp"

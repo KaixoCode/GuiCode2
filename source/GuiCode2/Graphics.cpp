@@ -114,17 +114,30 @@ namespace GuiCode
     }
 
 
-    void GraphicsBase::LoadFont(const char* name)
+    bool GraphicsBase::LoadFont(const std::string& name)
     {
         using namespace std::string_literals;
-        std::string _noExtension = "C:/Windows/Fonts/"s + name;
+        TCHAR szPath[MAX_PATH];
+        SHGetFolderPathA(nullptr, CSIDL_FONTS, nullptr, 0, szPath);
+
+        std::string _noExtension = szPath;
+        _noExtension += "/"s + name;
         std::filesystem::path _font = _noExtension + ".ttf";
 
         if (std::filesystem::exists(_font))
-            m_Fonts.emplace(name, GuiCode::Font{ _font.string() });
+        {
+            char* _name = new char[name.size() + 1];
+            for (int i = 0; i < name.size(); i++)
+                _name[i] = name[i];
+            _name[name.size()] = '\0';
+            m_Fonts.emplace(_name, GuiCode::Font{ _font.string() });
+            return true;
+        }
+        else
+            return false;
     }
 
-    void GraphicsBase::LoadFont(const std::string& path, const char* name)
+    void GraphicsBase::LoadFont(const std::string& path, const std::string& name)
     {
         m_Fonts.emplace(name, GuiCode::Font{ path });
     }
@@ -805,12 +818,18 @@ namespace GuiCode
 
         glBindTexture(GL_TEXTURE_2D, 0);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-}
+    }
 
     void OpenGL::Font(std::string_view font)
     {
-        if (m_Fonts.contains(font))
-            m_CurrentFont = &m_Fonts.at(font);
+        auto _it = std::find_if(m_Fonts.begin(), m_Fonts.end(), [&](auto a) { return a.first == font; });
+        if (_it != m_Fonts.end())
+            m_CurrentFont = &_it->second;
+        else if (!m_Trieds.contains(font))
+        {
+            if (!LoadFont(std::string{ font }))
+                m_Trieds.emplace(font);
+        }
     }
 
     void OpenGL::TextAlign(int align)

@@ -3,13 +3,18 @@
 namespace GuiCode
 {
 	ContextFrame::ContextFrame()
-		: Window({ .alwaysOnTop = true, .state = Hide, .resizeable = false, .decorated = false, .noAnimations = true })
+		: Window()
 	{
 		listener += [this](const MouseRelease& e)
 		{
 			if (hideOnClick)
 				m_ShouldClose = true;
 		};
+	}
+
+	void ContextFrame::Initialize()
+	{
+		InitializeWindow({ .alwaysOnTop = true, .state = Hide, .resizeable = false, .decorated = false, .noAnimations = true });
 	}
 
 	void ContextFrame::Update()
@@ -57,17 +62,19 @@ namespace GuiCode
 			_theChosenOne = &m_WindowPool.emplace_back();
 
 		Pointer _c = c;
-		_theChosenOne->position = offset + position;
-		_theChosenOne->size = c->size;
 		_theChosenOne->components.push_back(c);
 		_theChosenOne->owner = WindowBase::currentWindow;
 		_theChosenOne->hideOnClick = hideOnClick;
+		if (_theChosenOne->GetWin32Handle() == nullptr) 
+			_theChosenOne->Initialize();
+		_theChosenOne->position = offset + position;
+		_theChosenOne->size = c->size;
+		_theChosenOne->State<Visible>(Show);
 		if (!_c->State<Focused>())
 		{
 			_c->State<Focused>(true);
 			_c->listener(Focus{});
 		}
-		_theChosenOne->State<Visible>(Show);
 	}
 
 	void ContextMenu::Close(const Pointer<Component>& c)

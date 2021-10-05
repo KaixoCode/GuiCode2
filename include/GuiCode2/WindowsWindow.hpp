@@ -8,21 +8,26 @@ namespace GuiCode
     class WindowsWindow : public WindowBase
     {
     public:
+        WindowsWindow();
         WindowsWindow(const WindowData&);
+
+        void InitializeWindow(const WindowData& d) override;
+
+
         ~WindowsWindow()
         {
             glfwDestroyWindow(m_Window);
         }
 
 
-        HWND GetWin32Handle() const { return glfwGetWin32Window(m_Window); }
+        HWND GetWin32Handle() const { return !m_Window ? nullptr : glfwGetWin32Window(m_Window); }
 
 
         bool Loop() override;
 
     private:
         std::queue<std::unique_ptr<Event>> m_EventQueue;
-        GLFWwindow* m_Window;
+        GLFWwindow* m_Window = nullptr;
         
         bool m_InitialResize = true;
         Dimensions m_PrevDims{ 0, 0, 0, 0 };

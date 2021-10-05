@@ -14,6 +14,7 @@ namespace GuiCode
 	public:
 		ContextFrame();
 
+		void Initialize();
 		void Update() override;
 		void Close();
 		void CloseNow();

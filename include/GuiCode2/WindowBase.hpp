@@ -40,7 +40,10 @@ namespace GuiCode
 	public:
 		static inline WindowBase* currentWindow = nullptr;
 
-		WindowBase(const WindowData& d)
+		WindowBase() 
+		{}
+
+		virtual void InitializeWindow(const WindowData& d)
 		{
 			windowId = m_WindowIdCounter++;
 			info.name = d.name;
