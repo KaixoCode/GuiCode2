@@ -7,6 +7,8 @@ find_package(OpenGL REQUIRED)
 
 add_subdirectory(libs)
 
+option(GUICODE2_BUILD_EXAMPLE "Build Example" OFF)
+
 set(SRCGUI "${GuiCode2_SOURCE_DIR}/")
 
 file(GLOB_RECURSE SOURCE
@@ -51,3 +53,16 @@ target_link_libraries(GuiCode2
   user32
 )
 
+if (GUICODE2_BUILD_EXAMPLE)
+file(GLOB_RECURSE EXAMPLE_SOURCE
+  "${SRCGUI}example/*.cpp"
+)
+
+add_executable(GuiCode2Example
+  ${EXAMPLE_SOURCE}
+)
+
+target_link_libraries(GuiCode2Example
+  GuiCode2
+)
+endif()
