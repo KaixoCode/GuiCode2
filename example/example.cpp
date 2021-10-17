@@ -1,6 +1,6 @@
-#include "GuiCode2/Window.hpp"
-#include "GuiCode2/Frame.hpp"
-#include "GuiCode2/Menu.hpp"
+#include "GuiCode2/Window/Window.hpp"
+#include "GuiCode2/Window/Frame.hpp"
+#include "GuiCode2/Components/Menu.hpp"
 
 using namespace GuiCode;
 

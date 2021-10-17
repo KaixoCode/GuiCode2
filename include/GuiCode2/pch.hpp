@@ -49,7 +49,7 @@
 #include <ShlObj_core.h>
 
 // Rarely updated local headers
-#include "GuiCode2/Vec.hpp"
+#include "GuiCode2/Utils/Vec.hpp"
 
 #define M_PI 3.14159265359
 

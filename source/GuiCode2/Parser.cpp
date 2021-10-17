@@ -1,6 +1,6 @@
 #include "GuiCode2/Parser.hpp"
-#include "GuiCode2/Component.hpp"
-#include "GuiCode2/Panel.hpp"
+#include "GuiCode2/Components/Component.hpp"
+#include "GuiCode2/Components/Panel.hpp"
 
 namespace GuiCode
 {

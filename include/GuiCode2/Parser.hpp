@@ -1,6 +1,6 @@
 #pragma once
 #include "GuiCode2/pch.hpp"
-#include "GuiCode2/Component.hpp"
+#include "GuiCode2/Components/Component.hpp"
 
 namespace GuiCode
 {
