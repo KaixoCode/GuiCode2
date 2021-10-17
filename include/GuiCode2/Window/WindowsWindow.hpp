@@ -1,7 +1,7 @@
 #pragma once
 #include "GuiCode2/Components/Panel.hpp"
 #include "GuiCode2/Window/WindowBase.hpp"
-#include "GuiCode2/Graphics/Graphics.hpp"
+#include "GuiCode2/Graphics/OpenGL.hpp"
 
 namespace GuiCode
 {
