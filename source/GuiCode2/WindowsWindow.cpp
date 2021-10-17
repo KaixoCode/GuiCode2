@@ -338,17 +338,17 @@ namespace GuiCode
         _fCallDWP = !DwmDefWindowProc(hWnd, uMsg, wParam, lParam, &_lRet);
 
         int _keymod =
-            (((GetKeyState(VK_LCONTROL) & 0x8000) || GetKeyState(VK_RCONTROL) & 0x8000) ? EventMods::Control : 0)
-            | ((GetKeyState(VK_RCONTROL) & 0x8000) ? EventMods::RightControl : 0)
-            | ((GetKeyState(VK_LCONTROL) & 0x8000) ? EventMods::LeftControl : 0)
-            | (((GetKeyState(VK_LMENU) & 0x8000) || GetKeyState(VK_RMENU) & 0x8000) ? EventMods::Alt : 0)
-            | ((GetKeyState(VK_LMENU) & 0x8000) ? EventMods::LeftAlt : 0)
-            | ((GetKeyState(VK_RMENU) & 0x8000) ? EventMods::RightAlt : 0)
-            | (((GetKeyState(VK_LSHIFT) & 0x8000) || GetKeyState(VK_RSHIFT) & 0x8000) ? EventMods::Shift : 0)
-            | ((GetKeyState(VK_RSHIFT) & 0x8000) ? EventMods::RightShift : 0)
-            | ((GetKeyState(VK_LSHIFT) & 0x8000) ? EventMods::LeftShift : 0)
-            | ((GetKeyState(VK_NUMLOCK) & 0x8000) ? EventMods::NumLock : 0)
-            | ((GetKeyState(VK_CAPITAL) & 0x8000) ? EventMods::CapsLock : 0);
+            (((GetKeyState(VK_LCONTROL) & 0x8000) || GetKeyState(VK_RCONTROL) & 0x8000) ? Mods::Control : 0)
+            | ((GetKeyState(VK_RCONTROL) & 0x8000) ? Mods::RightControl : 0)
+            | ((GetKeyState(VK_LCONTROL) & 0x8000) ? Mods::LeftControl : 0)
+            | (((GetKeyState(VK_LMENU) & 0x8000) || GetKeyState(VK_RMENU) & 0x8000) ? Mods::Alt : 0)
+            | ((GetKeyState(VK_LMENU) & 0x8000) ? Mods::LeftAlt : 0)
+            | ((GetKeyState(VK_RMENU) & 0x8000) ? Mods::RightAlt : 0)
+            | (((GetKeyState(VK_LSHIFT) & 0x8000) || GetKeyState(VK_RSHIFT) & 0x8000) ? Mods::Shift : 0)
+            | ((GetKeyState(VK_RSHIFT) & 0x8000) ? Mods::RightShift : 0)
+            | ((GetKeyState(VK_LSHIFT) & 0x8000) ? Mods::LeftShift : 0)
+            | ((GetKeyState(VK_NUMLOCK) & 0x8000) ? Mods::NumLock : 0)
+            | ((GetKeyState(VK_CAPITAL) & 0x8000) ? Mods::CapsLock : 0);
 
 
         int _offset = IsMaximized(hWnd) ? 8 : 0;

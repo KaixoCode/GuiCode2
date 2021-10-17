@@ -76,7 +76,7 @@ namespace GuiCode
 			if (e.key == Key::Escape)
 				return;
 
-			if (e.mod & EventMods::Control)
+			if (e.mod & Mods::Control)
 				CtrlTypeActions(e), e.Handle();
 			else if (container.editable)
 				KeyTypeActions(e), e.Handle();
@@ -84,7 +84,7 @@ namespace GuiCode
 
 		listener += [this](const MouseClick& e)
 		{
-			if (e.button != MouseButton::Left || (e.mod & EventMods::Shift))
+			if (e.button != MouseButton::Left || (e.mod & Mods::Shift))
 				return;
 
 			if (m_Click > 0 && m_PressPos == Vec2<float>{ e.pos.x, e.pos.y })
@@ -103,7 +103,7 @@ namespace GuiCode
 
 			m_Timer = 60;
 
-			if (e.mod & EventMods::Shift)
+			if (e.mod & Mods::Shift)
 				container.selection = { PositionToIndex({ e.pos.x, e.pos.y }), container.selection.end };
 			else
 				container.selection = PositionToIndex({ e.pos.x, e.pos.y });
@@ -628,7 +628,7 @@ namespace GuiCode
 
 		// If theres a selection and shift is not pressed, go to the end of start of the
 		// selection depending on the key.
-		if (container.selection.Selected() && !(e.mod & EventMods::Shift))
+		if (container.selection.Selected() && !(e.mod & Mods::Shift))
 		{
 			if (e.keycode == Key::Left)
 				container.selection = container.selection.Lowest();
@@ -644,7 +644,7 @@ namespace GuiCode
 		}
 
 		// If _ctrlRightIndex is down move the _index an entire 'word'
-		if (e.mod & EventMods::Control)
+		if (e.mod & Mods::Control)
 		{
 			if (e.keycode == Key::Left)
 				index = container.CtrlLeft();
@@ -669,7 +669,7 @@ namespace GuiCode
 				index = PositionToIndex({ m_TypeX, fontSize * lineHeight + IndexToPosition(container.selection.start).y });
 		}
 
-		if (!(e.mod & EventMods::Shift))
+		if (!(e.mod & Mods::Shift))
 			container.selection = index;
 		else
 			container.selection = { index, container.selection.end };

@@ -825,6 +825,11 @@ namespace GuiCode
         auto _it = m_Fonts.find(font);
         if (_it != m_Fonts.end())
             m_CurrentFont = &_it->second;
+        else
+        {
+            if (LoadFont(std::string{ font }));
+                m_CurrentFont = &m_Fonts.at(font);
+        }
     }
 
     void OpenGL::TextAlign(int align)

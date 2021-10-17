@@ -1,5 +1,6 @@
 #pragma once
 #include "GuiCode2/Component.hpp"
+#include "GuiCode2/Key.hpp"
 #include "GuiCode2/BasicEvents.hpp"
 #include "GuiCode2/StateColors.hpp"
 #include "GuiCode2/Scrollbar.hpp"

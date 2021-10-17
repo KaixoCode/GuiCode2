@@ -36,9 +36,9 @@ namespace GuiCode
 		std::string& content = displayer.content;
 
 	private:
-		MenuButton m_Cut{ {.callback = [&](bool) { displayer.Cut(); }, .combo = Key::CTRL_X, .name = "Cut", } };
-		MenuButton m_Copy{ {.callback = [&](bool) { displayer.Copy(); }, .combo = Key::CTRL_C, .name = "Copy", } };
-		MenuButton m_Paste{ {.callback = [&](bool) { displayer.Paste(); }, .combo = Key::CTRL_V, .name = "Paste", } };
+		MenuButton m_Cut{ {.callback = [&](bool) { displayer.Cut(); }, .combo = 'X' | Mods::Control, .name = "Cut",}};
+		MenuButton m_Copy{ {.callback = [&](bool) { displayer.Copy(); }, .combo = 'C' | Mods::Control, .name = "Copy", } };
+		MenuButton m_Paste{ {.callback = [&](bool) { displayer.Paste(); }, .combo = 'V' | Mods::Control, .name = "Paste", } };
 
 		Menu m_Menu;
 		Vec2<float> m_Mouse;

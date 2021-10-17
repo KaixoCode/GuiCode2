@@ -3,23 +3,6 @@
 #include "GuiCode2/Component.hpp"
 namespace GuiCode
 {
-	struct EventMods
-	{
-		enum {
-			Control      = 0x0001,
-			RightControl = 0x0100,
-			LeftControl  = 0x0200,
-			Shift        = 0x0002, 
-			RightShift   = 0x0400, 
-			LeftShift    = 0x0800, 
-			Alt          = 0x0004, 
-			LeftAlt      = 0x1000, 
-			RightAlt     = 0x2000, 
-			NumLock      = 0x0008, 
-			CapsLock     = 0x0010
-		};
-	};
-
 	struct MouseButton
 	{
 		enum {

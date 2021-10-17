@@ -209,7 +209,7 @@ namespace GuiCode
 	template<>
 	Key Parsers<Key>::Parse(std::string_view& c)
 	{
-		return (Key::Combo)Parsers<int>::Parse(c);
+		return Key{ Parsers<int>::Parse(c) };
 	};
 
 	template<>
@@ -298,48 +298,48 @@ namespace GuiCode
 		enumMap["Hover"] = Button::Hover;
 		enumMap["Radio"] = Button::Radio;
 
-		enumMap["CTRL_A"] = Key::CTRL_A; enumMap["CTRL_SHIFT_A"] = Key::CTRL_SHIFT_A; enumMap["CTRL_ALT_A"] = Key::CTRL_ALT_A;
-		enumMap["CTRL_B"] = Key::CTRL_B; enumMap["CTRL_SHIFT_B"] = Key::CTRL_SHIFT_B; enumMap["CTRL_ALT_B"] = Key::CTRL_ALT_B;
-		enumMap["CTRL_C"] = Key::CTRL_C; enumMap["CTRL_SHIFT_C"] = Key::CTRL_SHIFT_C; enumMap["CTRL_ALT_C"] = Key::CTRL_ALT_C;
-		enumMap["CTRL_D"] = Key::CTRL_D; enumMap["CTRL_SHIFT_D"] = Key::CTRL_SHIFT_D; enumMap["CTRL_ALT_D"] = Key::CTRL_ALT_D;
-		enumMap["CTRL_E"] = Key::CTRL_E; enumMap["CTRL_SHIFT_E"] = Key::CTRL_SHIFT_E; enumMap["CTRL_ALT_E"] = Key::CTRL_ALT_E;
-		enumMap["CTRL_F"] = Key::CTRL_F; enumMap["CTRL_SHIFT_F"] = Key::CTRL_SHIFT_F; enumMap["CTRL_ALT_F"] = Key::CTRL_ALT_F;
-		enumMap["CTRL_G"] = Key::CTRL_G; enumMap["CTRL_SHIFT_G"] = Key::CTRL_SHIFT_G; enumMap["CTRL_ALT_G"] = Key::CTRL_ALT_G;
-		enumMap["CTRL_H"] = Key::CTRL_H; enumMap["CTRL_SHIFT_H"] = Key::CTRL_SHIFT_H; enumMap["CTRL_ALT_H"] = Key::CTRL_ALT_H;
-		enumMap["CTRL_I"] = Key::CTRL_I; enumMap["CTRL_SHIFT_I"] = Key::CTRL_SHIFT_I; enumMap["CTRL_ALT_I"] = Key::CTRL_ALT_I;
-		enumMap["CTRL_J"] = Key::CTRL_J; enumMap["CTRL_SHIFT_J"] = Key::CTRL_SHIFT_J; enumMap["CTRL_ALT_J"] = Key::CTRL_ALT_J;
-		enumMap["CTRL_K"] = Key::CTRL_K; enumMap["CTRL_SHIFT_K"] = Key::CTRL_SHIFT_K; enumMap["CTRL_ALT_K"] = Key::CTRL_ALT_K;
-		enumMap["CTRL_L"] = Key::CTRL_L; enumMap["CTRL_SHIFT_L"] = Key::CTRL_SHIFT_L; enumMap["CTRL_ALT_L"] = Key::CTRL_ALT_L;
-		enumMap["CTRL_M"] = Key::CTRL_M; enumMap["CTRL_SHIFT_M"] = Key::CTRL_SHIFT_M; enumMap["CTRL_ALT_M"] = Key::CTRL_ALT_M;
-		enumMap["CTRL_N"] = Key::CTRL_N; enumMap["CTRL_SHIFT_N"] = Key::CTRL_SHIFT_N; enumMap["CTRL_ALT_N"] = Key::CTRL_ALT_N;
-		enumMap["CTRL_O"] = Key::CTRL_O; enumMap["CTRL_SHIFT_O"] = Key::CTRL_SHIFT_O; enumMap["CTRL_ALT_O"] = Key::CTRL_ALT_O;
-		enumMap["CTRL_P"] = Key::CTRL_P; enumMap["CTRL_SHIFT_P"] = Key::CTRL_SHIFT_P; enumMap["CTRL_ALT_P"] = Key::CTRL_ALT_P;
-		enumMap["CTRL_Q"] = Key::CTRL_Q; enumMap["CTRL_SHIFT_Q"] = Key::CTRL_SHIFT_Q; enumMap["CTRL_ALT_Q"] = Key::CTRL_ALT_Q;
-		enumMap["CTRL_R"] = Key::CTRL_R; enumMap["CTRL_SHIFT_R"] = Key::CTRL_SHIFT_R; enumMap["CTRL_ALT_R"] = Key::CTRL_ALT_R;
-		enumMap["CTRL_S"] = Key::CTRL_S; enumMap["CTRL_SHIFT_S"] = Key::CTRL_SHIFT_S; enumMap["CTRL_ALT_S"] = Key::CTRL_ALT_S;
-		enumMap["CTRL_T"] = Key::CTRL_T; enumMap["CTRL_SHIFT_T"] = Key::CTRL_SHIFT_T; enumMap["CTRL_ALT_T"] = Key::CTRL_ALT_T;
-		enumMap["CTRL_U"] = Key::CTRL_U; enumMap["CTRL_SHIFT_U"] = Key::CTRL_SHIFT_U; enumMap["CTRL_ALT_U"] = Key::CTRL_ALT_U;
-		enumMap["CTRL_V"] = Key::CTRL_V; enumMap["CTRL_SHIFT_V"] = Key::CTRL_SHIFT_V; enumMap["CTRL_ALT_V"] = Key::CTRL_ALT_V;
-		enumMap["CTRL_W"] = Key::CTRL_W; enumMap["CTRL_SHIFT_W"] = Key::CTRL_SHIFT_W; enumMap["CTRL_ALT_W"] = Key::CTRL_ALT_W;
-		enumMap["CTRL_X"] = Key::CTRL_X; enumMap["CTRL_SHIFT_X"] = Key::CTRL_SHIFT_X; enumMap["CTRL_ALT_X"] = Key::CTRL_ALT_X;
-		enumMap["CTRL_Y"] = Key::CTRL_Y; enumMap["CTRL_SHIFT_Y"] = Key::CTRL_SHIFT_Y; enumMap["CTRL_ALT_Y"] = Key::CTRL_ALT_Y;
-		enumMap["CTRL_Z"] = Key::CTRL_Z; enumMap["CTRL_SHIFT_Z"] = Key::CTRL_SHIFT_Z; enumMap["CTRL_ALT_Z"] = Key::CTRL_ALT_Z;
-		enumMap["CTRL_1"] = Key::CTRL_1; enumMap["CTRL_SHIFT_1"] = Key::CTRL_SHIFT_1; enumMap["CTRL_ALT_1"] = Key::CTRL_ALT_1;
-		enumMap["CTRL_2"] = Key::CTRL_2; enumMap["CTRL_SHIFT_2"] = Key::CTRL_SHIFT_2; enumMap["CTRL_ALT_2"] = Key::CTRL_ALT_2;
-		enumMap["CTRL_3"] = Key::CTRL_3; enumMap["CTRL_SHIFT_3"] = Key::CTRL_SHIFT_3; enumMap["CTRL_ALT_3"] = Key::CTRL_ALT_3;
-		enumMap["CTRL_4"] = Key::CTRL_4; enumMap["CTRL_SHIFT_4"] = Key::CTRL_SHIFT_4; enumMap["CTRL_ALT_4"] = Key::CTRL_ALT_4;
-		enumMap["CTRL_5"] = Key::CTRL_5; enumMap["CTRL_SHIFT_5"] = Key::CTRL_SHIFT_5; enumMap["CTRL_ALT_5"] = Key::CTRL_ALT_5;
-		enumMap["CTRL_6"] = Key::CTRL_6; enumMap["CTRL_SHIFT_6"] = Key::CTRL_SHIFT_6; enumMap["CTRL_ALT_6"] = Key::CTRL_ALT_6;
-		enumMap["CTRL_7"] = Key::CTRL_7; enumMap["CTRL_SHIFT_7"] = Key::CTRL_SHIFT_7; enumMap["CTRL_ALT_7"] = Key::CTRL_ALT_7;
-		enumMap["CTRL_8"] = Key::CTRL_8; enumMap["CTRL_SHIFT_8"] = Key::CTRL_SHIFT_8; enumMap["CTRL_ALT_8"] = Key::CTRL_ALT_8;
-		enumMap["CTRL_9"] = Key::CTRL_9; enumMap["CTRL_SHIFT_9"] = Key::CTRL_SHIFT_9; enumMap["CTRL_ALT_9"] = Key::CTRL_ALT_9;
-		enumMap["CTRL_0"] = Key::CTRL_0; enumMap["CTRL_SHIFT_0"] = Key::CTRL_SHIFT_0; enumMap["CTRL_ALT_0"] = Key::CTRL_ALT_0;
+		enumMap["CTRL_A"] = 'A' | Mods::Control; enumMap["CTRL_SHIFT_A"] = 'A' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_A"] = 'A' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_B"] = 'B' | Mods::Control; enumMap["CTRL_SHIFT_B"] = 'B' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_B"] = 'B' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_C"] = 'C' | Mods::Control; enumMap["CTRL_SHIFT_C"] = 'C' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_C"] = 'C' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_D"] = 'D' | Mods::Control; enumMap["CTRL_SHIFT_D"] = 'D' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_D"] = 'D' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_E"] = 'E' | Mods::Control; enumMap["CTRL_SHIFT_E"] = 'E' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_E"] = 'E' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_F"] = 'F' | Mods::Control; enumMap["CTRL_SHIFT_F"] = 'F' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_F"] = 'F' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_G"] = 'G' | Mods::Control; enumMap["CTRL_SHIFT_G"] = 'G' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_G"] = 'G' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_H"] = 'H' | Mods::Control; enumMap["CTRL_SHIFT_H"] = 'H' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_H"] = 'H' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_I"] = 'I' | Mods::Control; enumMap["CTRL_SHIFT_I"] = 'I' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_I"] = 'I' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_J"] = 'J' | Mods::Control; enumMap["CTRL_SHIFT_J"] = 'J' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_J"] = 'J' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_K"] = 'K' | Mods::Control; enumMap["CTRL_SHIFT_K"] = 'K' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_K"] = 'K' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_L"] = 'L' | Mods::Control; enumMap["CTRL_SHIFT_L"] = 'L' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_L"] = 'L' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_M"] = 'M' | Mods::Control; enumMap["CTRL_SHIFT_M"] = 'M' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_M"] = 'M' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_N"] = 'N' | Mods::Control; enumMap["CTRL_SHIFT_N"] = 'N' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_N"] = 'N' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_O"] = 'O' | Mods::Control; enumMap["CTRL_SHIFT_O"] = 'O' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_O"] = 'O' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_P"] = 'P' | Mods::Control; enumMap["CTRL_SHIFT_P"] = 'P' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_P"] = 'P' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_Q"] = 'Q' | Mods::Control; enumMap["CTRL_SHIFT_Q"] = 'Q' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_Q"] = 'Q' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_R"] = 'R' | Mods::Control; enumMap["CTRL_SHIFT_R"] = 'R' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_R"] = 'R' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_S"] = 'S' | Mods::Control; enumMap["CTRL_SHIFT_S"] = 'S' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_S"] = 'S' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_T"] = 'T' | Mods::Control; enumMap["CTRL_SHIFT_T"] = 'T' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_T"] = 'T' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_U"] = 'U' | Mods::Control; enumMap["CTRL_SHIFT_U"] = 'U' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_U"] = 'U' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_V"] = 'V' | Mods::Control; enumMap["CTRL_SHIFT_V"] = 'V' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_V"] = 'V' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_W"] = 'W' | Mods::Control; enumMap["CTRL_SHIFT_W"] = 'W' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_W"] = 'W' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_X"] = 'X' | Mods::Control; enumMap["CTRL_SHIFT_X"] = 'X' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_X"] = 'X' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_Y"] = 'Y' | Mods::Control; enumMap["CTRL_SHIFT_Y"] = 'Y' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_Y"] = 'Y' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_Z"] = 'Z' | Mods::Control; enumMap["CTRL_SHIFT_Z"] = 'Z' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_Z"] = 'Z' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_1"] = '1' | Mods::Control; enumMap["CTRL_SHIFT_1"] = '1' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_1"] = '1' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_2"] = '2' | Mods::Control; enumMap["CTRL_SHIFT_2"] = '2' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_2"] = '2' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_3"] = '3' | Mods::Control; enumMap["CTRL_SHIFT_3"] = '3' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_3"] = '3' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_4"] = '4' | Mods::Control; enumMap["CTRL_SHIFT_4"] = '4' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_4"] = '4' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_5"] = '5' | Mods::Control; enumMap["CTRL_SHIFT_5"] = '5' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_5"] = '5' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_6"] = '6' | Mods::Control; enumMap["CTRL_SHIFT_6"] = '6' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_6"] = '6' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_7"] = '7' | Mods::Control; enumMap["CTRL_SHIFT_7"] = '7' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_7"] = '7' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_8"] = '8' | Mods::Control; enumMap["CTRL_SHIFT_8"] = '8' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_8"] = '8' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_9"] = '9' | Mods::Control; enumMap["CTRL_SHIFT_9"] = '9' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_9"] = '9' | Mods::Control | Mods::Alt;
+		enumMap["CTRL_0"] = '0' | Mods::Control; enumMap["CTRL_SHIFT_0"] = '0' | Mods::Control | Mods::Shift; enumMap["CTRL_ALT_0"] = '0' | Mods::Control | Mods::Alt;
 
-		enumMap["CTRL_SPACE"] = Key::CTRL_SPACE;
-		enumMap["CTRL_COMMA"] = Key::CTRL_COMMA;
-		enumMap["ALT_F4"] = Key::ALT_F4;
-		enumMap["CTRL_F4"] = Key::CTRL_F4;
-		enumMap["SHIFT_TAB"] = Key::SHIFT_TAB;
+		enumMap["CTRL_SPACE"] = ' ' | Mods::Control;
+		enumMap["CTRL_COMMA"] = ',' | Mods::Control;
+		enumMap["ALT_F4"] = Key::F4 | Mods::Alt;
+		enumMap["CTRL_F4"] = Key::F4 | Mods::Control;
+		enumMap["SHIFT_TAB"] = Key::Tab | Mods::Shift;
 		enumMap["F11"] = Key::F11;
 	}
 
