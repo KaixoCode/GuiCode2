@@ -54,7 +54,7 @@ namespace GuiCode
 		minimize.dimensions = { x + width - 46 * 3, y, 46, 30 };
 		menu.height = height;
 		menu.position = { x + height + 12, y };
-		menu.State<Visible>(menu.Panel::panels.size() != 0);
+		menu.State(Visible) = menu.Panel::panels.size() != 0;
 	}
 
 	void Frame::TitleBar::Render(CommandCollection& d) const
@@ -62,7 +62,7 @@ namespace GuiCode
 		d.Fill(background);
 		d.Quad(dimensions);
 		d.Fill(text);
-		if (menu.State<Visible>())
+		if (menu.State(Visible))
 		{
 			d.Quad({ x + height + menu.width + 18, y + 8, 1, height - 16 });
 			d.Quad({ x + height + 6, y + 8, 1, height - 16 });
@@ -70,7 +70,7 @@ namespace GuiCode
 		d.TextAlign(textAlign);
 		d.FontSize(textSize);
 		d.Font(font);
-		float _offset = menu.State<Visible>() ? menu.width + 31 : 6;
+		float _offset = menu.State(Visible) ? menu.width + 31 : 6;
 		if (title)
 			d.Text(*title, { x + height + _offset, y + height / 2 });
 	}
@@ -95,14 +95,14 @@ namespace GuiCode
 	void Frame::Init()
 	{
 		titlebar.title = &info.name;
-		titlebar.close.callback = [this]() { State<Visible>(Close); };
-		titlebar.minimize.callback = [this]() { State<Visible>(Minimize); };
-		titlebar.maximize.callback = [this]() { State<Visible>() == Maximize ? State<Visible>(Show) : State<Visible>(Maximize); };
+		titlebar.close.callback = [this]() { State(Visible) = Close; };
+		titlebar.minimize.callback = [this]() { State(Visible) = Minimize; };
+		titlebar.maximize.callback = [this]() { State(Visible) == Maximize ? State(Visible) = Show : State(Visible) = Maximize; };
 
 		titlebar.close.type = "close";
 		titlebar.close.color.base = { 26, 26, 26, 255 };
-		titlebar.close.color.State<Pressed>({ 170, 0, 0, 255 });
-		titlebar.close.color.State<Hovering>({ 255, 0, 0, 255 });
+		titlebar.close.color.State(Pressed) = { 170, 0, 0, 255 };
+		titlebar.close.color.State(Hovering) = { 255, 0, 0, 255 };
 		titlebar.close.render = [this](CommandCollection& d)
 		{
 			d.Fill(titlebar.close.color.Current());
@@ -118,8 +118,8 @@ namespace GuiCode
 
 		titlebar.minimize.type = "minimize";
 		titlebar.minimize.color.base = { 26, 26, 26, 255 };
-		titlebar.minimize.color.State<Pressed>({ 64, 64, 64, 255 });
-		titlebar.minimize.color.State<Hovering>({ 78, 78, 78, 255 });
+		titlebar.minimize.color.State(Pressed) = { 64, 64, 64, 255 };
+		titlebar.minimize.color.State(Hovering) = { 78, 78, 78, 255 };
 		titlebar.minimize.render = [this](CommandCollection& d)
 		{
 			d.Fill(titlebar.minimize.color.Current());
@@ -133,8 +133,8 @@ namespace GuiCode
 
 		titlebar.maximize.type = "maximize";
 		titlebar.maximize.color.base = { 26, 26, 26, 255 };
-		titlebar.maximize.color.State<Pressed>({ 64, 64, 64, 255 });
-		titlebar.maximize.color.State<Hovering>({ 78, 78, 78, 255 });
+		titlebar.maximize.color.State(Pressed) = { 64, 64, 64, 255 };
+		titlebar.maximize.color.State(Hovering) = { 78, 78, 78, 255 };
 		titlebar.maximize.render = [this](CommandCollection& d)
 		{
 			d.Fill(titlebar.maximize.color.Current());
@@ -143,7 +143,7 @@ namespace GuiCode
 			d.Fill({ 255, 255, 255, 255 });
 			float centerx = titlebar.maximize.x + titlebar.maximize.width / 2;
 			float centery = titlebar.maximize.y + titlebar.maximize.height / 2;
-			if (State<Visible>() == Maximize)
+			if (State(Visible) == Maximize)
 			{
 				d.Quad({ centerx - 5, centery + 3, 8, 1 });
 				d.Quad({ centerx + 2, centery - 4, 1, 8 });
@@ -170,7 +170,7 @@ namespace GuiCode
 
 	void Frame::ForwardUpdate()
 	{
-		float padding = State<Visible>() == Maximize ? 8 : 1;
+		float padding = State(Visible) == Maximize ? 8 : 1;
 
 		titlebar.dimensions = { padding, padding, width - 2 * padding, 30 };
 		panel.settings.size = { width - 2 * padding, height - 2 * padding - 30 };
@@ -194,7 +194,7 @@ namespace GuiCode
 	{
 		// Window border is hit when hovering over titlebar, but not over the buttons
 		// or when hovering over the outer 8 pixels, which is the resize part.
-		return (titlebar.State<Hovering>() && !titlebar.close.Hitbox(v) &&
+		return (titlebar.State(Hovering) && !titlebar.close.Hitbox(v) &&
 			!titlebar.minimize.Hitbox(v) && !titlebar.maximize.Hitbox(v) && !titlebar.menu.Hitbox(v))
 			|| v.x < 8 || v.y >= height - 8 || v.x >= width - 8 || v.y < 8;
 	}

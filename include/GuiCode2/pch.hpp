@@ -75,13 +75,13 @@ begin = std::chrono::steady_clock::now();
 #endif
 
 #define LIMIT_FPS(x) \
-static std::chrono::steady_clock::time_point endl = std::chrono::steady_clock::now(); \
-static std::chrono::steady_clock::time_point beginl = std::chrono::steady_clock::now(); \
+static auto endl = std::chrono::steady_clock::now(); \
+static auto beginl = std::chrono::steady_clock::now(); \
 endl = std::chrono::steady_clock::now(); \
-long long diffl = \
+int64_t diffl = \
 std::chrono::duration_cast<std::chrono::nanoseconds>(endl - beginl).count(); \
-int ns = 1000000000.0 / x; \
-int sleepfor = ns - diffl; \
+int64_t ns = 1000000000.0 / x; \
+int64_t sleepfor = ns - diffl; \
 if (sleepfor > 0) \
 std::this_thread::sleep_for(std::chrono::nanoseconds(sleepfor)); \
 beginl = std::chrono::steady_clock::now();

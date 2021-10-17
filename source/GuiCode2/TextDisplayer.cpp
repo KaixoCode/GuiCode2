@@ -52,7 +52,7 @@ namespace GuiCode
 
 		listener += [this](const KeyPress& e)
 		{
-			if (!State<Focused>() || e.Handled())
+			if (!State(Focused) || e.Handled())
 				return;
 
 			m_Timer = 60;
@@ -68,7 +68,7 @@ namespace GuiCode
 
 		listener += [this](const KeyType& e)
 		{
-			if (!State<Focused>() || e.Handled())
+			if (!State(Focused) || e.Handled())
 				return;
 
 			m_Timer = 60;
@@ -185,7 +185,7 @@ namespace GuiCode
 		auto sel = container.selection;
 		d.Fill(textColor);
 		int index = 0;
-		if (m_Lines.size() == 1 && m_Lines[0].length() == 0 && !State<Focused>())
+		if (m_Lines.size() == 1 && m_Lines[0].length() == 0 && !State(Focused))
 		{
 			int nx = 0;
 			if (align & Align::CenterX)
@@ -209,7 +209,7 @@ namespace GuiCode
 			bool low = sel.Lowest() <= beginindex + i.length() && sel.Lowest() > beginindex - 1;
 			bool high = sel.Highest() <= beginindex + i.length() && sel.Highest() > beginindex - 1;
 			bool between = beginindex > sel.Lowest() && beginindex + i.length() < sel.Highest();
-			bool pos = State<Focused>() && m_Timer > 30 && container.editable &&
+			bool pos = State(Focused) && m_Timer > 30 && container.editable &&
 				(sel.start < beginindex + i.length() && sel.start > beginindex - 1 ||
 					index == m_Lines.size() - 1 && sel.start == container.content.size());
 

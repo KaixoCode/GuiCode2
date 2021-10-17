@@ -7,10 +7,10 @@ namespace GuiCode
 	{
 		// If we have components
 		if (components)
-		{
+		{ 
 			if (e.beforeStateHandler)
 				for (auto& i : *components)
-					if (i->State<Visible>())
+					if (i->State(Visible))
 						if (e.Forward(*i)) i->listener(e);
 
 			// Then go through all the states that this listener handles
@@ -18,14 +18,14 @@ namespace GuiCode
 			{
 				int _amount = 0; // Key track of limit
 				for (auto& l : h.handlers) // Go through handlers for this state
-					for (auto& i : *components) // If over limit, set overflow = true
-						if (i->State<Visible>() || !h.settings.visible)
+					for (auto& i : *components)
+						if (i->State(Visible) || !h.settings.visible)
 							_amount += l->Call(e, *i, h.settings.limit - _amount);
 			}
 
 			if (!e.beforeStateHandler)
 				for (auto& i : *components)
-					if (i->State<Visible>())
+					if (i->State(Visible))
 						if (e.Forward(*i)) i->listener(e);
 		}
 

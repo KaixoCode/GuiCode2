@@ -4,25 +4,24 @@
 namespace GuiCode
 {
 	Component::Component()
-		: listener{ components }
+		: listener(components)
 	{
-		COUNTER++;
-		State<Visible>(true);
+		State(Visible) = true;
 		InitListeners();
 	}
 
 	Component::Component(Component&& other)
-		: components(other.components), cursor(other.cursor), 
+		: components(std::move(other.components)), cursor(std::move(other.cursor)), 
 		listener(components) 
 	{
-		COUNTER++; 
-		std::cout << "Move" << std::endl; 
+		State(Visible) = true;
+		InitListeners();
 	}
 
 	Component& Component::operator=(Component&& other)
 	{
 		components = std::move(other.components);
-		cursor = other.cursor;
+		cursor = std::move(other.cursor);
 		return *this;
 	}
 
@@ -32,10 +31,10 @@ namespace GuiCode
 		// if there is a change in state it will also send out the MouseEnter/MouseExit event
 		// accordingly. MouseEnter/MouseExit also update the state, which is crucial for 
 		// sub-components.
-		(listener.State<Hovering>({ .limit = 1 })
+		(listener.State({ .state = Hovering, .limit = 1 })
 			+= [this](const MouseMove& e, Component& c, int first) -> int
 			{
-				bool prev = c.State<Hovering>();
+				bool prev = c.State(Hovering);
 				bool curr = c.Hitbox(e.pos) && first; // first == 1 if no other component Hovering.
 
 				if (!prev && curr) c.listener(MouseEnter{});
@@ -47,11 +46,11 @@ namespace GuiCode
 
 		// The focused state also has a limit of 1, and is triggered by a MousePress event
 		// If there is a state change it will also send out the Focus/Unfocus events accordingly.
-		(listener.State<Focused>({ .limit = 1 }) 
+		(listener.State({.state = Focused, .limit = 1 })
 			+= [](const MousePress& e, Component& c, int first) -> int
 			{
-				bool prev = c.State<Focused>();
-				bool curr = c.State<Hovering>() && first;
+				bool prev = c.State(Focused);
+				bool curr = c.State(Hovering) && first;
 
 				if (!prev && curr) c.listener(Focus{});
 				else if (prev && !curr) c.listener(Unfocus{});
@@ -61,17 +60,12 @@ namespace GuiCode
 			+= [](const Unfocus& e, Component& c, int) -> int { return false; };
 
 		// Pressed also has limit of 1, and is handled simply by the MousePress and MouseRelease
-		(listener.State<Pressed>({ .limit = 1 })
-			+= [](const MousePress& e, Component& c, int) -> int { return c.State<Hovering>() ? c.State<Pressed>() | e.button : 0; })
-			+= [](const MouseRelease& e, Component& c, int) -> int { return c.State<Pressed>() & ~e.button; };
+		(listener.State({.state = Pressed, .limit = 1 })
+			+= [](const MousePress& e, Component& c, int) -> int { return c.State(Hovering) ? c.State(Pressed) | e.button : 0; })
+			+= [](const MouseRelease& e, Component& c, int) -> int { return c.State(Pressed) & ~e.button; };
 	}
 
-	void Component::CalculateOrder()
-	{
-		components.sort([](Component& a, Component& b) { return a.zIndex > b.zIndex; });
-	}
-
-	Pointer<Component> Component::Get(int state)
+	Pointer<Component> Component::Get(GuiCode::State state)
 	{
 		for (auto& i : components)
 		{
@@ -89,11 +83,11 @@ namespace GuiCode
 	{
 		d.PushClip();
 		Render(d);
-		CalculateOrder();
-		for (auto i = components.rbegin(); i != components.rend(); ++i)
-			if ((*i)->State<Visible>()) // If visible, and within bounding box, render
-				if ((*i)->BoundingBox().Overlaps(BoundingBox()))
-					(*i)->ForwardRender(d);
+		std::sort(components.begin(), components.end(), [](auto& a, auto& b) { return a->zIndex < b->zIndex; });
+
+		for (auto _c : components)
+			if (_c->State(Visible))
+				_c->ForwardRender(d);
 		d.PopClip();
 	}
 
@@ -113,8 +107,8 @@ namespace GuiCode
 	{
 		Update();
 		ConstrainSize();
-		for (auto i = components.rbegin(); i != components.rend(); ++i)
-			if ((*i)->State<Visible>())
-				(*i)->ForwardUpdate();
+		for (auto& _c : components)
+			if (_c->State(Visible))
+				_c->ForwardUpdate();
 	}
 }

@@ -34,18 +34,18 @@ namespace GuiCode
 		m_ColorMap.clear();
 	}
 
-	void StateColors::State(int state, Color color)
+	Color& StateColors::State(GuiCode::State state)
 	{
 		if (!m_ColorMap.contains(state))
 		{
 			m_States.push_back(state);
-			m_ColorMap.emplace(state, color);
+			m_ColorMap.emplace(state, Color{});
 		}
-		else
-			m_ColorMap[state] = color;
+
+		return m_ColorMap[state];
 	}
 
-	void StateColors::Remove(int state)
+	void StateColors::Remove(GuiCode::State state)
 	{
 		if (m_ColorMap.contains(state))
 		{
@@ -62,8 +62,7 @@ namespace GuiCode
 		if (!m_Link)
 			return base;
 
-		// Get current state
-		int _state = NoValue;
+		GuiCode::State _state = NoValue;
 		for (auto& i : m_States)
 			if (m_Link->State(i))
 			{
@@ -71,20 +70,17 @@ namespace GuiCode
 				break;
 			}
 
-		// Calculate lerp percent
 		auto _now = std::chrono::steady_clock::now();
 		auto _duration = std::chrono::duration_cast<std::chrono::milliseconds>(_now - m_ChangeTime).count();
 		float _percent = constrain(_duration / transition, 0, 1);
 
-		// Get the color
 		const Color& c = m_Goal == NoValue ? base : m_ColorMap.at(m_Goal);
 
-		// If change
 		if (_state != m_Goal)
 		{
-			m_Goal = _state; // set new goal
-			m_Current = m_Current.Lerp(c, _percent); // set current to current lerp percentage
-			m_ChangeTime = std::chrono::steady_clock::now(); // Get changetime
+			m_Goal = _state;
+			m_Current = m_Current.Lerp(c, _percent);
+			m_ChangeTime = std::chrono::steady_clock::now();
 			return m_Current;
 		}
 

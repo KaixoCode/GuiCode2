@@ -84,7 +84,7 @@ namespace GuiCode
 		settings.size.height = vertical ? Auto : Inherit;
 		listener += [&](const KeyPress& e)
 		{
-			if (e.Handled() || !State<Focused>())
+			if (e.Handled() || !State(Focused))
 				return;
 
 			Component* _c = Get(Hovering);
@@ -95,11 +95,11 @@ namespace GuiCode
 					bool _found = false;
 					for (auto& i : panels)
 					{
-						if (_found && !i->component->State<Disabled>())
+						if (_found && !i->component->State(Disabled))
 						{
-							_c->State<Hovering>(false);
+							_c->State(Hovering) = false;
 							_c->listener(MouseExit{});
-							i->component->State<Hovering>(true);
+							i->component->State(Hovering) = true;
 							i->component->listener(MouseEnter{});
 							e.Handle();
 							break;
@@ -111,7 +111,7 @@ namespace GuiCode
 				}
 				else
 				{
-					(*panels.begin())->component->State<Hovering>(true);
+					(*panels.begin())->component->State(Hovering) = true;
 					(*panels.begin())->component->listener(MouseEnter{});
 					e.Handle();
 				}
@@ -127,22 +127,22 @@ namespace GuiCode
 						{
 							if (_prev)
 							{
-								_c->State<Hovering>(false);
+								_c->State(Hovering) = false;
 								_c->listener(MouseExit{});
-								_prev->State<Hovering>(true);
+								_prev->State(Hovering) = true;
 								_prev->listener(MouseEnter{});
 								e.Handle();
 							}
 							break;
 						}
 
-						if (!i->component->State<Disabled>())
+						if (!i->component->State(Disabled))
 							_prev = i->component;
 					}
 				}
 				else
 				{
-					(*(--panels.end()))->component->State<Hovering>(true);
+					(*(--panels.end()))->component->State(Hovering) = true;
 					(*(--panels.end()))->component->listener(MouseEnter{});
 					e.Handle();
 				}
@@ -159,7 +159,7 @@ namespace GuiCode
 			Component* _c = Get(Hovering);
 			if (_c)
 			{
-				_c->State<Hovering>(false);
+				_c->State(Hovering) = false;
 				_c->listener(MouseExit{});
 			}
 		};
@@ -217,7 +217,7 @@ namespace GuiCode
 		d.Fill(settings.color.Current());
 		d.Quad({ x + settings.border.width, y + settings.border.width, width - 2 * settings.border.width, height - 2 * settings.border.width });
 
-		if (State<Selected>())
+		if (State(Selected))
 		{
 			d.Fill(settings.select.Current());
 			d.Quad({ x + 3, y + 3, height - 6, height - 6 });
@@ -291,7 +291,7 @@ namespace GuiCode
 
 		listener += [&](const Unfocus& e)
 		{
-			State<Selected>(false);
+			State(Selected) = false;
 			ContextMenu::Close(menu);
 		};
 	}
@@ -319,7 +319,7 @@ namespace GuiCode
 	Divider::Divider(const Settings& settings)
 		: settings(settings)
 	{
-		State<Disabled>(true);
+		State(Disabled) = true;
 	}
 
 	void Divider::Update()

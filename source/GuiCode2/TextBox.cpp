@@ -32,7 +32,7 @@ namespace GuiCode
 		{
 			if (e.keycode == Key::Enter)
 			{
-				State<Focused>(false);
+				State(Focused) = false;
 				listener(Unfocus{});
 				e.Handle();
 			}

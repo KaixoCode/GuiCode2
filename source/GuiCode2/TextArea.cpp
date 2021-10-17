@@ -30,7 +30,7 @@ namespace GuiCode
 		{
 			ContextMenu::Close(m_Menu);
 
-			if (e.button != MouseButton::Left || scrollbar.x.State<Hovering>() || scrollbar.y.State<Hovering>())
+			if (e.button != MouseButton::Left || scrollbar.x.State(Hovering) || scrollbar.y.State(Hovering))
 				return;
 
 			m_Mouse = e.pos - position;
@@ -44,8 +44,8 @@ namespace GuiCode
 				m_Dragging = false;
 			else if (e.button == MouseButton::Right)
 			{
-				m_Cut.State<Disabled>(!container.editable);
-				m_Paste.State<Disabled>(!container.editable);
+				m_Cut.State(Disabled) = !container.editable;
+				m_Paste.State(Disabled) = !container.editable;
 				ContextMenu::Open(m_Menu, e.pos, true);
 			}
 		};

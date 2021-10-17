@@ -30,9 +30,9 @@ namespace GuiCode
 			if (index == _index)
 			{
 				if ((*_it)->component)
-					me.components.remove(*((*_it)->component));
+					GuiCode::remove(me.components, *((*_it)->component));
 				else
-					me.components.remove(*(*_it));
+					GuiCode::remove(me.components, *(*_it));
 
 				data.erase(_it);
 				break;
@@ -44,9 +44,9 @@ namespace GuiCode
 	void Panel::Panels::remove(Panel& panel)
 	{
 		if (panel.component)
-			me.components.remove(*panel.component);
+			GuiCode::remove(me.components, *panel.component);
 		else
-			me.components.remove(panel);
+			GuiCode::remove(me.components, panel);
 
 		data.remove_if([&](Panel& a) { return &a == &panel; });
 	}
@@ -55,9 +55,9 @@ namespace GuiCode
 	{
 		for (auto& i : data)
 			if (i->component)
-				me.components.remove(*i->component);
+				GuiCode::remove(me.components, *i->component);
 			else
-				me.components.remove(*i);
+				GuiCode::remove(me.components, *i);
 
 		data.clear();
 	}
@@ -609,13 +609,12 @@ namespace GuiCode
 			for (auto& _s : panels)
 				_s->ForwardUpdate(); // TODO: fix this redundancy of calling twice.
 
-		scrollbar.x.State<Visible>(scrollbar.x.Necessary() && settings.overflow.x == Overflow::Scroll);
-		scrollbar.y.State<Visible>(scrollbar.y.Necessary() && settings.overflow.y == Overflow::Scroll);
+		scrollbar.x.State(Visible) = scrollbar.x.Necessary() && settings.overflow.x == Overflow::Scroll;
+		scrollbar.y.State(Visible) = scrollbar.y.Necessary() && settings.overflow.y == Overflow::Scroll;
 	}
 
 	void Panel::ForwardRender(CommandCollection& d)
 	{
-		CalculateOrder();
 		d.PushClip();
 		d.Fill(settings.background);
 		d.Quad(dimensions);
@@ -658,10 +657,10 @@ namespace GuiCode
 
 		d.PopClip();
 
-		if (scrollbar.x.State<Visible>())
+		if (scrollbar.x.State(Visible))
 			scrollbar.x.ForwardRender(d);
 
-		if (scrollbar.y.State<Visible>())
+		if (scrollbar.y.State(Visible))
 			scrollbar.y.ForwardRender(d);
 	}
 

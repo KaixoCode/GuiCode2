@@ -129,7 +129,7 @@ namespace GuiCode
             DwmSetWindowAttribute(GetWin32Handle(), DWMWA_TRANSITIONS_FORCEDISABLED, &fDisable, sizeof(fDisable));
         }
 
-        State<Visible>(data.state);
+        State(Visible) = data.state;
     }
 
 
@@ -156,7 +156,7 @@ namespace GuiCode
             MoveWindow(GetWin32Handle(), x, y, width, height, false);
         }
 
-        int _visible = State<Visible>();
+        int _visible = State(Visible);
 
         if (m_PrevVisibility != _visible)
         {
@@ -189,7 +189,7 @@ namespace GuiCode
         else if (placement.showCmd == SW_HIDE) _visible = Hide;
         else if (placement.showCmd == SW_SHOWMAXIMIZED) _visible = Maximize;
         else if (placement.showCmd == SW_SHOWMINIMIZED) _visible = Minimize;
-        State<Visible>(_visible);
+        State(Visible) = _visible;
         
         bool _shouldDraw = _visible == Maximize || _visible == Show;
 
@@ -246,7 +246,7 @@ namespace GuiCode
         return true;
     }
 
-    void WindowsWindow::UpdateCursor(int c)
+    void WindowsWindow::UpdateCursor(Cursor c)
     {
         if (m_Cursorid == c)
             return;
@@ -255,7 +255,7 @@ namespace GuiCode
 
         if (m_GLFWCursor)
             glfwDestroyCursor(m_GLFWCursor);
-        if (m_Cursorid == -1)
+        if (m_Cursorid == Cursor::None)
             glfwSetCursor(m_Window, m_GLFWCursor = glfwCreateStandardCursor(GLFW_CURSOR_NORMAL));
         else
         {

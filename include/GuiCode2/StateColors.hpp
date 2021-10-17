@@ -18,7 +18,7 @@ namespace GuiCode
 		{
 			Component* link = nullptr;
 			Color base{ 0, 0, 0, 0 };
-			std::map<int, Color> colors;
+			std::map<GuiCode::State, Color> colors;
 			float transition = 100;
 		};
 
@@ -39,17 +39,13 @@ namespace GuiCode
 		 */
 		void Clear();
 
-		template<int state>
-		void State(Color color) { State(state, color); }
-		void State(int state, Color color);
+		Color& State(GuiCode::State state);
 
 		/**
 		 * Remove a state.
 		 * @param state state
 		 */
-		template<int state>
-		void Remove() { Remove(state); }
-		void Remove(int state);
+		void Remove(GuiCode::State state);
 
 		/**
 		 * Get the current color based on state of the Component.
@@ -62,10 +58,10 @@ namespace GuiCode
 
 	private:
 		Component* m_Link;
-		std::list<int> m_States;
-		std::map<int, Color> m_ColorMap;
+		std::list<GuiCode::State> m_States;
+		std::map<GuiCode::State, Color> m_ColorMap;
 		mutable Color m_Current = base;
-		mutable int m_Goal = NoValue;
+		mutable GuiCode::State m_Goal = NoValue;
 		mutable std::chrono::steady_clock::time_point m_ChangeTime;
 	};
 }

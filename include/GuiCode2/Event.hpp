@@ -4,6 +4,16 @@
 
 namespace GuiCode
 {
+	enum State {
+		NoValue = 0,
+		Hovering,
+		Focused,
+		Pressed,
+		Visible,
+		Disabled,
+		Selected
+	};
+	
 	class Component;
 
 	/**
@@ -11,6 +21,7 @@ namespace GuiCode
 	 */
 	struct StateSettings
 	{
+		State state;
 		int limit = -1; // Set limit to sum of values for state of sub-components.
 		bool visible = true; // Does component need to be visible for state handler to ask about state?
 	};
@@ -49,11 +60,7 @@ namespace GuiCode
 	 */
 	struct EventListener
 	{
-		/**
-		 * EventListener needs the list of components to work with.
-		 * @param c component list
-		 */
-		EventListener(std::list<Pointer<Component>>& c)
+		EventListener(std::vector<Pointer<Component>>& c)
 			: components(&c)
 		{}
 		
@@ -107,7 +114,7 @@ namespace GuiCode
 		template<typename Func, typename Type, typename Obj>
 		struct StateFunction<Func, int(const Type&, Obj&, int)> : StateFunctionBase
 		{
-			StateFunction(int a, Func b) 
+			StateFunction(GuiCode::State a, Func b)
 				: state(a), callback(b) 
 			{}
 
@@ -122,7 +129,7 @@ namespace GuiCode
 				{
 					// Calculate new state with callback function
 					int _state = callback(*_e, *_c, left);
-					_c->State(state, _state);
+					_c->State(state) = _state;
 					return _state;
 				}
 
@@ -130,7 +137,7 @@ namespace GuiCode
 				return 0;
 			}
 
-			int state;
+			GuiCode::State state;
 			Func callback;
 		};
 
@@ -139,7 +146,6 @@ namespace GuiCode
 		 */
 		struct StateHandler
 		{
-			int state;
 			StateSettings settings; // State specific settings, like limit etc.
 
 			/**
@@ -149,7 +155,7 @@ namespace GuiCode
 			template<typename T>
 			StateHandler& operator+=(T t)
 			{
-				handlers.push_back(std::make_unique<StateFunction<T, LambdaSignatureT<T>>>(state, t));
+				handlers.push_back(std::make_unique<StateFunction<T, LambdaSignatureT<T>>>(settings.state, t));
 				return *this;
 			}
 
@@ -173,13 +179,12 @@ namespace GuiCode
 		 * @param s settings (optional)
 		 * @return StateHandler
 		 */
-		template<int state>
 		StateHandler& State(const StateSettings& s = {}) 
 		{
-			if (m_StateHandlers.contains(state))
-				return m_StateHandlers.at(state);
+			if (m_StateHandlers.contains(s.state))
+				return m_StateHandlers.at(s.state);
 			
-			return m_StateHandlers[state] = { state, s };
+			return m_StateHandlers[s.state] = { s };
 		}
 
 		/**
@@ -189,8 +194,8 @@ namespace GuiCode
 		void operator()(const Event& e);
 
 	private:
-		std::list<Pointer<Component>>* components = nullptr;
-		std::list<std::unique_ptr<EventFunctionBase>> m_Listeners;
-		std::map<int, StateHandler> m_StateHandlers;
+		std::vector<Pointer<Component>>* components = nullptr;
+		std::vector<std::unique_ptr<EventFunctionBase>> m_Listeners;
+		std::map<GuiCode::State, StateHandler> m_StateHandlers;
 	};
 }

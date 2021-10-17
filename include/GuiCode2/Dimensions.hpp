@@ -12,7 +12,7 @@ namespace GuiCode
 	{
 		Dimensions() : dimensions{ 0, 0, 0, 0 } {}
 		Dimensions(float a, float b, float c, float d) : dimensions{ a, b, c, d } {}
-		Dimensions(Dimensions&& other) { *this = other; }
+		Dimensions(Dimensions&& other) noexcept { *this = other; }
 		Dimensions(const Dimensions& other) { *this = other; }
 
 		Vec2<float> min{  5,  5 }; // Minimum size, -1 = no minimum

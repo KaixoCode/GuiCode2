@@ -6,9 +6,9 @@ namespace GuiCode
 	{
 		// Unselect all buttons in the group, if they are selected.
 		for (auto& i : group)
-			if (i->State<Selected>())
+			if (i->State(Selected))
 			{
-				i->State<Selected>(false);
+				i->State(Selected) = false;
 				i->settings.callback(false); // Also call the callback!
 			}
 	}
@@ -73,13 +73,13 @@ namespace GuiCode
 		listener += [this](const MouseEnter& e)
 		{
 			if (!settings.callback    // Ignore when no callback
-				|| State<Disabled>()) // Ignore when disabled
+				|| State(Disabled)) // Ignore when disabled
 				return;
 
 			if (settings.type == Hover
-				&& !State<Hovering>()) // To filter out Hovering state set by arrow keys.
+				&& !State(Hovering)) // To filter out Hovering state set by arrow keys.
 			{                          // The Hovering State only gets set after this
-				State<Selected>(true); // event normally, but not when done with arrow keys.
+				State(Selected) = true; // event normally, but not when done with arrow keys.
 				settings.callback(true);
 			}
 		};
@@ -87,12 +87,12 @@ namespace GuiCode
 		listener += [this](const MouseExit& e)
 		{
 			if (!settings.callback    // Ignore when no callback
-				|| State<Disabled>()) // Ignore when disabled
+				|| State(Disabled)) // Ignore when disabled
 				return;
 
 			if (settings.type == Hover)   // Mouse Exit event is only handled
 			{                             // by Hover Behaviour.
-				State<Selected>(false);   // Set Selected to false
+				State(Selected) = false;   // Set Selected to false
 				settings.callback(false); // and call the callback
 			}
 		};
@@ -101,30 +101,30 @@ namespace GuiCode
 		{
 			if (!settings.callback                // Ignore when no callback
 				|| ~e.button & MouseButton::Left  // Only when Left click
-				|| !(State<Focused>()             // Only if focused, 
-					&& State<Hovering>()		  // hovering, 
+				|| !(State(Focused)             // Only if focused, 
+					&& State(Hovering)		  // hovering, 
 					&& Hitbox(e.pos))			  // and mouse is over the button
-				|| State<Disabled>())             // Ignore when disabled
+				|| State(Disabled))             // Ignore when disabled
 				return;
 
 			if (settings.type == Click)  // Simple click behaviour will call the
 				settings.callback(true); // callback once, only when mouse released.
 
 			if (settings.type == Radio
-				&& !State<Selected>())      // Radio button behavious will
+				&& !State(Selected))      // Radio button behavious will
 			{                               // First unselect all buttons in the group
 				settings.group->Unselect(); // And then selected this button
-				State<Selected>(true);
+				State(Selected) = true;
 				settings.callback(true);
 			}
 
 			if (settings.type == Toggle) 
 			{
-				bool _selected = State<Selected>() ^ true; // Toggle the current state
+				bool _selected = State(Selected) ^ true; // Toggle the current state
 				settings.group->Unselect();                // Unselect any in the group
 				if (_selected)                             // If the new state is 'on'
 				{                                          // We will set the state
-					State<Selected>(_selected);            // Otherwise the group Unselect
+					State(Selected) = _selected;            // Otherwise the group Unselect
 					settings.callback(_selected);          // will have turned it off.
 				}
 			}
@@ -133,11 +133,11 @@ namespace GuiCode
 		listener += [this](const KeyPress& e)
 		{
 			if (!settings.callback    // Ignore if no callback is set
-				|| State<Disabled>()) // and if disabled
+				|| State(Disabled)) // and if disabled
 				return;
 
 			if (!e.repeat                       // Don't react to repeated key press events
-				&& (State<Hovering>()           // Either trigger when hovering state and
+				&& (State(Hovering)           // Either trigger when hovering state and
 					&& e.keycode == Key::Enter  // key is Enter
 					|| e == settings.combo))    // Or when the assigned key combo was pressed.
 			{
@@ -147,27 +147,27 @@ namespace GuiCode
 					e.Handle();                 // And make sure to handle the event.
 				}
 				else if (settings.type == Radio // Radio behaviour only has change 
-					&& !State<Selected>())      // states if the current state is not Selected
+					&& !State(Selected))      // states if the current state is not Selected
 				{
 					settings.group->Unselect(); // Unselect the group
-					State<Selected>(true);      // and then select this button
+					State(Selected) = true;      // and then select this button
 					settings.callback(true);
 					e.Handle();                 // make sure to handle the event
 				}
 				else if (settings.type == Hover // Hover behaviour also can only
-					&& !State<Selected>())      // change the state to 'on' when Enter is pressed
+					&& !State(Selected))      // change the state to 'on' when Enter is pressed
 				{
-					State<Selected>(true);      // So set the Selected state to true
+					State(Selected) = true;      // So set the Selected state to true
 					settings.callback(true);    // and call the callback
 					e.Handle();                 // Also handle the event
 				}
 				else if (settings.type == Toggle)
 				{
-					bool _selected = State<Selected>() ^ true; // Toggle the current state
+					bool _selected = State(Selected) ^ true; // Toggle the current state
 					settings.group->Unselect();                // Unselect group
 					if (_selected)                             // Only change this button's
 					{                                          // state if it's turning 'on'
- 						State<Selected>(_selected);            // because group unselect
+ 						State(Selected) = _selected;            // because group unselect
 						settings.callback(_selected);          // would have turned it off.
 					}
 					e.Handle();                                // Also handle the event.
@@ -176,19 +176,19 @@ namespace GuiCode
 
 			if (!e.repeat                 // Ignore repeated key press events
 				&& settings.type == Hover // If type is hover, we can also react to
-				&& State<Hovering>())     // left and right arrow presses.
+				&& State(Hovering))     // left and right arrow presses.
 			{
 				if (e.keycode == Key::Right // When right is pressed
-					&& !State<Selected>())  // and not selected
+					&& !State(Selected))  // and not selected
 				{
-					State<Selected>(true);   // Set Selected to true
+					State(Selected) = true;   // Set Selected to true
 					settings.callback(true); // call the callback
 					e.Handle();              // And handle the event
 				}
 				else if (e.keycode == Key::Left // When left is pressed
-					&& State<Selected>())       // and selected
+					&& State(Selected))       // and selected
 				{
-					State<Selected>(false);     // Set Selected state to false
+					State(Selected) = false;     // Set Selected state to false
 					settings.callback(false);   // call the callback
 					e.Handle();                 // And handle the event
 				}

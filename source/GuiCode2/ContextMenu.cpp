@@ -36,14 +36,14 @@ namespace GuiCode
 		if (components.size())
 		{
 			Component& _c = *components.begin();
-			if (_c.State<Focused>())
+			if (_c.State(Focused))
 			{
-				_c.State<Focused>(false);
+				_c.State(Focused) = false;
 				_c.listener(Unfocus{});
 			}
 			components.clear();
 		}
-		State<Visible>(Hide);
+		State(Visible) = Hide;
 		owner = nullptr;
 		m_ShouldClose = false;
 	}
@@ -52,7 +52,7 @@ namespace GuiCode
 	{
 		ContextFrame* _theChosenOne = nullptr;
 		for (auto& _window : m_WindowPool)
-			if (_window.State<Visible>() == Hide)
+			if (_window.State(Visible) == Hide)
 			{
 				_theChosenOne = &_window;
 				break;
@@ -69,10 +69,10 @@ namespace GuiCode
 			_theChosenOne->Initialize();
 		_theChosenOne->position = offset + position;
 		_theChosenOne->size = c->size;
-		_theChosenOne->State<Visible>(Show);
-		if (!_c->State<Focused>())
+		_theChosenOne->State(Visible) = Show;
+		if (!_c->State(Focused))
 		{
-			_c->State<Focused>(true);
+			_c->State(Focused) = true;
 			_c->listener(Focus{});
 		}
 	}

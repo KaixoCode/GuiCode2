@@ -61,8 +61,7 @@ namespace GuiCode
     {
         static inline int m_GraphicsIdCounter = 0;
     protected:
-        static inline std::map<std::string_view, GuiCode::Font> m_Fonts;
-        static inline std::set<std::string_view> m_Trieds;
+        static inline std::map<std::string_view, GuiCode::Font, std::less<>> m_Fonts;
     public:
         static inline std::string DefaultFont = "segoeui";
 

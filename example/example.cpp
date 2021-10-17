@@ -6,9 +6,13 @@ using namespace GuiCode;
 int main() {
 	Gui _gui;
 
-	_gui.push_back(new Frame{ {
+	Pointer<Frame> _frame{ new Frame{ {
 		.name = "Window"
-	} });
+	} } };
 
-	while (_gui.Loop());
+	_gui.push_back(_frame);
+
+	while (_gui.Loop()) {
+		MEASURE_FPS;
+	}
 }

@@ -93,12 +93,12 @@ namespace GuiCode
 	};
 
 	template<>
-	int Parsers<int>::Parse(std::string_view& c)
+	int64_t Parsers<int64_t>::Parse(std::string_view& c)
 	{
 		c = c.substr(c.find_first_not_of(" "));
 		const char* begin = c.data();
 		char* end;
-		auto res = std::strtol(c.data(), &end, 10);
+		auto res = std::strtoll(c.data(), &end, 10);
 
 		// If res is 0, try enums
 		if (res == 0)
@@ -113,15 +113,33 @@ namespace GuiCode
 	};
 
 	template<>
+	int Parsers<int>::Parse(std::string_view& c)
+	{
+		return static_cast<int>(Parsers<int64_t>::Parse(c));
+	};
+
+	template<>
 	uint8_t Parsers<uint8_t>::Parse(std::string_view& c)
 	{
-		return Parsers<int>::Parse(c);
+		return Parsers<int64_t>::Parse(c);
+	};
+
+	template<>
+	State Parsers<State>::Parse(std::string_view& c)
+	{
+		return static_cast<State>(Parsers<int64_t>::Parse(c));
+	};
+
+	template<>
+	Cursor Parsers<Cursor>::Parse(std::string_view& c)
+	{
+		return static_cast<Cursor>(Parsers<int64_t>::Parse(c));
 	};
 
 	template<>
 	bool Parsers<bool>::Parse(std::string_view& c)
 	{
-		return Parsers<int>::Parse(c);
+		return Parsers<int64_t>::Parse(c);
 	};
 
 	template<>
@@ -158,8 +176,8 @@ namespace GuiCode
 		{
 			while (true)
 			{
-				auto[state, color] = Parsers<std::tuple<int, Color>>::Parse(c);
-				colors.State(state, color);
+				auto[state, color] = Parsers<std::tuple<State, Color>>::Parse(c);
+				colors.State(state) = color;
 			}
 		}
 		catch (...) {}

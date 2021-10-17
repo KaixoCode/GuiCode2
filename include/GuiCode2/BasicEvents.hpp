@@ -36,7 +36,7 @@ namespace GuiCode
 			: pos(pos), Event(false)
 		{}
 
-		bool Forward(const Component& c) const override { return c.State<Hovering>(); };
+		bool Forward(const Component& c) const override { return c.State(Hovering); };
 
 		Vec2<float> pos; // New mouse position
 	};
@@ -47,7 +47,7 @@ namespace GuiCode
 			: source(source), pos(pos), buttons(buttons), mod(mod), Event(false)
 		{}
 
-		bool Forward(const Component& c) const override { return c.State<Pressed>(); };
+		bool Forward(const Component& c) const override { return c.State(Pressed); };
 
 		Vec2<float> source; // Press position of cursor
 		Vec2<float> pos;    // Position of cursor
@@ -61,7 +61,7 @@ namespace GuiCode
 			: pos(pos), button(button), mod(mod), Event(false)
 		{}
 
-		bool Forward(const Component& c) const override { return c.State<Hovering>(); };
+		bool Forward(const Component& c) const override { return c.State(Hovering); };
 
 		Vec2<float> pos; // Position of press
 		int button;      // Button held down
@@ -74,7 +74,7 @@ namespace GuiCode
 			: pos(pos), button(button), mod(mod), Event(false)
 		{}
 
-		bool Forward(const Component& c) const override { return c.State<Hovering>(); };
+		bool Forward(const Component& c) const override { return c.State(Hovering); };
 
 		Vec2<float> pos; // Position of click
 		int button;      // Button used to click
@@ -87,7 +87,7 @@ namespace GuiCode
 			: pos(pos), amount(amount), mod(mod)
 		{}
 
-		bool Forward(const Component& c) const override { return c.State<Hovering>(); };
+		bool Forward(const Component& c) const override { return c.State(Hovering); };
 
 		Vec2<float> pos; // Cursor position when mousewheel was used
 		int amount;      // Amount the mousewheel was used
@@ -100,7 +100,7 @@ namespace GuiCode
 			: pos(pos), button(button), mod(mod), Event(false)
 		{}
 
-		bool Forward(const Component& c) const override { return c.State<Focused>(); };
+		bool Forward(const Component& c) const override { return c.State(Focused); };
 
 		Vec2<float> pos; // Position of the cursor
 		int button;      // Button that was released
@@ -147,7 +147,7 @@ namespace GuiCode
 
 	struct MouseExit : public Event
 	{
-		bool Forward(const Component& c) const override { return c.State<Hovering>(); };
+		bool Forward(const Component& c) const override { return c.State(Hovering); };
 	};
 
 	struct MouseEnter : public Event
@@ -162,6 +162,6 @@ namespace GuiCode
 
 	struct Unfocus : public Event
 	{
-		bool Forward(const Component& c) const override { return c.State<Focused>(); };
+		bool Forward(const Component& c) const override { return c.State(Focused); };
 	};
 }

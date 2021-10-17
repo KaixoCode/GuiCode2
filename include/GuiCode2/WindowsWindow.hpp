@@ -33,11 +33,11 @@ namespace GuiCode
         Dimensions m_PrevDims{ 0, 0, 0, 0 };
         int m_PrevVisibility = 0;
         GLFWcursor* m_GLFWCursor = 0;
-        int m_Cursorid = 0;
+        Cursor m_Cursorid = Cursor::Arrow;
 
         bool WindowsLoop();
 
-        void UpdateCursor(int);
+        void UpdateCursor(Cursor);
 
         void CursorPosCallback(int x, int y, int mod);
         void MouseButtonCallback(int button, bool press, int mod);

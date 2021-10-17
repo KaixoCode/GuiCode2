@@ -3,6 +3,10 @@
 
 namespace GuiCode
 {
+    static inline void remove(auto& container, auto& element) {
+        //container.erase(std::remove(container.begin(), container.end(), element));
+    }
+
     // trim from start (in place)
     static inline void ltrim(std::string& s) {
         s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
@@ -653,8 +657,6 @@ namespace GuiCode
     // Function constructor deduction guide for lambdas
     template <class _Fx>
     Function(_Fx)->Function<typename std::_Deduce_signature<_Fx>::type>;
-
-
 }
 
 namespace std
