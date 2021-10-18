@@ -8,9 +8,6 @@
 
 namespace GuiCode
 {
-	/**
-	 * Base for a button, does not contain any graphics.
-	 */
 	class ButtonParser;
 	class Button : public Component
 	{
