@@ -4,7 +4,7 @@
 namespace GuiCode
 {
     static inline void remove(auto& container, auto& element) {
-        //container.erase(std::remove(container.begin(), container.end(), element));
+        container.erase(std::remove(container.begin(), container.end(), element));
     }
 
     // trim from start (in place)

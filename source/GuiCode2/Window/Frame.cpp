@@ -33,8 +33,6 @@ namespace GuiCode
 	Frame::TitleBar& Frame::TitleBar::operator=(Frame::TitleBar&& other)
 	{
 		text = std::move(other.text);
-		textSize = std::move(other.textSize);
-		textAlign = std::move(other.textAlign);
 		font = std::move(other.font);
 		background = std::move(other.background);
 		if (other.close.type == "close")
@@ -61,14 +59,14 @@ namespace GuiCode
 	{
 		d.Fill(background);
 		d.Quad(dimensions);
-		d.Fill(text);
+		d.Fill(text.color);
 		if (menu.State(Visible))
 		{
 			d.Quad({ x + height + menu.width + 18, y + 8, 1, height - 16 });
 			d.Quad({ x + height + 6, y + 8, 1, height - 16 });
 		}
-		d.TextAlign(textAlign);
-		d.FontSize(textSize);
+		d.TextAlign(Align::Left | Align::CenterY);
+		d.FontSize(text.size);
 		d.Font(font);
 		float _offset = menu.State(Visible) ? menu.width + 31 : 6;
 		if (title)
@@ -79,22 +77,25 @@ namespace GuiCode
 	{
 		return Component::Hitbox(v) && !(v.x < 8 || v.x >= width - 8 || v.y < 8);
 	}
-	
-	Frame::Frame()
-		: Window()
-	{
-		Init();
-	}
 
-	Frame::Frame(const WindowData& data)
+	Frame::Frame(const Settings& data)
 		: Window(data)
 	{
 		Init();
 	}
 
+	Frame& Frame::operator=(Frame&& other)
+	{
+		background = std::move(other.background);
+		border = std::move(other.border);
+		titlebar = std::move(other.titlebar);
+		panel = std::move(other.panel);
+		return *this;
+	}
+
 	void Frame::Init()
 	{
-		titlebar.title = &info.name;
+		titlebar.title = &settings.name;
 		titlebar.close.callback = [this]() { State(Visible) = Close; };
 		titlebar.minimize.callback = [this]() { State(Visible) = Minimize; };
 		titlebar.maximize.callback = [this]() { State(Visible) == Maximize ? State(Visible) = Show : State(Visible) = Maximize; };
@@ -204,11 +205,11 @@ namespace GuiCode
 	 */
 
 	template<>
-	WindowInfo Parsers<WindowInfo>::Parse(std::string_view& c)
+	Frame::Settings Parsers<Frame::Settings>::Parse(std::string_view& c)
 	{
 		auto [name, hideonclose] = Parsers<std::tuple<std::string, bool>>::Parse(c);
 
-		return { name, hideonclose };
+		return { .name = name, .hideOnClose = hideonclose };
 	}
 
 	TitleBarButtonParser::TitleBarButtonParser()
@@ -226,9 +227,8 @@ namespace GuiCode
 		alias["menu"] = "menu-bar-button";
 		alias["button"] = "titlebar-button";
 		Attribute("background", &Frame::TitleBar::background);
-		Attribute("text", &Frame::TitleBar::text);
-		Attribute("text-size", &Frame::TitleBar::textSize);
-		Attribute("text-align", &Frame::TitleBar::textAlign);
+		//Attribute("text", &Frame::TitleBar::text);
+		//Attribute("text-size", &Frame::TitleBar::textSize);
 		Attribute("font", &Frame::TitleBar::font);
 	}
 
@@ -239,9 +239,9 @@ namespace GuiCode
 		settings.name = "frame";
 		Attribute("background", &Frame::background);
 		Attribute("border", &Frame::border);
-		Attribute("info", &Frame::info);
-		Attribute("info.name", &WindowInfo::name);
-		Attribute("info.hideonclose", &WindowInfo::hideOnClose);
+		Attribute("settings", &Frame::settings);
+		Attribute("settings.name", &Frame::Settings::name);
+		Attribute("settings.hideonclose", &Frame::Settings::hideOnClose);
 	}
 
 	void TitleBarParser::Append(Component& c, Pointer<Component>&& obj)

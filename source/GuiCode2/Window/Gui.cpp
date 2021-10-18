@@ -1,4 +1,4 @@
-#include "GuiCode2/Window/Window.hpp"
+#include "GuiCode2/Window/Gui.hpp"
 #include "GuiCode2/Utils/ContextMenu.hpp"
 
 namespace GuiCode
@@ -11,7 +11,7 @@ namespace GuiCode
 			auto& _w = m_Windows[i];
 			if (!_w->Loop())
 			{
-				if (!_w->info.hideOnClose)
+				if (!_w->settings.hideOnClose)
 					m_Running = false;
 
 				else

@@ -30,10 +30,6 @@ namespace GuiCode
 	class Frame : public Window
 	{
 	public:
-		/**
-		 * Simple button class for the close/minimize/maximize 
-		 * buttons on the frame.
-		 */
 		class Button : public Component
 		{
 		public:
@@ -41,6 +37,7 @@ namespace GuiCode
 			Button(const Button&) = delete;
 			Button(Button&&) = delete;
 			Button& operator=(Button&& other);
+			Button& operator=(const Button&) = delete;
 
 			std::string type;
 			StateColors color;
@@ -50,22 +47,23 @@ namespace GuiCode
 			void Render(CommandCollection& d) const override { render(d); }
 		};
 
-		/**
-		 * Title bar, contains the close/maximize/minimize 
-		 * buttons.
-		 */
 		class TitleBar : public Component
 		{
 		public:
 			friend class Frame;
 			TitleBar();
+			TitleBar(const TitleBar&) = delete;
+			TitleBar(TitleBar&&) = delete;
 			TitleBar& operator=(TitleBar&& other);
+			TitleBar& operator=(const TitleBar&) = delete;
 
 			Color background{ 26, 26, 26, 255 };
-			Color text{ 255, 255, 255, 255 };
 			Button close, maximize, minimize;
-			float textSize = 12;
-			int textAlign = Align::Left | Align::CenterY;
+			struct Text
+			{
+				float size = 12;
+				Color color{ 255, 255, 255, 255 };
+			} text;
 			std::string font = GraphicsBase::DefaultFont;
 			Menu menu{ false /* Not vertical menu */ };
 
@@ -77,18 +75,11 @@ namespace GuiCode
 			std::string* title = nullptr;
 		};
 
-		Frame();
-		Frame(const WindowData& data);
+		Frame(const Settings& data = {});
 		Frame(const Frame&) = delete;
 		Frame(Frame&&) = delete;
-		Frame& operator=(Frame&& other)
-		{
-			background = std::move(other.background);
-			border = std::move(other.border);
-			titlebar = std::move(other.titlebar);
-			panel = std::move(other.panel);
-			return *this;
-		}
+		Frame& operator=(Frame&& other);
+		Frame& operator=(const Frame&) = delete;
 
 		Color background{ 13, 13, 13, 255 };
 		Color border{ 64, 64, 64 };

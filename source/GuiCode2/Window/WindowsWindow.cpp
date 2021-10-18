@@ -1,4 +1,5 @@
-#include "GuiCode2/Window/WindowsWindow.hpp"
+#ifdef WIN32
+#include "GuiCode2/Window/Window.hpp"
 #include "GuiCode2/Utils/ContextMenu.hpp"
 
 namespace GuiCode
@@ -40,24 +41,12 @@ namespace GuiCode
         return bestmonitor;
     }
 
-    int WindowsWindow::m_WindowCount = 0;
-    WindowsWindow* WindowsWindow::m_MainWindow = nullptr;
+    int Window::m_WindowCount = 0;
+    Window* Window::m_MainWindow = nullptr;
 
-    WindowsWindow::WindowsWindow()
-        : WindowBase()
-    {}
-
-    WindowsWindow::WindowsWindow(const WindowData& data)
-        : WindowBase()
-    {
-        InitializeWindow(data);
-    }
-
-    void WindowsWindow::InitializeWindow(const WindowData& data)
-    {
-        WindowBase::InitializeWindow(data);
-        m_PrevVisibility = data.state;
-        dimensions = data.dimensions.dimensions;
+    void Window::Create() {
+        m_PrevVisibility = settings.state;
+        dimensions = settings.dimensions.dimensions;
         
         if (m_WindowCount == 0 && !glfwInit())
         {
@@ -68,16 +57,16 @@ namespace GuiCode
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        glfwWindowHint(GLFW_FLOATING, data.alwaysOnTop);
-        glfwWindowHint(GLFW_RESIZABLE, data.resizeable);
-        glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, data.transparentBuffer);
-        glfwWindowHint(GLFW_DECORATED, data.decorated);
+        glfwWindowHint(GLFW_FLOATING, settings.alwaysOnTop);
+        glfwWindowHint(GLFW_RESIZABLE, settings.resizeable);
+        glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, settings.transparentBuffer);
+        glfwWindowHint(GLFW_DECORATED, settings.decorated);
         glfwWindowHint(GLFW_SAMPLES, 4);
-        glfwWindowHint(GLFW_VISIBLE, data.state != 0);
+        glfwWindowHint(GLFW_VISIBLE, settings.state != 0);
         glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
         glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
 
-        m_Window = glfwCreateWindow(55, 55, data.name.c_str(), nullptr, m_MainWindow ? m_MainWindow->m_Window : nullptr);
+        m_Window = glfwCreateWindow(55, 55, settings.name.c_str(), nullptr, m_MainWindow ? m_MainWindow->m_Window : nullptr);
         if (m_MainWindow == nullptr)
             m_MainWindow = this;
 
@@ -88,7 +77,7 @@ namespace GuiCode
                 glfwTerminate();
         }
 
-        if (!data.decorated)
+        if (!settings.decorated)
         {
             long style = GetWindowLong(GetWin32Handle(), GWL_EXSTYLE);
             style = style & ~WS_EX_APPWINDOW | WS_EX_TOOLWINDOW;
@@ -117,35 +106,39 @@ namespace GuiCode
         m_WindowCount++;
 
         // Add a subproc to handle some msgs ourselves.
-        SetWindowSubclass(GetWin32Handle(), &SubClassProc, windowId, (DWORD_PTR) static_cast<void*>(this));
+        SetWindowSubclass(GetWin32Handle(), &SubClassProc, id, (DWORD_PTR) static_cast<void*>(this));
 
         // Set the margins of the Win32 window.
         MARGINS _margins = { 1, 1, 1, 1 };
         DwmExtendFrameIntoClientArea(GetWin32Handle(), &_margins);
 
-        if (data.noAnimations)
+        if (!settings.animations)
         {
             BOOL fDisable = TRUE;
             DwmSetWindowAttribute(GetWin32Handle(), DWMWA_TRANSITIONS_FORCEDISABLED, &fDisable, sizeof(fDisable));
         }
 
-        State(Visible) = data.state;
+        State(Visible) = settings.state;
     }
 
+    Window::~Window()
+    {
+        glfwDestroyWindow(m_Window);
+    }
 
-    bool WindowsWindow::Loop()
+    bool Window::Loop()
     {
         if (auto _w = dynamic_cast<ContextFrame*>(this))
-            currentWindow = _w->owner;
+            CURRENT = _w->owner;
         else
-            currentWindow = this;
+            CURRENT = this;
 
         bool _ret = WindowsLoop();
         glfwPollEvents();
         return _ret;
     }
 
-    bool WindowsWindow::WindowsLoop() 
+    bool Window::WindowsLoop() 
     {
         static int _currentId = -1;
 
@@ -160,7 +153,7 @@ namespace GuiCode
 
         if (m_PrevVisibility != _visible)
         {
-            int _placement;
+            int _placement = SW_SHOW;
 
             int _cmd = 0;
             if (_visible == Close) return false;
@@ -195,9 +188,9 @@ namespace GuiCode
 
         // Only change context if it's necessary, because this seems to
         // have a relatively high impact on the CPU usage.
-        if (_currentId != windowId && _shouldDraw)
+        if (_currentId != id && _shouldDraw)
         {
-            _currentId = windowId;
+            _currentId = id;
             glfwMakeContextCurrent(m_Window);
         }
 
@@ -235,7 +228,7 @@ namespace GuiCode
                 listener(*m_EventQueue.front());
 
                 // Check again if the eventqueue is empty, because some button somewhere
-                // might trigger a resize of the window, which will trigger this WindowsWindow::Update
+                // might trigger a resize of the window, which will trigger this Window::Update
                 // which will finish this while loop, and then exit out of AddEvent about here ^
                 // and then m_EventQueue will be empty, causing an exception when calling pop().
                 if (!m_EventQueue.empty())
@@ -246,7 +239,7 @@ namespace GuiCode
         return true;
     }
 
-    void WindowsWindow::UpdateCursor(Cursor c)
+    void Window::UpdateCursor(Cursor c)
     {
         if (m_Cursorid == c)
             return;
@@ -326,9 +319,9 @@ namespace GuiCode
         return _hitTests[_uRow][_uCol];
     }
 
-    LRESULT CALLBACK WindowsWindow::SubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+    LRESULT CALLBACK Window::SubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
     {
-        WindowsWindow* _self = (WindowsWindow*)dwRefData;
+        Window* _self = (Window*)dwRefData;
         if (_self == nullptr)
             return 0;
         bool _fCallDWP = true;
@@ -353,7 +346,7 @@ namespace GuiCode
 
         int _offset = IsMaximized(hWnd) ? 8 : 0;
         float _padding = 8.0;
-        if (_self->mouseInfo.pressedMouseButtons != MouseButton::None || !_self->BorderHitbox(_self->mouseInfo.cursorPosition))
+        if (_self->cursor.buttons != MouseButton::None || !_self->BorderHitbox(_self->cursor.position))
             switch (uMsg)
             {
                 {
@@ -447,7 +440,7 @@ namespace GuiCode
 
                 if (!_any)
                 {
-                    ((WindowsWindow*)_w->owner)->m_EventQueue.push(std::make_unique<Unfocus>());
+                    ((Window*)_w->owner)->m_EventQueue.push(std::make_unique<Unfocus>());
                     for (auto& i : ContextMenu::m_WindowPool)
                     {
                         if (i.owner == _w->owner)
@@ -585,40 +578,40 @@ namespace GuiCode
         return _lRet;
     }
 
-    void WindowsWindow::CursorPosCallback(int x, int y, int mod)
+    void Window::CursorPosCallback(int x, int y, int mod)
     {
-        mouseInfo.cursorPosition.x = x;
-        mouseInfo.cursorPosition.y = y;
-        if (mouseInfo.pressedMouseButtons == MouseButton::None)
+        cursor.position.x = x;
+        cursor.position.y = y;
+        if (cursor.buttons == MouseButton::None)
             m_EventQueue.emplace(new MouseMove{ { (float)x, (float)y } });
         else
-            m_EventQueue.emplace(new MouseDrag{ mouseInfo.pressedCursorPosition, { (float)x, (float)y }, mouseInfo.pressedMouseButtons, mod });
+            m_EventQueue.emplace(new MouseDrag{ cursor.pressed, { (float)x, (float)y }, cursor.buttons, mod });
     }
 
-    void WindowsWindow::MouseButtonCallback(int button, bool press, int mod)
+    void Window::MouseButtonCallback(int button, bool press, int mod)
     {
         if (press)
         {
-            mouseInfo.pressedMouseButtons |= button; // Add button to pressed
-            mouseInfo.pressedCursorPosition = mouseInfo.cursorPosition; // Set press cursor position
-            m_EventQueue.emplace(new MousePress{ mouseInfo.cursorPosition, button, mod });
+            cursor.buttons |= button; // Add button to pressed
+            cursor.pressed = cursor.position; // Set press cursor position
+            m_EventQueue.emplace(new MousePress{ cursor.position, button, mod });
         }
         else
         {
-            mouseInfo.pressedMouseButtons ^= button; // Remove button from pressed
-            if (mouseInfo.pressedCursorPosition == mouseInfo.cursorPosition) // If pos not changed, add click
-                m_EventQueue.emplace(new MouseClick{ mouseInfo.cursorPosition, button, mod });
+            cursor.buttons ^= button; // Remove button from pressed
+            if (cursor.pressed == cursor.position) // If pos not changed, add click
+                m_EventQueue.emplace(new MouseClick{ cursor.position, button, mod });
 
-            m_EventQueue.emplace(new MouseRelease{ mouseInfo.cursorPosition, button, mod });
+            m_EventQueue.emplace(new MouseRelease{ cursor.position, button, mod });
         }
     }
 
-    void WindowsWindow::MouseWheelCallback(int amount, int mod, int x, int y)
+    void Window::MouseWheelCallback(int amount, int mod, int x, int y)
     {
         m_EventQueue.emplace(new MouseWheel{ { (float)x, (float)y }, amount, mod });
     }
 
-    void WindowsWindow::KeyCallback(int key, bool repeat, int action, int mod)
+    void Window::KeyCallback(int key, bool repeat, int action, int mod)
     {
         if (action == 0) // Release
             m_EventQueue.emplace(new KeyRelease{ key, mod });
@@ -631,7 +624,7 @@ namespace GuiCode
         }
     }
 
-    void WindowsWindow::WindowSizeCallback(int x, int y, int width, int height)
+    void Window::WindowSizeCallback(int x, int y, int width, int height)
     {
         dimensions = { (float)x, (float)y, (float)width, (float)height };
         m_PrevDims = { (float)x, (float)y, (float)width, (float)height };
@@ -642,3 +635,4 @@ namespace GuiCode
         WindowsLoop();
     }
 }
+#endif

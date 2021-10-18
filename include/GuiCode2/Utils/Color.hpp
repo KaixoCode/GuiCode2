@@ -16,10 +16,6 @@ namespace GuiCode
             : r(r), g(g), b(b), a(255)
         {}
 
-        constexpr Color(unsigned int hex)
-            : r((hex & 0x00FF0000) >> 16), g((hex & 0x0000FF00) >> 8), b(hex & 0x000000FF), a((hex & 0xFF000000) >> 24)
-        {}
-
         constexpr Color(int hex)
             : r((hex & 0x00FF0000) >> 16), g((hex & 0x0000FF00) >> 8), b(hex & 0x000000FF), a(255)
         {}
@@ -41,9 +37,9 @@ namespace GuiCode
         bool operator==(const Color& other) const { return x == other.x && y == other.y && z == other.z && w == other.w; }
         bool operator!=(const Color& other) const { return x != other.x || y != other.y || z != other.z || w != other.w; }
 
-        union { float x = 0; float r; float h; };
-        union { float y = 0; float g; float s; };
-        union { float z = 0; float b; float v; };
+        union { float x = 0; float r; };
+        union { float y = 0; float g; };
+        union { float z = 0; float b; };
         union { float w = 0; float a; };
 
         Color Lerp(const Color& other, float percent) const

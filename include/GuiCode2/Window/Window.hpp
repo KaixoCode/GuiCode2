@@ -1,36 +1,55 @@
 #pragma once
-
-#ifdef WIN32
-#include "GuiCode2/Window/WindowsWindow.hpp"
-namespace GuiCode {
-	using Window = WindowsWindow;
-}
-#endif
+#include "GuiCode2/Components/Panel.hpp"
 
 namespace GuiCode
 {
-	class Gui
+	enum WindowState
+	{
+		Hide = 1, Show, Minimize, Maximize, Close
+	};
+
+	class WindowBase : public Component
 	{
 	public:
+		static inline WindowBase* CURRENT = nullptr;
+		static inline size_t WINDOW_ID_COUNTER = 0;
 
-		template<std::derived_from<WindowBase> T>
-		T& push_back(Pointer<T>&& window)
+		struct Settings
 		{
-			return m_Windows.emplace_back(std::forward<T>(window));
-		}
+			std::string name = "Window";
+			Dimensions dimensions{ 0, 0, 500, 500 };
+			bool alwaysOnTop = false;
+			bool transparentBuffer = false;
+			int state = Show;
+			bool resizeable = true;
+			bool decorated = true;
+			bool animations = true;
+			bool hideOnClose = false;
+		};
 
-		template<std::derived_from<WindowBase> T>
-		T& push_back(Pointer<T>& window)
+		WindowBase(const Settings& d)
+			: settings(d), id(WINDOW_ID_COUNTER++)
+		{}
+
+		virtual void Create() = 0;
+		virtual bool Loop() = 0;
+
+		struct CursorState
 		{
-			m_Windows.push_back(window);
-			return window;
-		}
+			int buttons = 0;
+			Vec2<float> position{ 0, 0 };
+			Vec2<float> pressed{ 0, 0 };
+		} cursor;
 
-		bool Loop();
-		void Close() { m_Running = false; }
+		int id;
+		std::unique_ptr<GraphicsBase> graphics;
+		Settings settings;
 
-	private:
-		bool m_Running = true;
-		std::vector<Pointer<WindowBase>> m_Windows;
+		Vec4<float> BoundingBox() const override { return { 0, 0, width, height }; }
+		virtual bool BorderHitbox(const Vec2<float>&) const { return false; }
 	};
 }
+
+#ifdef WIN32
+#include "GuiCode2/Window/WindowsWindow.hpp"
+#endif

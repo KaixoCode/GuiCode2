@@ -1,4 +1,4 @@
-#include "GuiCode2/Window/Window.hpp"
+#include "GuiCode2/Window/Gui.hpp"
 #include "GuiCode2/Window/Frame.hpp"
 #include "GuiCode2/Components/Menu.hpp"
 
@@ -7,11 +7,15 @@ using namespace GuiCode;
 int main() {
 	Gui _gui;
 
-	Pointer<Frame> _frame{ new Frame{ {
+	Window::Settings _settings{
 		.name = "Window"
-	} } };
+	};
 
-	MenuBarButton& _file = _frame->titlebar.menu.push_back(new MenuBarButton{ {
+	Frame& _frame = _gui.emplace<Frame>(_settings);
+	
+	_frame.Create();
+
+	MenuBarButton& _file = _frame.titlebar.menu.push_back(new MenuBarButton{ {
 		.name = "File",
 	} });
 
@@ -34,8 +38,6 @@ int main() {
 		.combo = Key::F11 | Mods::Control | Mods::Shift,
 		.name = "test4",
 	} });
-
-	_gui.push_back(_frame);
 
 	while (_gui.Loop()) {
 		MEASURE_FPS;

@@ -10,9 +10,9 @@ namespace GuiCode
 	{
 		auto& _panel = data.emplace_back(panel);
 		if (_panel->component)
-			me.components.push_back(*_panel->component);
+			me.components.push_back(_panel->component);
 		else
-			me.components.push_back(*_panel);
+			me.components.push_back(_panel);
 
 		return _panel;
 	}
@@ -30,9 +30,9 @@ namespace GuiCode
 			if (index == _index)
 			{
 				if ((*_it)->component)
-					GuiCode::remove(me.components, *((*_it)->component));
+					GuiCode::remove(me.components, (*_it)->component);
 				else
-					GuiCode::remove(me.components, *(*_it));
+					GuiCode::remove(me.components, (*_it));
 
 				data.erase(_it);
 				break;
@@ -44,7 +44,7 @@ namespace GuiCode
 	void Panel::Panels::remove(Panel& panel)
 	{
 		if (panel.component)
-			GuiCode::remove(me.components, *panel.component);
+			GuiCode::remove(me.components, panel.component);
 		else
 			GuiCode::remove(me.components, panel);
 
@@ -55,9 +55,9 @@ namespace GuiCode
 	{
 		for (auto& i : data)
 			if (i->component)
-				GuiCode::remove(me.components, *i->component);
+				GuiCode::remove(me.components, i->component);
 			else
-				GuiCode::remove(me.components, *i);
+				GuiCode::remove(me.components, i);
 
 		data.clear();
 	}

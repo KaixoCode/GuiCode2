@@ -60,29 +60,34 @@ namespace GuiCode
             : m_Data(new Object{ nullptr, 1, false })
         {}
 
-        template<typename Type> requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
-            Pointer(Type& c)
+        template<typename Type>
+        Pointer(Type& c) requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
             : m_Data(new Object{ dynamic_cast<T*>(&c), 1, false })
         {}
 
-        template<typename Type> requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
-            Pointer(Type* c)
+        template<typename Type> 
+        Pointer(Type* c) requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
             : m_Data(new Object{ dynamic_cast<T*>(c), 1, true })
         {}
 
-        template<typename Type> requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
-            Pointer(Pointer<Type>&& c)
+        template<typename Type> 
+        Pointer(Pointer<Type>&& c) requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
             : m_Data(reinterpret_cast<Object*>(c.m_Data))
         {
             c.Invalidate();
         }
 
-        template<typename Type> requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
-            Pointer(const Pointer<Type>& c)
+        template<typename Type> 
+        Pointer(const Pointer<Type>& c) requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
             : m_Data(reinterpret_cast<Object*>(c.m_Data))
         {
             c.m_Data->refs++;
         }
+
+        template<typename ...Args>
+        Pointer(Args&&... args) requires std::constructible_from<T, Args...>
+            : m_Data(new Object{ new T{ std::forward<Args>(args)... }, 1, true })
+        {}
 
         Pointer(Pointer&& c)
             : m_Data(c.m_Data)
@@ -114,8 +119,8 @@ namespace GuiCode
             return *this;
         }
 
-        template<typename Type> requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
-            Pointer& operator=(Pointer<Type>&& c)
+        template<typename Type>
+        Pointer& operator=(Pointer<Type>&& c) requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
         {
             if (m_Data)
             {
@@ -150,10 +155,10 @@ namespace GuiCode
         operator const Type* () const { return dynamic_cast<Type*>(m_Data->data); }
 
         template<std::derived_from<T> Type>
-        Type& Get() { return *dynamic_cast<Type*>(m_Data->data); }
+        Type* Get() { return dynamic_cast<Type*>(m_Data->data); }
 
         template<std::derived_from<T> Type>
-        const Type& Get() const { return *dynamic_cast<Type*>(m_Data->data); }
+        const Type* Get() const { return dynamic_cast<Type*>(m_Data->data); }
 
         operator T& () { return *m_Data->data; }
         operator const T& () const { return *m_Data->data; }
@@ -164,8 +169,14 @@ namespace GuiCode
         operator bool() { return m_Data && m_Data->data; }
         operator bool() const { return m_Data && m_Data->data; }
 
-        bool operator==(const Pointer& other) const { return other.m_Data->data == m_Data->data; }
-        bool operator==(T* other) const { return other == m_Data->data; }
+        template<typename Type> requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
+        bool operator==(const Pointer<Type>& other) const { return other.m_Data->data == m_Data->data; }
+
+        template<typename Type> requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
+        bool operator==(Type* other) const { return other == m_Data->data; }
+
+        template<typename Type> requires (std::derived_from<Type, T> || std::derived_from<T, Type>)
+        bool operator==(Type& other) const { return &other == m_Data->data; }
 
         ~Pointer()
         {

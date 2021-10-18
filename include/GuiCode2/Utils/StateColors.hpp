@@ -28,29 +28,12 @@ namespace GuiCode
 		StateColors& operator=(const StateColors& other);
 		StateColors& operator=(StateColors&& other);
 
-		/**
-		 * Link it to a component.
-		 * @param link component
-		 */
 		void Link(Component* link) { m_Link = link; }
-
-		/**
-		 * Clears all color apart from the base color.
-		 */
 		void Clear();
 
 		Color& State(GuiCode::State state);
-
-		/**
-		 * Remove a state.
-		 * @param state state
-		 */
 		void Remove(GuiCode::State state);
 
-		/**
-		 * Get the current color based on state of the Component.
-		 * @return color
-		 */
 		Color Current() const;
 
 		Color base{ 0, 0, 0, 0 }; // Base color, when no state is present
