@@ -566,7 +566,7 @@ namespace GuiCode
 
 	void TextDisplayer::Cut() 
 	{
-		Clipboard::Get().Copy(std::string(container.SelectionString()));
+		Clipboard::Copy(std::string(container.SelectionString()));
 		if (!container.editable)
 			return;
 
@@ -576,7 +576,7 @@ namespace GuiCode
 
 	void TextDisplayer::Copy() 
 	{
-		Clipboard::Get().Copy(std::string(container.SelectionString()));
+		Clipboard::Copy(std::string(container.SelectionString()));
 	}
 
 	void TextDisplayer::Paste() 
@@ -584,7 +584,7 @@ namespace GuiCode
 		if (!container.editable)
 			return;
 
-		container.Insert(Clipboard::Get().Paste());
+		container.Insert(Clipboard::Paste());
 		RecalculateLines();
 	}
 
