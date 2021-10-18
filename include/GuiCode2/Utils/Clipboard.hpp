@@ -7,13 +7,7 @@ namespace GuiCode
 	class Clipboard
 	{
 	public:
-		static inline Clipboard& Get()
-		{
-			static Clipboard instance;
-			return instance;
-		}
-
-		void Copy(const std::string& data)
+		static inline void Copy(const std::string& data)
 		{
 			if (!OpenClipboard(nullptr))
 				return;
@@ -44,7 +38,7 @@ namespace GuiCode
 			CloseClipboard();
 		}
 
-		std::string Paste()
+		static inline std::string Paste()
 		{
 
 			if (!IsClipboardFormatAvailable(CF_TEXT))
