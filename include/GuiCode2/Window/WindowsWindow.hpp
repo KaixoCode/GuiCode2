@@ -15,6 +15,8 @@ namespace GuiCode
         void Create();
         bool Loop() override;
 
+        void Aero(bool b);
+
         HWND GetWin32Handle() const { return !m_Window ? nullptr : glfwGetWin32Window(m_Window); }
 
     private:

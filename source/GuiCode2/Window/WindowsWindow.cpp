@@ -268,6 +268,32 @@ namespace GuiCode
         }
     }
 
+    void Window::Aero(bool b)
+    {
+        const HINSTANCE _hModule = LoadLibrary(TEXT("user32.dll"));
+        if (_hModule)
+        {
+            struct ACCENTPOLICY
+            {
+                int nAccentState; int nFlags; int nColor; int nAnimationId;
+            };
+            struct WINCOMPATTRDATA
+            {
+                int nAttribute; PVOID pData; ULONG ulDataSize;
+            };
+            typedef BOOL(WINAPI* pSetWindowCompositionAttribute)(HWND, WINCOMPATTRDATA*);
+            const pSetWindowCompositionAttribute SetWindowCompositionAttribute = (pSetWindowCompositionAttribute)GetProcAddress(_hModule, "SetWindowCompositionAttribute");
+
+            if (SetWindowCompositionAttribute)
+            {
+                ACCENTPOLICY policy = { b ? 3 : 0, 0, 0, 0 }; // ACCENT_ENABLE_BLURBEHIND=3...
+                WINCOMPATTRDATA data = { 19, &policy, sizeof(ACCENTPOLICY) }; // WCA_ACCENT_POLICY=19
+                SetWindowCompositionAttribute(GetWin32Handle(), &data);
+            }
+
+            FreeLibrary(_hModule);
+        }
+    }
 
     // Hit test the frame for resizing and moving.
     LRESULT HitTestNCA(HWND hWnd, int x, int y, float scale)
