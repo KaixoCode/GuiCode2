@@ -17,7 +17,8 @@ namespace GuiCode
             LeftAlt = 0x10000000,
             RightAlt = 0x20000000,
             NumLock = 0x00080000,
-            CapsLock = 0x00100000
+            CapsLock = 0x00100000,
+            Windows = 0x8000000
         };
     };
 

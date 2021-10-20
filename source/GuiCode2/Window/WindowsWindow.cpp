@@ -62,7 +62,7 @@ namespace GuiCode
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, settings.transparentBuffer);
         glfwWindowHint(GLFW_DECORATED, settings.decorated);
         glfwWindowHint(GLFW_SAMPLES, 4);
-        glfwWindowHint(GLFW_VISIBLE, settings.state != 0);
+        glfwWindowHint(GLFW_VISIBLE, settings.state != Hide);
         glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
         glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
 
@@ -444,6 +444,11 @@ namespace GuiCode
 
         switch (uMsg)
         {
+        case WM_HOTKEY:
+        {
+            Hotkey::m_Hotkeys[wParam]();
+        }
+        break;
         case WM_KILLFOCUS:
         {
             if (auto _w = dynamic_cast<ContextFrame*>(_self))

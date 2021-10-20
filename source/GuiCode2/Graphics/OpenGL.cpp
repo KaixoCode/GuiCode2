@@ -10,6 +10,7 @@ namespace GuiCode
         CreateTriangleBuffers();
         CreateEllipseBuffers();
         CreateTextBuffers();
+        CreateTexturedQuadBuffers();
     }
 
     void OpenGL::Render()
@@ -26,23 +27,24 @@ namespace GuiCode
         {
             Command& a = _commands.front();
             switch (a.type) {
-            case Command::Fill:       this->Fill(a.color); break;
-            case Command::Quad:       this->Quad(FlipY(a.a), a.bs.a); break;
-            case Command::Line:       this->Line(FlipY2(a.a), a.bs.a); break;
-            case Command::Ellipse:    this->Ellipse(FlipY(a.a), a.b); break;
-            case Command::Triangle:   this->Triangle(FlipY(a.a), a.bs.a); break;
-            case Command::Text:       this->Text(a.view, a.b); break;
-            case Command::Font:       this->Font(a.view); break;
-            case Command::FontSize:   this->FontSize(a.as2.a); break;
-            case Command::TextAlign:  this->TextAlign(a.as3.a); break;
-            case Command::Clip:       this->Clip(FlipY(a.a)); break;
-            case Command::PushClip:   this->PushClip(); break;
-            case Command::PopClip:    this->PopClip(); break;
-            case Command::Viewport:   this->Viewport(a.a); break;
-            case Command::ClearClip:  this->ClearClip(); break;
-            case Command::Translate:  this->Translate(a.as.a); break;
-            case Command::PushMatrix: this->PushMatrix(); break;
-            case Command::PopMatrix:  this->PopMatrix(); break;
+            case Command::Fill:         this->Fill(a.color); break;
+            case Command::Quad:         this->Quad(FlipY(a.a), a.bs.a); break;
+            case Command::TexturedQuad: this->TexturedQuad(a.bs2.b, FlipY(a.a), a.bs2.a); break;
+            case Command::Line:         this->Line(FlipY2(a.a), a.bs.a); break;
+            case Command::Ellipse:      this->Ellipse(FlipY(a.a), a.b); break;
+            case Command::Triangle:     this->Triangle(FlipY(a.a), a.bs.a); break;
+            case Command::Text:         this->Text(a.view, a.b); break;
+            case Command::Font:         this->Font(a.view); break;
+            case Command::FontSize:     this->FontSize(a.as2.a); break;
+            case Command::TextAlign:    this->TextAlign(a.as3.a); break;
+            case Command::Clip:         this->Clip(FlipY(a.a)); break;
+            case Command::PushClip:     this->PushClip(); break;
+            case Command::PopClip:      this->PopClip(); break;
+            case Command::Viewport:     this->Viewport(a.a); break;
+            case Command::ClearClip:    this->ClearClip(); break;
+            case Command::Translate:    this->Translate(a.as.a); break;
+            case Command::PushMatrix:   this->PushMatrix(); break;
+            case Command::PopMatrix:    this->PopMatrix(); break;
             }
             _commands.pop();
         }
@@ -113,6 +115,33 @@ namespace GuiCode
             std::floor(a.z / m_Scaling),
             std::floor(a.w / m_Scaling));
     }
+
+    Texture OpenGL::LoadTexture(const TextureData& data) 
+    {
+        Texture texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        //Load the image
+        int channels = 4;
+        unsigned char* _data = data.data;
+        if (_data) {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, data.width, data.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, _data);
+            glGenerateMipmap(GL_TEXTURE_2D);
+        }
+
+        return texture;
+    };
+
+    void OpenGL::FreeTexture(Texture)
+    {
+        // TODO
+    };
 
     void OpenGL::CreateLineBuffers()
     {
@@ -330,6 +359,128 @@ namespace GuiCode
         }
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+
+
+    void OpenGL::CreateTexturedQuadBuffers()
+    {
+        float _vertices[] = {
+            0.0f, 0.0f, 0.0f, 0.0f,
+            1.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 1.0f, 0.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+            0.0f, 1.0f, 0.0f, 1.0f
+        };
+
+        glGenVertexArrays(1, &textured.vao);
+        glGenBuffers(1, &textured.vbo);
+
+        glBindVertexArray(textured.vao);
+
+        glBindBuffer(GL_ARRAY_BUFFER, textured.vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(_vertices), _vertices, GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+        glEnableVertexAttribArray(1);
+    }
+
+    void OpenGL::TexturedQuad(Texture t, const glm::vec4& dim, float rotation)
+    {
+        static Shader _shader
+        {
+            // Vertex shader
+            "#version 450 core \n "
+            "layout(location = 0) in vec2 aPos; "
+            "layout(location = 1) in vec2 aTexCoord; "
+            "uniform mat4 mvp; "
+            "out vec2 texCoord; "
+            "void main() { "
+            "    gl_Position = mvp * vec4(aPos, 0.0, 1.0); "
+            "    texCoord = vec2(aTexCoord.x, aTexCoord.y); "
+            "}",
+
+            // Fragment shader
+            "#version 450 core \n "
+            "out vec4 FragColor; "
+            "uniform sampler2D theTexture; "
+            "in vec2 texCoord; "
+            "void main() { "
+            "    FragColor = texture(theTexture, texCoord).rgba; "
+            "} "
+
+        };
+        static GLint mvp = glGetUniformLocation(_shader.ID, "mvp");
+        static GLint texture = glGetUniformLocation(_shader.ID, "theTexture");
+        static Shader _shader2
+        {
+            // Vertex shader
+            "#version 450 core \n "
+            "layout(location = 0) in vec2 aPos; "
+            "layout(location = 1) in vec2 aTexCoord; "
+            "uniform vec4 dim; "
+            "out vec2 texCoord; "
+            "void main() { "
+            "    gl_Position = vec4(dim.x + aPos.x * dim.z, dim.y + aPos.y * dim.w, 0.0, 1.0); "
+            "    texCoord = vec2(aTexCoord.x, aTexCoord.y); "
+            "}",
+
+            // Fragment shader
+            "#version 450 core \n "
+            "out vec4 FragColor; "
+            "uniform sampler2D theTexture; "
+            "in vec2 texCoord; "
+            "void main() { "
+            "    FragColor = texture(theTexture, texCoord).rgba; "
+            "} "
+        };
+        static GLint dims2 = glGetUniformLocation(_shader2.ID, "dim");
+        static GLint texture2 = glGetUniformLocation(_shader2.ID, "theTexture");
+
+        if (rotation != 0)
+        {
+            if (m_PreviousShader != 8)
+            {
+                _shader.Use();
+                glBindVertexArray(textured.vao);
+            }
+            m_PreviousShader = 8;
+
+            glm::mat4 _model{ 1.0f };
+            _model = glm::translate(_model, glm::vec3{ dim.x, dim.y, 0 });
+            _model = glm::translate(_model, glm::vec3{ dim.z / 2, dim.w / 2, 0 });
+            _model = glm::rotate(_model, (float)glm::radians(rotation), glm::vec3{ 0, 0, 1 });
+            _model = glm::translate(_model, glm::vec3{ -dim.z / 2, -dim.w / 2, 0 });
+            _model = glm::scale(_model, glm::vec3{ dim.z, dim.w, 1 });
+            _shader.SetMat4(mvp, m_ViewProj * _model);
+            _shader.SetInt(texture, 1);
+        }
+        else
+        {
+            if (m_PreviousShader != 9)
+            {
+                _shader2.Use();
+                glBindVertexArray(textured.vao);
+            }
+            m_PreviousShader = 9;
+
+            glm::vec4 _dim;
+            _dim.x = (dim.x + m_Matrix[3].x) * m_Projection[0].x + m_Projection[3].x;
+            _dim.y = (dim.y + m_Matrix[3].y) * m_Projection[1].y + m_Projection[3].y;
+            _dim.z = dim.z * m_Projection[0].x;
+            _dim.w = dim.w * m_Projection[1].y;
+
+            _shader2.SetVec4(dims2, _dim);
+            _shader2.SetInt(texture2, 1);
+        }
+
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, t);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
 
     void OpenGL::CreateEllipseBuffers()

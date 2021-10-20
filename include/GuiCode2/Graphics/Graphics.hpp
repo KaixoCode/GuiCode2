@@ -7,6 +7,7 @@
 
 namespace GuiCode
 {
+    using Texture = uint32_t;
     struct Command
     {
         union
@@ -23,11 +24,12 @@ namespace GuiCode
         {
             Vec2<float> b;
             struct { float a; float b; } bs;
+            struct { float a; Texture b; } bs2;
         };
 
         const enum Type : char {
             Fill = 0, Clip, PushClip, PopClip, ClearClip, Translate, PushMatrix, PopMatrix, 
-            Viewport, Line, Quad, Ellipse, Triangle, Text, FontSize, Font, TextAlign, LineHeight, 
+            Viewport, Line, Quad, TexturedQuad, Ellipse, Triangle, Text, FontSize, Font, TextAlign, LineHeight, 
         } type;
     };
 
@@ -45,6 +47,7 @@ namespace GuiCode
         void Viewport(const Vec4<float>& a) { m_Commands.push(Command{.a = a, .type = Command::Viewport }); };
         void Line(const Vec4<float>& a, float thickness) { m_Commands.push(Command{.a = a, .bs = {.a = thickness }, .type = Command::Line }); };
         void Quad(const Vec4<float>& a, float b = 0) { m_Commands.push(Command{ .a = a, .bs = {.a = b }, .type = Command::Quad }); };
+        void TexturedQuad(Texture t, const Vec4<float>& a, float b = 0) { m_Commands.push(Command{ .a = a, .bs2 = {.a = b, .b = t }, .type = Command::TexturedQuad }); };
         void Ellipse(const Vec4<float>& a, const Vec2<float>& b = { 0, 0 }) { m_Commands.push(Command{ .a = a, .b = b, .type = Command::Ellipse }); };
         void Triangle(const Vec4<float>& a, float b = 0) { m_Commands.push(Command{ .a = a, .bs{.a = b }, .type = Command::Triangle }); };
         void Text(std::string_view str, const Vec2<float>& b) { m_Commands.push(Command{.view = str, .b = b, .type = Command::Text }); };
@@ -65,6 +68,13 @@ namespace GuiCode
     protected:
         static inline std::map<std::string, GuiCode::Font, std::less<>> m_Fonts;
     public:
+
+        struct TextureData {
+            uint8_t* data;
+            size_t width;
+            size_t height;
+        };
+
         static inline std::string DefaultFont = "segoeui";
         static void LoadFont(const std::string& path, const std::string& name);
         static bool LoadFont(const std::string& name);
@@ -73,6 +83,9 @@ namespace GuiCode
 
         virtual void Render() = 0;
         virtual void SetProjection(const glm::mat4& proj);
+
+        virtual Texture LoadTexture(const TextureData&) = 0;
+        virtual void FreeTexture(Texture) = 0;
 
         CommandCollection collection;
 
@@ -83,6 +96,7 @@ namespace GuiCode
         virtual void PopMatrix();
         virtual void Fill(const Color&) = 0;
         virtual void Quad(const glm::vec4&, float) = 0;
+        virtual void TexturedQuad(Texture, const glm::vec4&, float) = 0;
         virtual void Line(const glm::vec4&, float) = 0;
         virtual void Ellipse(const glm::vec4&, const glm::vec2&) = 0;
         virtual void Triangle(const glm::vec4&, float) = 0;

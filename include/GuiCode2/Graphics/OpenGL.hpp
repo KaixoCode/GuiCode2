@@ -16,6 +16,8 @@ namespace GuiCode
         void Fill(const Color&) override;
         void CreateQuadBuffers();
         void Quad(const glm::vec4&, float) override;
+        void CreateTexturedQuadBuffers();
+        void TexturedQuad(Texture, const glm::vec4&, float) override;
         void CreateLineBuffers();
         void Line(const glm::vec4&, float) override;
         void CreateEllipseBuffers();
@@ -34,6 +36,9 @@ namespace GuiCode
         void ClearClip() override;
         void Viewport(const glm::vec4&) override;
 
+        Texture LoadTexture(const TextureData&) override;
+        void FreeTexture(Texture) override;
+
         int m_PreviousShader = -1;
         Color m_Fill{ 1, 1, 1, 1 };
         float m_FontSize = 16;
@@ -43,6 +48,7 @@ namespace GuiCode
         GuiCode::Font* m_CurrentFont = nullptr;
 
         struct { unsigned int vao, vbo; } quad;
+        struct { unsigned int vao, vbo; } textured;
         struct { unsigned int vao, vbo; } line;
         struct { unsigned int vao, vbo; } ellipse;
         struct { unsigned int vao, vbo; } triangle;
