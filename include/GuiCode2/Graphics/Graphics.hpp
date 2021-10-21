@@ -23,8 +23,8 @@ namespace GuiCode
         union
         {
             Vec2<float> b;
-            struct { float a; float b; } bs;
-            struct { float a; Texture b; } bs2;
+            struct { float a; float b; bool c; } bs;
+            struct { float a; Texture b; bool c; } bs2;
         };
 
         const enum Type : char {
@@ -46,8 +46,8 @@ namespace GuiCode
         void PopMatrix() { m_Commands.push(Command{ .type = Command::PopMatrix }); };
         void Viewport(const Vec4<float>& a) { m_Commands.push(Command{.a = a, .type = Command::Viewport }); };
         void Line(const Vec4<float>& a, float thickness) { m_Commands.push(Command{.a = a, .bs = {.a = thickness }, .type = Command::Line }); };
-        void Quad(const Vec4<float>& a, float b = 0) { m_Commands.push(Command{ .a = a, .bs = {.a = b }, .type = Command::Quad }); };
-        void TexturedQuad(Texture t, const Vec4<float>& a, float b = 0) { m_Commands.push(Command{ .a = a, .bs2 = {.a = b, .b = t }, .type = Command::TexturedQuad }); };
+        void Quad(const Vec4<float>& a, float b = 0, bool c = false) { m_Commands.push(Command{ .a = a, .bs = {.a = b, .c = c}, .type = Command::Quad }); };
+        void TexturedQuad(Texture t, const Vec4<float>& a, float b = 0, bool c = false) { m_Commands.push(Command{ .a = a, .bs2 = {.a = b, .b = t, .c = c }, .type = Command::TexturedQuad }); };
         void Ellipse(const Vec4<float>& a, const Vec2<float>& b = { 0, 0 }) { m_Commands.push(Command{ .a = a, .b = b, .type = Command::Ellipse }); };
         void Triangle(const Vec4<float>& a, float b = 0) { m_Commands.push(Command{ .a = a, .bs{.a = b }, .type = Command::Triangle }); };
         void Text(std::string_view str, const Vec2<float>& b) { m_Commands.push(Command{.view = str, .b = b, .type = Command::Text }); };
@@ -95,8 +95,8 @@ namespace GuiCode
         virtual void PushMatrix();
         virtual void PopMatrix();
         virtual void Fill(const Color&) = 0;
-        virtual void Quad(const glm::vec4&, float) = 0;
-        virtual void TexturedQuad(Texture, const glm::vec4&, float) = 0;
+        virtual void Quad(const glm::vec4&, float, bool) = 0;
+        virtual void TexturedQuad(Texture, const glm::vec4&, float, bool) = 0;
         virtual void Line(const glm::vec4&, float) = 0;
         virtual void Ellipse(const glm::vec4&, const glm::vec2&) = 0;
         virtual void Triangle(const glm::vec4&, float) = 0;

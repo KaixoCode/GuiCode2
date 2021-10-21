@@ -28,8 +28,8 @@ namespace GuiCode
             Command& a = _commands.front();
             switch (a.type) {
             case Command::Fill:         this->Fill(a.color); break;
-            case Command::Quad:         this->Quad(FlipY(a.a), a.bs.a); break;
-            case Command::TexturedQuad: this->TexturedQuad(a.bs2.b, FlipY(a.a), a.bs2.a); break;
+            case Command::Quad:         this->Quad(FlipY(a.a), a.bs.a, a.bs.c); break;
+            case Command::TexturedQuad: this->TexturedQuad(a.bs2.b, FlipY(a.a), a.bs2.a, a.bs2.c); break;
             case Command::Line:         this->Line(FlipY2(a.a), a.bs.a); break;
             case Command::Ellipse:      this->Ellipse(FlipY(a.a), a.b); break;
             case Command::Triangle:     this->Triangle(FlipY(a.a), a.bs.a); break;
@@ -277,7 +277,7 @@ namespace GuiCode
         glEnableVertexAttribArray(0);
     }
 
-    void OpenGL::Quad(const glm::vec4& dim, float rotation)
+    void OpenGL::Quad(const glm::vec4& dim, float rotation, bool radius)
     {
         static Shader _shader
         {
@@ -303,25 +303,57 @@ namespace GuiCode
         static Shader _shader2
         {
             // Vertex shader
-            "#version 330 core \n "
-            "layout(location = 0) in vec2 aPos; "
-            "uniform vec4 dim; "
-            "void main() { "
-            "    gl_Position = vec4(dim.x + aPos.x * dim.z, dim.y + aPos.y * dim.w, 0.0, 1.0); "
-            "}",
+            R"~~(
+#version 450 core
+layout(location = 0) in vec2 aPos;
+uniform vec4 dim;
+out vec2 uv;
+void main() {
+    gl_Position = vec4(dim.x + aPos.x * dim.z, dim.y + aPos.y * dim.w, 0.0, 1.0);
+    uv = aPos;
+}
+            )~~",
 
             // Fragment shader
-            "#version 330 core \n "
-            "out vec4 FragColor; "
-            "uniform vec4 color; "
-            "void main() { "
-            "    FragColor = color; "
-            "} "
+            R"~~(
+#version 450 core
+out vec4 FragColor;
+uniform vec4 color;
+uniform float radius;
+in vec2 uv;
+
+float roundedFrame (float radius, float thickness)
+{
+    float res = 0;
+    if (length(uv - vec2(radius, radius)) < radius + thickness)
+        res = 1 - 10 * (length(uv - vec2(radius, radius)) - radius);
+
+    else if (length(uv - vec2(radius, 1 - radius)) < radius + thickness)
+        res = 1 - 10 * (length(uv - vec2(radius, 1 - radius)) - radius);
+
+    else if (length(uv - vec2(1 - radius, radius)) < radius + thickness)
+        res = 1 - 10 * (length(uv - vec2(1 - radius, radius)) - radius);
+
+    else if (length(uv - vec2(1 - radius, 1 - radius)) < radius + thickness)
+        res = 1 - 10 * (length(uv - vec2(1 - radius, 1 - radius)) - radius);
+
+    else if (uv.x > radius && uv.x < 1 - radius || uv.y > radius && uv.y < 1 - radius)
+        res = 1;
+
+    return max(min(res, 1), 0);
+}
+
+void main() {
+    
+    FragColor = vec4(color.rgb, color.a * roundedFrame(radius / 2, 0.01));
+}
+            )~~"
         };
         static GLint dims2 = glGetUniformLocation(_shader2.ID, "dim");
+        static GLint radius2 = glGetUniformLocation(_shader2.ID, "radius");
         static GLint color2 = glGetUniformLocation(_shader2.ID, "color");
 
-        if (rotation != 0)
+        if (!radius && rotation != 0)
         {
             if (m_PreviousShader != 6)
             {
@@ -355,6 +387,7 @@ namespace GuiCode
             _dim.w = dim.w * m_Projection[1].y;
 
             _shader2.SetVec4(dims2, _dim);
+            _shader2.SetFloat(radius2, rotation);
             _shader2.SetVec4(color2, m_Fill);
         }
 
@@ -388,59 +421,90 @@ namespace GuiCode
         glEnableVertexAttribArray(1);
     }
 
-    void OpenGL::TexturedQuad(Texture t, const glm::vec4& dim, float rotation)
+    void OpenGL::TexturedQuad(Texture t, const glm::vec4& dim, float rotation, bool radius)
     {
         static Shader _shader
         {
             // Vertex shader
-            "#version 450 core \n "
-            "layout(location = 0) in vec2 aPos; "
-            "layout(location = 1) in vec2 aTexCoord; "
-            "uniform mat4 mvp; "
-            "out vec2 texCoord; "
-            "void main() { "
-            "    gl_Position = mvp * vec4(aPos, 0.0, 1.0); "
-            "    texCoord = vec2(aTexCoord.x, aTexCoord.y); "
-            "}",
+            R"~~(
+#version 450 core
+layout(location = 0) in vec2 aPos;
+layout(location = 1) in vec2 aTexCoord;
+uniform mat4 mvp;
+out vec2 texCoord;
+void main() {
+    gl_Position = mvp * vec4(aPos, 0.0, 1.0);
+    texCoord = vec2(aTexCoord.x, aTexCoord.y);
+}
+            )~~",
 
             // Fragment shader
-            "#version 450 core \n "
-            "out vec4 FragColor; "
-            "uniform sampler2D theTexture; "
-            "in vec2 texCoord; "
-            "void main() { "
-            "    FragColor = texture(theTexture, texCoord).rgba; "
-            "} "
-
+            R"~~(
+#version 450 core
+out vec4 FragColor;
+uniform sampler2D theTexture;
+in vec2 texCoord;
+void main() {
+    FragColor = texture(theTexture, texCoord).rgba;
+}
+            )~~"
         };
         static GLint mvp = glGetUniformLocation(_shader.ID, "mvp");
         static GLint texture = glGetUniformLocation(_shader.ID, "theTexture");
         static Shader _shader2
         {
             // Vertex shader
-            "#version 450 core \n "
-            "layout(location = 0) in vec2 aPos; "
-            "layout(location = 1) in vec2 aTexCoord; "
-            "uniform vec4 dim; "
-            "out vec2 texCoord; "
-            "void main() { "
-            "    gl_Position = vec4(dim.x + aPos.x * dim.z, dim.y + aPos.y * dim.w, 0.0, 1.0); "
-            "    texCoord = vec2(aTexCoord.x, aTexCoord.y); "
-            "}",
+            R"~~(
+#version 450 core
+layout(location = 0) in vec2 aPos;
+layout(location = 1) in vec2 aTexCoord;
+uniform vec4 dim;
+out vec2 texCoord;
+void main() {
+    gl_Position = vec4(dim.x + aPos.x * dim.z, dim.y + aPos.y * dim.w, 0.0, 1.0);
+    texCoord = vec2(aTexCoord.x, aTexCoord.y);
+}
+            )~~",
 
             // Fragment shader
-            "#version 450 core \n "
-            "out vec4 FragColor; "
-            "uniform sampler2D theTexture; "
-            "in vec2 texCoord; "
-            "void main() { "
-            "    FragColor = texture(theTexture, texCoord).rgba; "
-            "} "
+            R"~~(
+#version 450 core
+out vec4 FragColor;
+uniform sampler2D theTexture;
+uniform float radius;
+in vec2 texCoord;
+
+float roundedFrame (float radius, float thickness)
+{
+    if (length(texCoord - vec2(radius, radius)) < radius + thickness)
+        return 1 - 5 * (length(texCoord - vec2(radius, radius)) - radius);
+
+    if (length(texCoord - vec2(radius, 1 - radius)) < radius + thickness)
+        return 1 - 5 * (length(texCoord - vec2(radius, 1 - radius)) - radius);
+
+    if (length(texCoord - vec2(1 - radius, radius)) < radius + thickness)
+        return 1 - 5 * (length(texCoord - vec2(1 - radius, radius)) - radius);
+
+    if (length(texCoord - vec2(1 - radius, 1 - radius)) < radius + thickness)
+        return 1 - 5 * (length(texCoord - vec2(1 - radius, 1 - radius)) - radius);
+
+    if (texCoord.x > radius && texCoord.x < 1 - radius || texCoord.y > radius && texCoord.y < 1 - radius)
+        return 1;
+
+    return 0;
+}
+
+void main() {
+    vec4 clr = texture(theTexture, texCoord).rgba;
+    FragColor = vec4(clr.rgb, clr.a * roundedFrame(radius, 0.01));
+}
+            )~~"
         };
         static GLint dims2 = glGetUniformLocation(_shader2.ID, "dim");
+        static GLint radius2 = glGetUniformLocation(_shader2.ID, "radius");
         static GLint texture2 = glGetUniformLocation(_shader2.ID, "theTexture");
 
-        if (rotation != 0)
+        if (!radius && rotation != 0)
         {
             if (m_PreviousShader != 8)
             {
@@ -474,6 +538,7 @@ namespace GuiCode
             _dim.w = dim.w * m_Projection[1].y;
 
             _shader2.SetVec4(dims2, _dim);
+            _shader2.SetFloat(radius2, rotation);
             _shader2.SetInt(texture2, 1);
         }
 
