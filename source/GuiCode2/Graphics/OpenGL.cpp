@@ -312,7 +312,6 @@ out vec2 uv;
 out vec2 size;
 void main() {
     gl_Position = vec4(dim.x + aPos.x * dim.z, dim.y + aPos.y * dim.w, 0.0, 1.0);
-    //uv = vec2(aPos.x, aPos.y);
     uv = vec2(aPos.x * rdim.z, aPos.y * rdim.w);
     size = vec2(rdim.z, rdim.w);
 }
@@ -323,9 +322,9 @@ void main() {
 #version 450 core
 out vec4 FragColor;
 uniform vec4 color;
-in vec2 size;
 uniform float radius;
 in vec2 uv;
+in vec2 size;
 
 float roundedFrame (float r, float thickness)
 {
@@ -344,14 +343,13 @@ float roundedFrame (float r, float thickness)
 
     else if (length(uv - vec2(size.x - r, size.y - r)) < r + thickness)
         res = 1 - (length(uv - vec2(size.x - r, size.y - r)) - r);
-
     
     return max(min(res, 1), 0);
 }
 
 void main() {
     
-    FragColor = vec4(color.rgb, color.a * roundedFrame(radius * min(size.x, size.y), 2));
+    FragColor = vec4(color.rgb, color.a * roundedFrame(radius, 2));
 }
             )~~"
         };
@@ -467,10 +465,15 @@ void main() {
 layout(location = 0) in vec2 aPos;
 layout(location = 1) in vec2 aTexCoord;
 uniform vec4 dim;
+uniform vec4 rdim;
 out vec2 texCoord;
+out vec2 uv;
+out vec2 size;
 void main() {
     gl_Position = vec4(dim.x + aPos.x * dim.z, dim.y + aPos.y * dim.w, 0.0, 1.0);
     texCoord = vec2(aTexCoord.x, aTexCoord.y);
+    uv = vec2(aPos.x * rdim.z, aPos.y * rdim.w);
+    size = vec2(rdim.z, rdim.w);
 }
             )~~",
 
@@ -481,34 +484,38 @@ out vec4 FragColor;
 uniform sampler2D theTexture;
 uniform float radius;
 in vec2 texCoord;
+in vec2 uv;
+in vec2 size;
 
-float roundedFrame (float radius, float thickness)
+float roundedFrame (float r, float thickness)
 {
-    if (length(texCoord - vec2(radius, radius)) < radius + thickness)
-        return 1 - 5 * (length(texCoord - vec2(radius, radius)) - radius);
+    float res = 0;
+    if (uv.x > r && uv.x < size.x - r
+          || uv.y > r && uv.y < size.y - r)
+        res = 1;
+    else if (length(uv - vec2(r, r)) < r + thickness)
+        res = 1 - (length(uv - vec2(r, r)) - r);
 
-    if (length(texCoord - vec2(radius, 1 - radius)) < radius + thickness)
-        return 1 - 5 * (length(texCoord - vec2(radius, 1 - radius)) - radius);
+    else if (length(uv - vec2(r, size.y - r)) < r + thickness)
+        res = 1 - (length(uv - vec2(r, size.y - r)) - r);
 
-    if (length(texCoord - vec2(1 - radius, radius)) < radius + thickness)
-        return 1 - 5 * (length(texCoord - vec2(1 - radius, radius)) - radius);
+    else if (length(uv - vec2(size.x - r, r)) < r + thickness)
+        res = 1 - (length(uv - vec2(size.x - r, r)) - r);
 
-    if (length(texCoord - vec2(1 - radius, 1 - radius)) < radius + thickness)
-        return 1 - 5 * (length(texCoord - vec2(1 - radius, 1 - radius)) - radius);
-
-    if (texCoord.x > radius && texCoord.x < 1 - radius || texCoord.y > radius && texCoord.y < 1 - radius)
-        return 1;
-
-    return 0;
+    else if (length(uv - vec2(size.x - r, size.y - r)) < r + thickness)
+        res = 1 - (length(uv - vec2(size.x - r, size.y - r)) - r);
+    
+    return max(min(res, 1), 0);
 }
 
 void main() {
     vec4 clr = texture(theTexture, texCoord).rgba;
-    FragColor = vec4(clr.rgb, clr.a * roundedFrame(radius, 0.01));
+    FragColor = vec4(clr.rgb, clr.a * roundedFrame(radius, 2));
 }
             )~~"
         };
         static GLint dims2 = glGetUniformLocation(_shader2.ID, "dim");
+        static GLint rdims2 = glGetUniformLocation(_shader2.ID, "rdim");
         static GLint radius2 = glGetUniformLocation(_shader2.ID, "radius");
         static GLint texture2 = glGetUniformLocation(_shader2.ID, "theTexture");
 
@@ -546,6 +553,7 @@ void main() {
             _dim.w = dim.w * m_Projection[1].y;
 
             _shader2.SetVec4(dims2, _dim);
+            _shader2.SetVec4(rdims2, dim);
             _shader2.SetFloat(radius2, rotation);
             _shader2.SetInt(texture2, 1);
         }
