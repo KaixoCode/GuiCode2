@@ -15,9 +15,9 @@ namespace GuiCode
 
         void Fill(const Color&) override;
         void CreateQuadBuffers();
-        void Quad(const glm::vec4&, float, bool) override;
+        void Quad(const glm::vec4&, float, int) override;
         void CreateTexturedQuadBuffers();
-        void TexturedQuad(Texture, const glm::vec4&, float, bool) override;
+        void TexturedQuad(Texture, const glm::vec4&, float, int) override;
         void CreateLineBuffers();
         void Line(const glm::vec4&, float) override;
         void CreateEllipseBuffers();
