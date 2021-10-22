@@ -30,6 +30,8 @@ namespace GuiCode
 
 			Character& Char(char c)
 			{
+				if (c < 0)
+					return m_CharMap[0];
 				return m_CharMap[c];
 			}
 
