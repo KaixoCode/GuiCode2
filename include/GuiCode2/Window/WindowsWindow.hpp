@@ -23,6 +23,7 @@ namespace GuiCode
         std::queue<std::unique_ptr<Event>> m_EventQueue;
         GLFWwindow* m_Window = nullptr;
         
+        bool m_Aero = false;
         bool m_InitialResize = true;
         Dimensions m_PrevDims{ 0, 0, 0, 0 };
         int m_PrevVisibility = 0;

@@ -270,6 +270,9 @@ namespace GuiCode
 
     void Window::Aero(bool b)
     {
+        if (m_Aero == b)
+            return;
+        m_Aero = b;
         const HINSTANCE _hModule = LoadLibrary(TEXT("user32.dll"));
         if (_hModule)
         {

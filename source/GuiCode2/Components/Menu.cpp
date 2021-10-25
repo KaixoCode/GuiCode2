@@ -53,8 +53,8 @@ namespace GuiCode
 
 		if (vertical)
 		{
-			Component::min.width = _min + (scrollbar.y.Necessary() ? scrollbar.y.width : 0) + padding.left + padding.right;
-			Component::min.height = 39 + padding.top + padding.bottom + (scrollbar.x.Necessary() ? scrollbar.x.height : 0);
+			settings.min.width = _min + (scrollbar.y.Necessary() ? scrollbar.y.width : 0) + padding.left + padding.right;
+			settings.min.height = 39 + padding.top + padding.bottom + (scrollbar.x.Necessary() ? scrollbar.x.height : 0);
 		}
 		ConstrainSize();
 	}

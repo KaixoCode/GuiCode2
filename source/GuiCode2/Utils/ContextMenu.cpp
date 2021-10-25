@@ -3,7 +3,7 @@
 namespace GuiCode
 {
 	ContextFrame::ContextFrame()
-		: Window(Window::Settings{ .alwaysOnTop = true, .state = Hide, .resizeable = false, .decorated = false, .animations = false })
+		: Window(Window::Settings{ .alwaysOnTop = true, .transparentBuffer = true, .state = Hide, .resizeable = false, .decorated = false, .animations = false })
 	{
 		listener += [this](const MouseRelease& e)
 		{

@@ -35,7 +35,6 @@ namespace GuiCode
 		static void Close(const Pointer<Component>& c);
 		static void Loop();
 
-	private:
 		static inline std::list<ContextFrame> m_WindowPool;
 
 		friend class Window;

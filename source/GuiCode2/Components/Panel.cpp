@@ -796,6 +796,8 @@ namespace GuiCode
 			min.width = component->min.width;
 		else if (settings.min.width == Auto)
 			min.width = _minSizes.width;
+		else if (settings.min.width == None)
+			min.width = None;
 
 		if (settings.min.height >= 0)
 			min.height = settings.min.height;
@@ -803,6 +805,8 @@ namespace GuiCode
 			min.height = component->min.height;
 		else if (settings.min.height == Auto)
 			min.height = _minSizes.height;
+		else if (settings.min.height == None)
+			min.height = None;
 
 		if (settings.max.width >= 0)
 			max.width = settings.max.width;
@@ -810,6 +814,8 @@ namespace GuiCode
 			max.width = component->max.width;
 		else if (settings.max.width == Auto)
 			max.width = _maxSizes.width;
+		else if (settings.max.width == None)
+			max.width = None;
 
 		if (settings.max.height >= 0)
 			max.height = settings.max.height;
@@ -817,6 +823,8 @@ namespace GuiCode
 			max.height = component->max.height;
 		else if (settings.max.height == Auto)
 			max.height = _maxSizes.height;
+		else if (settings.max.height == None)
+			max.height = None;
 
 		if (min.width != -1 && width < min.width)
 			width = min.width;
