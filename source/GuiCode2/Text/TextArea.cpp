@@ -26,7 +26,7 @@ namespace GuiCode
 	{
 		panels.push_back(new Panel{ {.ratio = 0, .size{ Auto, Auto } }, displayer });
 		
-		listener += [this](const MousePress& e)
+		*this += [this](const MousePress& e)
 		{
 			ContextMenu::Close(m_Menu);
 
@@ -38,7 +38,7 @@ namespace GuiCode
 			m_Dragging = true;
 		};
 
-		listener += [this](const MouseRelease& e)
+		*this += [this](const MouseRelease& e)
 		{
 			if (e.button == MouseButton::Left)
 				m_Dragging = false;
@@ -50,31 +50,31 @@ namespace GuiCode
 			}
 		};
 
-		listener += [this](const MouseDrag& e)
+		*this += [this](const MouseDrag& e)
 		{
 			m_Mouse = e.pos - position;
 		};
 
-		listener += [this](const KeyPress& e)
+		*this += [this](const KeyPress& e)
 		{
 			if (e.Handled())
 				m_Update = 2;
 		};
 
-		listener += [this](const KeyType& e)
+		*this += [this](const KeyType& e)
 		{
 			if (e.Handled())
 				m_Update = 2;
 		};
 
-		listener += [this](const Unfocus& e)
+		*this += [this](const Unfocus& e)
 		{
 			ContextMenu::Close(m_Menu);
 		};
 
-		m_Menu.push_back(m_Cut);
-		m_Menu.push_back(m_Copy);
-		m_Menu.push_back(m_Paste);
+		m_Menu.components.push_back(m_Cut);
+		m_Menu.components.push_back(m_Copy);
+		m_Menu.components.push_back(m_Paste);
 	}
 
 	void TextArea::Update() 

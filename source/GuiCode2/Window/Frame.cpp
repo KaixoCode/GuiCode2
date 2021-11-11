@@ -6,7 +6,7 @@ namespace GuiCode
 	Frame::Button::Button()
 		: color({ .link = this })
 	{
-		listener += [this](const MouseRelease& e)
+		*this += [this](const MouseRelease& e)
 		{
 			if (e.button & MouseButton::Left && Hitbox(e.pos))
 				callback();
@@ -26,8 +26,8 @@ namespace GuiCode
 		components.push_back(minimize);
 		components.push_back(maximize);
 		components.push_back(menu);
-		menu.border.width = 0;
-		menu.padding = { 0, 0, 0, 0 };
+		//menu.border.width = 0;
+		//menu.padding = { 0, 0, 0, 0 };
 	}
 
 	Frame::TitleBar& Frame::TitleBar::operator=(Frame::TitleBar&& other)
@@ -52,7 +52,7 @@ namespace GuiCode
 		minimize.dimensions = { x + width - 46 * 3, y, 46, 30 };
 		menu.height = height;
 		menu.position = { x + height + 12, y };
-		menu.State(Visible) = menu.Panel::panels.size() != 0;
+		menu.State(Visible) = menu.components.size() != 0;
 	}
 
 	void Frame::TitleBar::Render(CommandCollection& d) const

@@ -5,7 +5,7 @@ namespace GuiCode
 	ContextFrame::ContextFrame()
 		: Window(Window::Settings{ .alwaysOnTop = true, .transparentBuffer = true, .state = Hide, .resizeable = false, .decorated = false, .animations = false })
 	{
-		listener += [this](const MouseRelease& e)
+		*this += [this](const MouseRelease& e)
 		{
 			if (hideOnClick)
 				m_ShouldClose = true;
@@ -34,7 +34,7 @@ namespace GuiCode
 			if (_c.State(Focused))
 			{
 				_c.State(Focused) = false;
-				_c.listener(Unfocus{});
+				_c.HandleEvent(Unfocus{});
 			}
 			components.clear();
 		}
@@ -68,7 +68,7 @@ namespace GuiCode
 		if (!_c->State(Focused))
 		{
 			_c->State(Focused) = true;
-			_c->listener(Focus{});
+			_c->HandleEvent(Focus{});
 		}
 	}
 

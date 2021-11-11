@@ -4,18 +4,30 @@
 namespace GuiCode
 {
 	Component::Component()
-		: listener(components)
+	{
+		State(Visible) = true;
+		InitListeners();
+	}
+
+	Component::Component(const Component& other)
+		: EventListener(other), cursor(other.cursor)
 	{
 		State(Visible) = true;
 		InitListeners();
 	}
 
 	Component::Component(Component&& other)
-		: components(std::move(other.components)), cursor(std::move(other.cursor)), 
-		listener(components) 
+		: EventListener(std::move(other)), cursor(std::move(other.cursor))
 	{
 		State(Visible) = true;
 		InitListeners();
+	}
+
+	Component& Component::operator=(const Component& other)
+	{
+		components = other.components;
+		cursor = other.cursor;
+		return *this;
 	}
 
 	Component& Component::operator=(Component&& other)
@@ -31,38 +43,38 @@ namespace GuiCode
 		// if there is a change in state it will also send out the MouseEnter/MouseExit event
 		// accordingly. MouseEnter/MouseExit also update the state, which is crucial for 
 		// sub-components.
-		(listener.State({ .state = Hovering, .limit = 1 })
-			+= [this](const MouseMove& e, Component& c, int first) -> int
+		StateHandler({ .state = Hovering, .limit = 1 })
+			.Add([this](const MouseMove& e, Component& c, int first) -> int
 			{
 				bool prev = c.State(Hovering);
 				bool curr = c.Hitbox(e.pos) && first; // first == 1 if no other component Hovering.
 
-				if (!prev && curr) c.listener(MouseEnter{});
-				else if (prev && !curr) c.listener(MouseExit{});
+				if (!prev && curr) c.HandleEvent(MouseEnter{});
+				else if (prev && !curr) c.HandleEvent(MouseExit{});
 
 				return curr;
 			})
-			+= [](const MouseExit& e, Component& c, int) -> int { return false; };
+			.Add([](const MouseExit& e, Component& c, int) -> int { return false; });
 
 		// The focused state also has a limit of 1, and is triggered by a MousePress event
 		// If there is a state change it will also send out the Focus/Unfocus events accordingly.
-		(listener.State({.state = Focused, .limit = 1 })
-			+= [](const MousePress& e, Component& c, int first) -> int
+		StateHandler({.state = Focused, .limit = 1 })
+			.Add([](const MousePress& e, Component& c, int first) -> int
 			{
 				bool prev = c.State(Focused);
 				bool curr = c.State(Hovering) && first;
 
-				if (!prev && curr) c.listener(Focus{});
-				else if (prev && !curr) c.listener(Unfocus{});
+				if (!prev && curr) c.HandleEvent(Focus{});
+				else if (prev && !curr) c.HandleEvent(Unfocus{});
 
 				return curr;
 			})
-			+= [](const Unfocus& e, Component& c, int) -> int { return false; };
+			.Add([](const Unfocus& e, Component& c, int) -> int { return false; });
 
 		// Pressed also has limit of 1, and is handled simply by the MousePress and MouseRelease
-		(listener.State({.state = Pressed, .limit = 1 })
-			+= [](const MousePress& e, Component& c, int) -> int { return c.State(Hovering) ? c.State(Pressed) | e.button : 0; })
-			+= [](const MouseRelease& e, Component& c, int) -> int { return c.State(Pressed) & ~e.button; };
+		StateHandler({.state = Pressed, .limit = 1 })
+			.Add([](const MousePress& e, Component& c, int) -> int { return c.State(Hovering) ? c.State(Pressed) | e.button : 0; })
+			.Add([](const MouseRelease& e, Component& c, int) -> int { return c.State(Pressed) & ~e.button; });
 	}
 
 	Pointer<Component> Component::Get(GuiCode::State state)

@@ -42,7 +42,7 @@ namespace GuiCode
 				Color color{ 255, 255, 255, 255 };
 			} text;
 			std::string font = GraphicsBase::DefaultFont;
-			Menu menu{ false /* Not vertical menu */ };
+			Menu menu;
 
 			void Update() override;
 			void Render(CommandCollection& d) const override;

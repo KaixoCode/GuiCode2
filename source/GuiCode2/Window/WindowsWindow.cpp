@@ -225,7 +225,7 @@ namespace GuiCode
             // Go through the even queue
             while (!m_EventQueue.empty())
             {
-                listener(*m_EventQueue.front());
+                HandleEvent(*m_EventQueue.front());
 
                 // Check again if the eventqueue is empty, because some button somewhere
                 // might trigger a resize of the window, which will trigger this Window::Update

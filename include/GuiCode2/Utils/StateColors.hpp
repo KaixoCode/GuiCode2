@@ -24,7 +24,7 @@ namespace GuiCode
 
 		StateColors(const Settings& settings = {});
 		StateColors(const StateColors& other) { *this = other; }
-		StateColors(StateColors&& other) { *this = other; }
+		StateColors(StateColors&& other) { *this = std::move(other); }
 		StateColors& operator=(const StateColors& other);
 		StateColors& operator=(StateColors&& other);
 

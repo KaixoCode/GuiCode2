@@ -2,148 +2,88 @@
 
 namespace GuiCode
 {
-	Menu::Menu(bool vertical)
-		: vertical(vertical),
-		border(settings.border),
-		background(settings.background),
-		padding(settings.padding)
+	Menu::Menu(const Settings& s)
+		: settings(s)
 	{
-		Init();
-		background = { 26, 26, 26, 255 };
-		if (vertical)
-		{
-			padding = { 4, 4, 4, 4 };
-			border.width = 1;
-			border.color = { 64, 64, 64, 255 };
-		}
+		InitListeners();
 	}
 
-	Menu::Menu(Menu&& other)
-		: vertical(other.vertical),
-		border(settings.border),
-		background(settings.background),
-		padding(settings.padding)
+	Menu::Menu(const Menu& other)
+		: Component(other), settings(other.settings)
 	{
-		Init();
-		background = other.background;
-		padding = other.padding;
-		border = other.border;
+		InitListeners();
 	}
 
-	Menu& Menu::operator=(Menu&& other)
+	Menu::Menu(Menu&& other) 
+		: Component(std::move(other)), settings(std::move(other.settings))
 	{
-		vertical = other.vertical;
-		Panel::operator=(std::move(other));
-		return *this;
+		InitListeners();
 	}
 
-	void Menu::Clear()
+	void Menu::InitListeners()
 	{
-		panels.clear();
-	}
-
-	void Menu::Update()
-	{
-		float _min = 136;
-		for (auto& c : components)
-		{
-			if (c->min.width > _min)
-				_min = c->min.width;
-		}
-
-		if (vertical)
-		{
-			settings.min.width = _min + (scrollbar.y.Necessary() ? scrollbar.y.width : 0) + padding.left + padding.right;
-			settings.min.height = 39 + padding.top + padding.bottom + (scrollbar.x.Necessary() ? scrollbar.x.height : 0);
-		}
-		ConstrainSize();
-	}
-
-	bool Menu::Hitbox(const Vec2<float>& pos) const
-	{
-		if (Panel::Hitbox(pos))
-			return true;
-
-		// Make sure to include menu component hitboxes
-		for (auto& i : panels)
-			if (i->component->Hitbox(pos))
-				return true;
-
-		return false;
-	}
-
-	void Menu::Init()
-	{
-		settings.max.height = 500;
-		settings.max.width = 500;
-		settings.ratio = 1;
-		settings.layout = vertical ? Layout::Column : Layout::Row;
-		settings.overflow.x = vertical ? Overflow::Hide : Overflow::Scroll;
-		settings.overflow.y = vertical ? Overflow::Scroll : Overflow::Hide;
-		settings.size.width = vertical ? Inherit : Auto;
-		settings.size.height = vertical ? Auto : Inherit;
-		listener += [&](const KeyPress& e)
+		*this += [&](const KeyPress& e)
 		{
 			if (e.Handled() || !State(Focused))
 				return;
 
 			Component* _c = Get(Hovering);
-			if ((vertical && e.keycode == Key::Down) || (!vertical && e.keycode == Key::Right))
+			if ((settings.vertical && e.keycode == Key::Down) || (!settings.vertical && e.keycode == Key::Right))
 			{
 				if (_c && _c != this)
 				{
 					bool _found = false;
-					for (auto& i : panels)
+					for (auto& i : components)
 					{
-						if (_found && !i->component->State(Disabled))
+						if (_found && !i->State(Disabled))
 						{
 							_c->State(Hovering) = false;
-							_c->listener(MouseExit{});
-							i->component->State(Hovering) = true;
-							i->component->listener(MouseEnter{});
+							_c->HandleEvent(MouseExit{});
+							i->State(Hovering) = true;
+							i->HandleEvent(MouseEnter{});
 							e.Handle();
 							break;
 						}
 
-						if (i->component == _c)
+						if (i == _c)
 							_found = true;
 					}
 				}
 				else
 				{
-					(*panels.begin())->component->State(Hovering) = true;
-					(*panels.begin())->component->listener(MouseEnter{});
+					(*components.begin())->State(Hovering) = true;
+					(*components.begin())->HandleEvent(MouseEnter{});
 					e.Handle();
 				}
 			}
-			else if ((vertical && e.keycode == Key::Up) || (!vertical && e.keycode == Key::Left))
+			else if ((settings.vertical && e.keycode == Key::Up) || (!settings.vertical && e.keycode == Key::Left))
 			{
 				if (_c && _c != this)
 				{
 					Component* _prev = nullptr;
-					for (auto& i : panels)
+					for (auto& i : components)
 					{
-						if (i->component == _c)
+						if (i == _c)
 						{
 							if (_prev)
 							{
 								_c->State(Hovering) = false;
-								_c->listener(MouseExit{});
+								_c->HandleEvent(MouseExit{});
 								_prev->State(Hovering) = true;
-								_prev->listener(MouseEnter{});
+								_prev->HandleEvent(MouseEnter{});
 								e.Handle();
 							}
 							break;
 						}
 
-						if (!i->component->State(Disabled))
-							_prev = i->component;
+						if (!i->State(Disabled))
+							_prev = i;
 					}
 				}
 				else
 				{
-					(*(--panels.end()))->component->State(Hovering) = true;
-					(*(--panels.end()))->component->listener(MouseEnter{});
+					(*(--components.end()))->State(Hovering) = true;
+					(*(--components.end()))->HandleEvent(MouseEnter{});
 					e.Handle();
 				}
 			}
@@ -154,166 +94,84 @@ namespace GuiCode
 			}
 		};
 
-		listener += [&](const Unfocus& e)
+		*this += [&](const Unfocus& e)
 		{
 			Component* _c = Get(Hovering);
 			if (_c)
 			{
 				_c->State(Hovering) = false;
-				_c->listener(MouseExit{});
+				_c->HandleEvent(MouseExit{});
 			}
 		};
 	}
 
-	MenuButton::MenuButton(const Settings& settings)
-		: Button({ settings.group, settings.type, settings.callback, settings.combo })
+	void Menu::ForwardUpdate() 
 	{
-		this->settings = settings;
-		Init();
-	}
-
-	MenuButton::MenuButton(MenuButton&& other)
-		: Button({ other.settings.group, other.settings.type, other.settings.callback, other.settings.combo })
-	{
-		settings = other.settings;
-		Init();
-	}
-
-	MenuButton::MenuButton(const MenuButton& other)
-		: Button({ other.settings.group, other.settings.type, other.settings.callback, other.settings.combo })
-	{
-		settings = other.settings;
-		Init();
-	}
-
-	MenuButton& MenuButton::operator=(MenuButton&& other)
-	{
-		settings = std::move(other.settings);
-		Button::operator=(std::move(other));
-		return *this;
-	}
-
-	void MenuButton::Init()
-	{
-		height = 20;
-		settings.Link(this);
-	}
-
-	void MenuButton::Update()
-	{
-		// Set the minimum width of this menu button to fit all text.
-		float _minWidth = 0;
-		_minWidth += GraphicsBase::StringWidth(settings.name, settings.font, settings.text.size);
-		_minWidth += GraphicsBase::StringWidth(Button::settings.combo.ToString(), settings.font, settings.text.size);
-		_minWidth += height + 36;
-		min.width = _minWidth;
-	}
-
-	void MenuButton::Render(CommandCollection& d) const
-	{
-		d.Fill(settings.border.color.Current());
-		d.Quad(dimensions);
-
-		d.Fill(settings.color.Current());
-		d.Quad({ x + settings.border.width, y + settings.border.width, width - 2 * settings.border.width, height - 2 * settings.border.width });
-
-		if (State(Selected))
+		float _x = x + settings.margin.left;
+		float _y = y + settings.margin.top;
+		float _w = width - settings.margin.left - settings.margin.right;
+		float _h = height - settings.margin.top - settings.margin.bottom;
+		float _b = 0;
+		if (settings.vertical)
 		{
-			d.Fill(settings.select.Current());
-			d.Quad({ x + 3, y + 3, height - 6, height - 6 });
+			for (auto& i : components)
+			{
+				i->dimensions = { _x, _y, _w, i->height };
+				_y += i->height + settings.padding * 2;
+
+				if (i->width > _b)
+					_b = i->width;
+			}
+
+			height = _y + settings.margin.bottom;
+			width = _b;
+		}
+		else 
+		{
+			for (auto& i : components)
+			{
+				i->dimensions = { _x, _y, i->width, _h };
+				_x += i->width + settings.padding * 2;
+				if (i->height > _b)
+					_b = i->height;
+			}
+
+			width = _x + settings.margin.right;
+			height = _b;
 		}
 
-		d.Fill(settings.text.color.Current());
-		d.TextAlign(Align::Middle | Align::Left);
-		d.FontSize(settings.text.size);
-		d.Font(settings.font);
-		d.Text(settings.name, { x + height + 3, y + height / 2 });
-		if (Button::settings.combo)
-		{
-			d.TextAlign(Align::Middle | Align::Right);
-			d.Text(Button::settings.combo.ToString(), { x + width - 9, y + height / 2 });
-		}
+		Component::ForwardUpdate();
 	}
 
-	void SubMenuButton::Init()
+	bool Menu::Hitbox(const Vec2<float>& pos) const
 	{
-		Button::settings.type = Hover;
-		Button::settings.callback = [this](bool v)
-		{
-			if (v)
-				ContextMenu::Open(menu, { x + width, y });
+		if (Component::Hitbox(pos))
+			return true;
 
-			else
-				ContextMenu::Close(menu);
-		};
+		// Make sure to include menu component hitboxes
+		for (auto& i : components)
+			if (i->Hitbox(pos))
+				return true;
+
+		return false;
 	}
 
-	void SubMenuButton::Render(CommandCollection& d) const
-	{
-		d.Fill(settings.border.color.Current());
-		d.Quad(dimensions);
-
-		d.Fill(settings.color.Current());
-		d.Quad({ x + settings.border.width, y + settings.border.width, width - 2 * settings.border.width, height - 2 * settings.border.width });
-
-		d.Fill(settings.text.color.Current());
-		d.TextAlign(Align::Middle | Align::Left);
-		d.FontSize(settings.text.size);
-		d.Font(settings.font);
-		d.Text(settings.name, { x + height + 3, y + height / 2 });
-		d.Triangle({ x + width - 8, y + height / 2, 4, 8 }, 0.0f);
-	}
+	SubMenuButton::SubMenuButton(const Settings& settings)
+		: Button(Button::Settings{
+			.group = settings.group,
+			.type = Button::Hover,
+			.callback = [this](bool v) {
+				if (v) ContextMenu::Open(menu, { x + width, y });
+				else ContextMenu::Close(menu);
+			},
+			.combo = settings.combo,
+			.graphics = settings.graphics,
+		})
+	{}
 
 	bool SubMenuButton::Hitbox(const Vec2<float>& pos) const
 	{
-		return MenuButton::Hitbox(pos) || menu.Hitbox(pos - Vec2<float>{ x + width, y });
-	}
-
-	MenuBarButton& MenuBarButton::operator=(MenuBarButton&& other)
-	{
-		padding = std::move(other.padding);
-		menu = std::move(other.menu);
-		MenuButton::operator=(std::move(other));
-		return *this;
-	}
-
-	void MenuBarButton::Init()
-	{
-		Button::settings.type = Toggle;
-		Button::settings.callback = [this](bool v)
-		{
-			if (v)
-				ContextMenu::Open(menu, { x, y + height });
-
-			else
-				ContextMenu::Close(menu);
-		};
-
-		listener += [&](const Unfocus& e)
-		{
-			State(Selected) = false;
-			ContextMenu::Close(menu);
-		};
-	}
-
-	void MenuBarButton::Update()
-	{
-		width = GraphicsBase::StringWidth(settings.name, settings.font, settings.text.size) + settings.border.width * 2 + padding * 2;
-	}
-
-	void MenuBarButton::Render(CommandCollection& d) const
-	{
-		d.Fill(settings.border.color.Current());
-		d.Quad(dimensions);
-
-		d.Fill(settings.color.Current());
-		d.Quad({ x + settings.border.width, y + settings.border.width, width - 2 * settings.border.width, height - 2 * settings.border.width });
-
-		d.Fill(settings.text.color.Current());
-		d.TextAlign(Align::Center);
-		d.FontSize(settings.text.size);
-		d.Font(settings.font);
-		d.Text(settings.name, { x + width / 2, y + height / 2 });
+		return Button::Hitbox(pos) || menu.Hitbox(pos - Vec2<float>{ x + width, y });
 	}
 
 	Divider::Divider(const Settings& settings)

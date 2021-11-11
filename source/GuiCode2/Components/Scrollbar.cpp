@@ -6,7 +6,7 @@ namespace GuiCode
 	{
 		size = { 16, 16 }; // Base width/height is 16.
 
-		listener += [this](const MousePress& e)
+		*this += [this](const MousePress& e)
 		{
 			m_ValueWhenPressed = value; // pressed value
 
@@ -25,12 +25,12 @@ namespace GuiCode
 				m_IsDragging = true;
 		};
 
-		listener += [this](const MouseRelease& e)
+		*this += [this](const MouseRelease& e)
 		{
 			m_IsDragging = false;
 		};
 
-		listener += [this](const MouseDrag& e)
+		*this += [this](const MouseDrag& e)
 		{
 			// Only scroll when left mouse and dragging
 			if (!(e.buttons & MouseButton::Left) || !m_IsDragging)

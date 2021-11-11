@@ -2,7 +2,7 @@
 
 namespace GuiCode
 {
-	Panel::Panels::Panels(Panel& me, const std::list<Pointer<Panel>>& data)
+	Panel::Panels::Panels(Panel& me, const std::vector<Pointer<Panel>>& data)
 		: data(data), me(me)
 	{}
 
@@ -48,7 +48,7 @@ namespace GuiCode
 		else
 			GuiCode::remove(me.components, panel);
 
-		data.remove_if([&](Panel& a) { return &a == &panel; });
+		GuiCode::remove(data, panel);
 	}
 
 	void Panel::Panels::clear()
@@ -87,7 +87,7 @@ namespace GuiCode
 		Init();
 	}
 
-	Panel::Panel(const Settings& s, const std::list<Pointer<Panel>>& d)
+	Panel::Panel(const Settings& s, const std::vector<Pointer<Panel>>& d)
 		: settings(s),
 		panels(*this, d)
 	{
@@ -132,6 +132,8 @@ namespace GuiCode
 
 	void Panel::Init()
 	{
+		settings.border.Link(this);
+		settings.background.Link(this);
 		if (component)
 			components.push_back(*component);
 
@@ -147,7 +149,7 @@ namespace GuiCode
 		components.push_back(scrollbar.x);
 		components.push_back(scrollbar.y);
 		
-		listener += [this](const MouseWheel& e)
+		*this += [this](const MouseWheel& e)
 		{
 			// If mousewheel already handled by sub-component, don't scroll
 			if (e.Handled())
@@ -626,7 +628,7 @@ namespace GuiCode
 	void Panel::ForwardRender(CommandCollection& d)
 	{
 		d.PushClip();
-		d.Fill(settings.background);
+		d.Fill(settings.background.Current());
 		d.Quad(dimensions);
 
 		RenderBorder(d);
@@ -684,19 +686,19 @@ namespace GuiCode
 		_widths.right = settings.border.width;
 		_widths.bottom = settings.border.width;
 
-		_colors.left = settings.border.color;
-		_colors.top = settings.border.color;
-		_colors.right = settings.border.color;
-		_colors.bottom = settings.border.color;
+		_colors.left = settings.border.color.Current();
+		_colors.top = settings.border.color.Current();
+		_colors.right = settings.border.color.Current();
+		_colors.bottom = settings.border.color.Current();
 
 		if (settings.border.left.width > 0)
-			_widths.left = settings.border.left.width, _colors.left = settings.border.left.color;
+			_widths.left = settings.border.left.width, _colors.left = settings.border.left.color.Current();
 		if (settings.border.top.width > 0)
-			_widths.top = settings.border.top.width, _colors.top = settings.border.top.color;
+			_widths.top = settings.border.top.width, _colors.top = settings.border.top.color.Current();
 		if (settings.border.right.width > 0)
-			_widths.right = settings.border.right.width, _colors.right = settings.border.right.color;
+			_widths.right = settings.border.right.width, _colors.right = settings.border.right.color.Current();
 		if (settings.border.bottom.width > 0)
-			_widths.bottom = settings.border.bottom.width, _colors.bottom = settings.border.bottom.color;
+			_widths.bottom = settings.border.bottom.width, _colors.bottom = settings.border.bottom.color.Current();
 
 		if (_widths.left)
 		{

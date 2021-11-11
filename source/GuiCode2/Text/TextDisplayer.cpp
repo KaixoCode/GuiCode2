@@ -50,7 +50,7 @@ namespace GuiCode
 	{
 		cursor = Cursor::IBeam;
 
-		listener += [this](const KeyPress& e)
+		*this += [this](const KeyPress& e)
 		{
 			if (!State(Focused) || e.Handled())
 				return;
@@ -66,7 +66,7 @@ namespace GuiCode
 			RecalculateLines();
 		};
 
-		listener += [this](const KeyType& e)
+		*this += [this](const KeyType& e)
 		{
 			if (!State(Focused) || e.Handled())
 				return;
@@ -82,7 +82,7 @@ namespace GuiCode
 				KeyTypeActions(e), e.Handle();
 		};
 
-		listener += [this](const MouseClick& e)
+		*this += [this](const MouseClick& e)
 		{
 			if (e.button != MouseButton::Left || (e.mod & Mods::Shift))
 				return;
@@ -96,7 +96,7 @@ namespace GuiCode
 			m_Click = 20;
 		};
 
-		listener += [this](const MousePress& e)
+		*this += [this](const MousePress& e)
 		{
 			if (e.button != MouseButton::Left)
 				return;
@@ -114,7 +114,7 @@ namespace GuiCode
 			m_Dragging = true;
 		};
 
-		listener += [this](const MouseRelease& e)
+		*this += [this](const MouseRelease& e)
 		{
 			RecalculateLines();
 			if (e.button != MouseButton::Left)
@@ -123,7 +123,7 @@ namespace GuiCode
 			m_Dragging = false;
 		};
 
-		listener += [this](const MouseDrag& e)
+		*this += [this](const MouseDrag& e)
 		{
 			if (~e.buttons & MouseButton::Left)
 				return;
@@ -136,13 +136,13 @@ namespace GuiCode
 			}
 		};
 
-		listener += [this](const Unfocus& e)
+		*this += [this](const Unfocus& e)
 		{
 			container.selection = container.selection.start;
 			container.ConstrainSelection();
 		};
 
-		listener += [this](const Focus& e)
+		*this += [this](const Focus& e)
 		{
 			m_Timer = 60;
 			RecalculateLines();

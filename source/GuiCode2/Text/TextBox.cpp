@@ -28,40 +28,40 @@ namespace GuiCode
 		panels.push_back(new Panel{ {.ratio = 0, .size{ Auto, Auto } }, displayer });
 		cursor = Cursor::IBeam;
 
-		displayer.listener += [this](const KeyPress& e)
+		displayer += [this](const KeyPress& e)
 		{
 			if (e.keycode == Key::Enter)
 			{
 				State(Focused) = false;
-				listener(Unfocus{});
+				HandleEvent(Unfocus{});
 				e.Handle();
 			}
 		};
 
-		listener += [this](const MousePress& e)
+		*this += [this](const MousePress& e)
 		{
 			m_Mouse = e.pos - position;
 			UpdateScroll();
 			m_Dragging = true;
 		};
 
-		listener += [this](const MouseRelease& e)
+		*this += [this](const MouseRelease& e)
 		{
 			m_Dragging = false;
 		};
 
-		listener += [this](const MouseDrag& e)
+		*this += [this](const MouseDrag& e)
 		{
 			m_Mouse = e.pos - position;
 		};
 
-		listener += [this](const KeyPress& e)
+		*this += [this](const KeyPress& e)
 		{
 			if (e.Handled())
 				m_Update = 2;
 		};
 
-		listener += [this](const KeyType& e)
+		*this += [this](const KeyType& e)
 		{
 			if (e.Handled())
 				m_Update = 2;

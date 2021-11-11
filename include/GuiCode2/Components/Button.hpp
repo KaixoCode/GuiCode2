@@ -17,20 +17,32 @@ namespace GuiCode
 
 	public:
 		using Callback = Function<void(bool)>;
+
+		struct Graphics 
+		{
+			Button* button;
+			virtual void Render(CommandCollection&) const {};
+			virtual void Update() {};
+			virtual void Link(Button* button) {};
+		};
+
 		struct Group : public Pointer<GroupBase> 
 		{ 
 			Group(); 
+			Group(const Group&);
+			Group(Group&&);
 			Group& operator=(const Group& other);
+			Group& operator=(Group&& other);
 			
+			void Link(Button* button);
+			void Unlink(Button* button);
+
 		private:
 			Button* me = nullptr;
 			friend class Button; 
 		};
 
-		enum Type
-		{
-			Click, Toggle, Hover, Radio
-		};
+		enum Type { Click, Toggle, Hover, Radio };
 
 		struct Settings
 		{
@@ -38,84 +50,21 @@ namespace GuiCode
 			Type type = Click; // Button behaviour.
 			Callback callback; // Gets called whenever there is a change in state.
 			Key combo;         // When set, this key combo will trigger the button behaviour.
-		};
+			std::string name;  // Name of the button
+			Pointer<Graphics> graphics; // Graphics for this button
+		} settings;
 
 		Button(const Settings& settings = Settings{});
-		Button(Button&& other);
-		Button(const Button& other) = delete;
+		Button(const Button&);
+		Button(Button&&);
 		~Button();
-		Button& operator=(Button&& other);
-		Button& operator=(const Button&) = delete;
+		Button& operator=(const Button&);
+		Button& operator=(Button&&);
 
-		Settings settings;
-
-	private:
-		void Init();
-	};
-
-	class NormalButton : public Button
-	{
-	public:
-		struct Settings
-		{
-			Button::Group group;
-			Button::Type type = Click;
-			Button::Callback callback;
-			Key combo;
-
-			std::string name = "Button";
-
-			StateColors color{ {
-				.base{ 38, 38, 38, 0 },
-				.colors{
-					{ Disabled, { 0, 0, 0, 0 } },
-					{ Pressed, 0x414141 },
-					{ Hovering, 0x262626 },
-				},
-				.transition = 100
-			} };
-
-			struct Border
-			{
-				float width = 1;
-				StateColors color{ {
-					.base{ 118, 118, 118, 0 },
-					.colors{
-						{ Disabled, { 0, 0, 0, 0 } },
-						{ Pressed, 0x919191 },
-						{ Hovering, 0x767676 },
-					},
-					.transition = 100
-				} };
-			} border;
-
-			struct
-			{
-				float size = 12;
-				StateColors color{ {
-					.base = 0xE0E0E0,
-					.colors{
-						{ Disabled, 0xA0A0A0 }
-					}
-				} };
-			} text;
-
-			std::string font = GraphicsBase::DefaultFont;
-
-			void Link(Component* c) { color.Link(c), border.color.Link(c), text.color.Link(c); }
-		};
-
-		NormalButton(const Settings& settings = { });
-		NormalButton(NormalButton&& other);
-		NormalButton(const NormalButton& other);
-		NormalButton& operator=(NormalButton&& other);
-
-		void Update() override;
 		void Render(CommandCollection& d) const override;
-
-		Settings settings;
+		void Update() override;
 
 	private:
-		void Init();
+		void InitListeners();
 	};
 }

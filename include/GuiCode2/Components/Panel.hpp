@@ -32,15 +32,20 @@ namespace GuiCode
 		struct Side
 		{
 			float width = 0;
-			Color color;
+			StateColors color;
 		};
 
 		float width = 0;		   // Border can be picked
-		Color color;               // for individual sides
+		StateColors color;               // for individual sides
 		Side left; 				   // or for the entire border
 		Side right; 			   // at once. If side is specified
 		Side top; 				   // it will override width/color
 		Side bottom;			   // specified for entire border
+
+		void Link(Component* c) { 
+			color.Link(c), left.color.Link(c), right.color.Link(c), 
+				top.color.Link(c), bottom.color.Link(c); 
+		}
 	};
 
 	/**
@@ -93,12 +98,12 @@ namespace GuiCode
 			Vec2<float> min{ Inherit, Inherit };  // minimum size for this Panel
 			Vec2<float> max{ Inherit, Inherit };  // maximum size for this Panel
 			int align = Align::Top | Align::Left; // alignment of panel in area given by parent
-			Color background{ 0, 0, 0, 0 };	      // background color of panel
+			StateColors background{ {.base { 0, 0, 0, 0 } } };	// background color of panel
 		};
 
 		Panel();
 		Panel(const Settings& s);
-		Panel(const Settings& s, const std::list<Pointer<Panel>>& d);
+		Panel(const Settings& s, const std::vector<Pointer<Panel>>& d);
 		Panel(const Settings& s, const Pointer<Component>& c);
 		Panel(Panel&& other);
 		Panel(const Panel& other) = delete;
@@ -156,12 +161,12 @@ namespace GuiCode
 		Pointer<Component> component;
 		struct Panels
 		{
-			using iterator = std::list<Pointer<Panel>>::iterator;
+			using iterator = std::vector<Pointer<Panel>>::iterator;
 			using value_type = Pointer<Panel>;
 			using pointer = Panel*;
 			using reference = Panel&;
 
-			Panels(Panel& me, const std::list<Pointer<Panel>>& data = {});
+			Panels(Panel& me, const std::vector<Pointer<Panel>>& data = {});
 
 			Panel& push_back(const Pointer<Panel>& panel);
 			void pop_back();
@@ -178,7 +183,7 @@ namespace GuiCode
 
 		private:
 			Panel& me;
-			std::list<Pointer<Panel>> data;
+			std::vector<Pointer<Panel>> data;
 
 			friend class Panel;
 		} panels{ *this };
@@ -198,7 +203,7 @@ namespace GuiCode
 		Vec4<float>& margin = settings.margin;
 		Border& border = settings.border;
 		int& align = settings.align;
-		Color& background = settings.background;
+		StateColors& background = settings.background;
 
 	private:
 		Vec4<float> m_Viewport; // Actual dimensions of the used space in this panel (used by scrollbars)
