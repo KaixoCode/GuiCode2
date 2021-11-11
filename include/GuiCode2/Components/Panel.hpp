@@ -283,11 +283,11 @@ namespace GuiCode
 			enumMap["inherit"] = (int)Sizing::Inherit;
 			enumMap["left"] = (int)Align::Left;
 			enumMap["right"] = (int)Align::Right;
+			enumMap["center"] = (int)Align::Center;
 			enumMap["center-x"] = (int)Align::CenterX;
 			enumMap["top"] = (int)Align::Top;
 			enumMap["bottom"] = (int)Align::Bottom;
 			enumMap["center-y"] = (int)Align::CenterY;
-			enumMap["center"] = (int)Align::Center;
 			enumMap["text-top"] = (int)Align::TextTop;
 			enumMap["text-bottom"] = (int)Align::TextBottom;
 			enumMap["baseline"] = (int)Align::Baseline;

@@ -22,7 +22,7 @@ namespace GuiCode
 	{
 		int a = c.size();
 		for (auto& [name, val] : TagParser::enumMap)
-			if (c.find(name) == 0)
+			if (c.find(name) == 0 && (c.size() == name.size() || c.size() > name.size() && !(std::isalpha(c.at(name.size())) || c.at(name.size()) == '-' || c.at(name.size()) == '_')))
 			{
 				c = c.substr(name.size());
 				return { true, val };

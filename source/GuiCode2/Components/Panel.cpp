@@ -191,6 +191,16 @@ namespace GuiCode
 
 			component->x = x + settings.padding.left;
 			component->y = y + settings.padding.top;
+
+			if (settings.align & Align::CenterX)
+			{
+				component->x = x + width / 2 - component->width / 2;
+			}
+
+			if (settings.align & Align::CenterY)
+			{
+				component->y = y + height / 2 - component->height / 2;
+			}
 		}
 		else
 		{

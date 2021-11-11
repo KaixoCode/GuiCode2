@@ -84,11 +84,6 @@ namespace GuiCode
             c.m_Data->refs++;
         }
 
-        template<typename ...Args>
-        Pointer(Args&&... args) requires std::constructible_from<T, Args...>
-            : m_Data(new Object{ new T{ std::forward<Args>(args)... }, 1, true })
-        {}
-
         Pointer(Pointer&& c)
             : m_Data(c.m_Data)
         {

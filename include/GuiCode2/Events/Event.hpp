@@ -6,7 +6,8 @@
 
 namespace GuiCode
 {
-	enum State {
+	using State = uint64_t;
+	enum StateVals {
 		NoValue = 0,
 		Hovering,
 		Focused,
