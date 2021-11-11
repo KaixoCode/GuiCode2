@@ -4,29 +4,6 @@
 
 namespace GuiCode
 {
-	/**
-	 * Parsers
-	 */
-	struct TitleBarButtonParser : public TagParser
-	{
-		TitleBarButtonParser();
-		Pointer<Component> Create() override;
-	};
-
-	struct TitleBarParser : public TagParser
-	{
-		TitleBarParser();
-		Pointer<Component> Create() override;
-		void Append(Component& c, Pointer<Component>&& obj) override;
-	};
-
-	struct FrameParser : public ComponentParser
-	{
-		FrameParser();
-		Pointer<Component> Create() override;
-		void Append(Component& c, Pointer<Component>&& obj) override;
-	};
-
 	class Frame : public Window
 	{
 	public:

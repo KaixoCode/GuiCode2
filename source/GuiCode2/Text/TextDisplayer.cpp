@@ -683,30 +683,4 @@ namespace GuiCode
 	{
 		m_TypeX = IndexToPosition(container.selection.start).x;
 	}
-
-	/**
-	 * Parser
-	 */
-
-	TextDisplayerParser::TextDisplayerParser()
-	{
-		settings.name = "text-displayer";
-		Attribute("wrap", &TextDisplayer::wrap);
-		Attribute("align", &TextDisplayer::align);
-		Attribute("line-height", &TextDisplayer::lineHeight);
-		Attribute("font-size", &TextDisplayer::fontSize);
-		Attribute("font", &TextDisplayer::font);
-		Attribute("placeholder", &TextDisplayer::placeholder);
-		Attribute("text-color", &TextDisplayer::textColor);
-		Attribute("select-color", &TextDisplayer::selectColor);
-		Attribute("editable", &TextDisplayer::m_Editable);
-		Attribute("content", &TextDisplayer::m_Content);
-		enumMap["word"] = (int)Wrap::Word;
-		enumMap["character"] = (int)Wrap::Character;
-	}
-
-	Pointer<Component> TextDisplayerParser::Create()
-	{
-		return new TextDisplayer{};
-	}
 }

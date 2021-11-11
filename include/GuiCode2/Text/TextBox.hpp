@@ -5,12 +5,6 @@
 
 namespace GuiCode
 {
-	struct TextBoxParser : public PanelParser
-	{
-		TextBoxParser();
-		Pointer<Component> Create() override;
-	}; 
-
 	class TextBox : public Panel
 	{
 		using Panel::settings;
@@ -39,17 +33,5 @@ namespace GuiCode
 
 		void UpdateScroll();
 		void Init();
-
-		Ref<int> m_Align = displayer.align;
-		Ref<TextContainer> m_Container = displayer.container;
-		Ref<std::string> m_Font = displayer.font;
-		Ref<float> m_FontSize = displayer.fontSize;
-		Ref<std::string> m_Placeholder = displayer.placeholder;
-		Ref<Color> m_TextColor = displayer.textColor;
-		Ref<Color> m_SelectColor = displayer.selectColor;
-		Ref<bool> m_Editable = displayer.editable;
-		Ref<std::string> m_Content = displayer.content;
-
-		friend class TextBoxParser;
 	};
 }

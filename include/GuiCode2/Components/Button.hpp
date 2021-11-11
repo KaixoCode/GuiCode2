@@ -2,13 +2,11 @@
 #include "GuiCode2/Components/Component.hpp"
 #include "GuiCode2/Events/BasicEvents.hpp"
 #include "GuiCode2/Events/Key.hpp"
-#include "GuiCode2/Parser.hpp"
 #include "GuiCode2/Utils/StateColors.hpp"
 #include "GuiCode2/Utils/Utils.hpp"
 
 namespace GuiCode
 {
-	class ButtonParser;
 	class Button : public Component
 	{
 		struct GroupBase
@@ -52,13 +50,7 @@ namespace GuiCode
 		Settings settings;
 
 	private:
-		Ref<Group> m_Group = settings.group;
-		Ref<Type> m_Type = settings.type;
-		Ref<Callback> m_Callback = settings.callback;
-		Ref<Key> m_Combo = settings.combo;
-
 		void Init();
-		friend class ButtonParser;
 	};
 
 	class NormalButton : public Button
@@ -125,31 +117,5 @@ namespace GuiCode
 
 	private:
 		void Init();
-
-		Ref<std::string> m_Name = settings.name;
-		Ref<StateColors> m_Color = settings.color;
-		Ref<Settings::Border> m_Border = settings.border;
-		Ref<float> m_BorderWidth = settings.border.width;
-		Ref<StateColors> m_BorderColor = settings.border.color;
-		Ref<float> m_TextSize = settings.text.size;
-		Ref<StateColors> m_TextColor = settings.text.color;
-		Ref<std::string> m_Font = settings.font;
-		friend class NormalButtonParser;
-	};
-
-	/**
-	 * Parsers
-	 */
-	struct ButtonParser : public ComponentParser
-	{
-		static inline std::map<std::string, Button::Group> buttonGroupMap;
-		ButtonParser();
-		Pointer<Component> Create() override;
-	};
-
-	struct NormalButtonParser : public ButtonParser
-	{
-		NormalButtonParser();
-		Pointer<Component> Create() override;
 	};
 }

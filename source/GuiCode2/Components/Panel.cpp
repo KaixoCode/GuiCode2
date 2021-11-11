@@ -845,44 +845,4 @@ namespace GuiCode
 		if (max.height != -1 && height > max.height)
 			height = max.height;
 	}
-
-	// Parsers
-	template<>
-	Layout Parsers<Layout>::Parse(std::string_view& c)
-	{
-		return (Layout)Parsers<int>::Parse(c);
-	};
-
-	template<>
-	Overflow Parsers<Overflow>::Parse(std::string_view& c)
-	{
-		return (Overflow)Parsers<int>::Parse(c);
-	};
-
-	template<>
-	Panel::Id Parsers<Panel::Id>::Parse(std::string_view& c)
-	{
-		return Parsers<int>::Parse(c);
-	};
-
-	template<>
-	Panel::Settings::OverflowStruct Parsers<Panel::Settings::OverflowStruct>::Parse(std::string_view& c)
-	{
-		auto [x, y] = Parsers<std::tuple<Overflow, Overflow>>::Parse(c);
-		return Panel::Settings::OverflowStruct{ x, y };
-	};
-
-	template<>
-	Border Parsers<Border>::Parse(std::string_view& c)
-	{
-		auto [width, color] = Parsers<std::tuple<float, Color>>::Parse(c);
-		return Border{ width, color };
-	};
-
-	template<>
-	Border::Side Parsers<Border::Side>::Parse(std::string_view& c)
-	{
-		auto res = Parsers<Border>::Parse(c);
-		return { res.width, res.color };
-	};
 }

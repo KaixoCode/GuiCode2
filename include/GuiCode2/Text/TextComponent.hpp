@@ -3,12 +3,6 @@
 
 namespace GuiCode 
 {
-	struct TextParser : public TextBoxParser
-	{
-		TextParser();
-		Pointer<Component> Create() override;
-	};
-
 	class Text : public TextBox
 	{
 	public:

@@ -5,19 +5,12 @@
 #include "GuiCode2/Graphics/Graphics.hpp"
 #include "GuiCode2/Events/BasicEvents.hpp"
 #include "GuiCode2/Utils/Clipboard.hpp"
-#include "GuiCode2/Parser.hpp"
 
 namespace GuiCode
 {
 	enum class Wrap
 	{
 		None = -1, Word, Character
-	};
-
-	struct TextDisplayerParser : public ComponentParser
-	{
-		TextDisplayerParser();
-		Pointer<Component> Create() override;
 	};
 
 	class TextDisplayer : public Component
@@ -77,9 +70,5 @@ namespace GuiCode
 
 		void UpdateTypeX();
 		void Init();
-
-		Ref<bool> m_Editable = container.editable;
-		Ref<std::string> m_Content = container.content;
-		friend class TextDisplayerParser;
 	};
 }

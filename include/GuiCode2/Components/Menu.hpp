@@ -9,48 +9,6 @@
 namespace GuiCode
 {
 	/**
-	 * Parsers
-	 */
-	struct MenuButtonParser : public ButtonParser
-	{
-		MenuButtonParser();
-		Pointer<Component> Create() override;
-	};
-
-	struct SubMenuButtonParser : public MenuButtonParser
-	{
-		SubMenuButtonParser();
-		Pointer<Component> Create() override;
-		void Append(Component& c, Pointer<Component>&& obj);
-	};
-
-	struct MenuBarButtonParser : public MenuButtonParser
-	{
-		MenuBarButtonParser();
-		Pointer<Component> Create() override;
-		void Append(Component& c, Pointer<Component>&& obj);
-	};
-
-	struct DividerParser : public ComponentParser
-	{
-		DividerParser();
-		Pointer<Component> Create() override;
-	};
-
-	struct MenuParser : public ComponentParser
-	{
-		MenuParser();
-		Pointer<Component> Create() override;
-		void Append(Component& c, Pointer<Component>&& obj);
-	};
-
-	struct MenuBarParser : public MenuParser
-	{
-		MenuBarParser();
-		Pointer<Component> Create() override;
-	};
-
-	/**
 	 * Basic menu, makes use of a Panel to layout.
 	 */
 	class Menu : public Panel
@@ -84,15 +42,11 @@ namespace GuiCode
 		Vec4<float>& padding;
 		Color& background;
 		Border& border;
-	private:
-		bool vertical = true;
-		Ref<Vec4<float>> m_Padding = padding;
-		Ref<Color> m_Background = background;
-		Ref<Border> m_Border = border;
 
 	private:
+		bool vertical = true;
+
 		void Init();
-		friend class MenuParser;
 	};
 
 	/**
@@ -169,18 +123,6 @@ namespace GuiCode
 
 	private:
 		void Init();
-		
-		Ref<std::string> m_Name = settings.name;
-		Ref<StateColors> m_Color = settings.color;
-		Ref<Settings::Border> m_Border = settings.border;
-		Ref<float> m_BorderWidth = settings.border.width;
-		Ref<StateColors> m_BorderColor = settings.border.color;
-		Ref<float> m_TextSize = settings.text.size;
-		Ref<StateColors> m_TextColor = settings.text.color;
-		Ref<StateColors> m_Select = settings.select;
-		Ref<std::string> m_Font = settings.font;
-		friend class MenuButtonParser;
-		friend class MenuBarButtonParser;
 	};
 
 	/**
@@ -200,11 +142,6 @@ namespace GuiCode
 
 	private:
 		void Init();
-
-		Ref<Vec4<float>> m_MenuPadding = menu.padding;
-		Ref<Color> m_MenuBackground = menu.background;
-		Ref<Border> m_MenuBorder = menu.border;
-		friend class SubMenuButtonParser;
 	};
 
 	/**
@@ -226,11 +163,6 @@ namespace GuiCode
 
 	private:
 		void Init();
-
-		Ref<Vec4<float>> m_MenuPadding = menu.padding;
-		Ref<Color> m_MenuBackground = menu.background;
-		Ref<Border> m_MenuBorder = menu.border;
-		friend class MenuBarButtonParser;
 	};
 
 	class Divider : public Component
@@ -247,12 +179,5 @@ namespace GuiCode
 
 		void Update() override;
 		void Render(CommandCollection& d) const override;
-
-	private:
-		Ref<Vec4<float>> m_Padding = settings.padding;
-		Ref<float> m_Stroke = settings.stroke;
-		Ref<Color> m_Color = settings.color;
-
-		friend class DividerParser;
 	};
 }

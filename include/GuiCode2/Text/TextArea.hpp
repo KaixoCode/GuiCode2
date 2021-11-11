@@ -6,12 +6,6 @@
 
 namespace GuiCode
 {
-	struct TextAreaParser : public ComponentParser
-	{
-		TextAreaParser();
-		Pointer<Component> Create() override;
-	};
-
 	class TextArea : public Panel
 	{
 		using Panel::settings;
@@ -47,19 +41,5 @@ namespace GuiCode
 
 		void UpdateScroll();
 		void Init();
-
-		Ref<int> m_Align = displayer.align;
-		Ref<TextContainer> m_Container = displayer.container;
-		Ref<std::string> m_Font = displayer.font;
-		Ref<float> m_FontSize = displayer.fontSize;
-		Ref<float> m_LineHeight = displayer.lineHeight;
-		Ref<std::string> m_Placeholder = displayer.placeholder;
-		Ref<Color> m_TextColor = displayer.textColor;
-		Ref<Color> m_SelectColor = displayer.selectColor;
-		Ref<Wrap> m_Wrap = displayer.wrap;
-		Ref<bool> m_Editable = displayer.editable;
-		Ref<std::string> m_Content = displayer.content;
-
-		friend class TextAreaParser;
 	};
 }

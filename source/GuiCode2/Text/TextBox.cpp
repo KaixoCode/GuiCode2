@@ -107,22 +107,4 @@ namespace GuiCode
 
 		scrollbar.x.ConstrainValue();
 	}
-
-	TextBoxParser::TextBoxParser()
-	{
-		settings.name = "textbox";
-		Attribute("text-align", &TextBox::m_Align);
-		Attribute("font-size", &TextBox::m_FontSize);
-		Attribute("font", &TextBox::m_Font);
-		Attribute("placeholder", &TextBox::m_Placeholder);
-		Attribute("text-color", &TextBox::m_TextColor);
-		Attribute("select-color", &TextBox::m_SelectColor);
-		Attribute("editable", &TextBox::m_Editable);
-		Attribute("content", &TextBox::m_Content);
-	}
-
-	Pointer<Component> TextBoxParser::Create()
-	{
-		return new TextBox{};
-	}
 }

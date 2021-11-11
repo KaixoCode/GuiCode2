@@ -8,14 +8,4 @@ namespace GuiCode
 		Panel::settings.min.width = GraphicsBase::StringWidth(content, font, fontSize) + 4;
 		editable = false;
 	}
-
-	TextParser::TextParser()
-	{
-		settings.name = "text";
-	}
-
-	Pointer<Component> TextParser::Create()
-	{
-		return new Text{};
-	}
 }
