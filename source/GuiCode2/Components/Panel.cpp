@@ -2,6 +2,55 @@
 
 namespace GuiCode
 {
+	void Border::Render(CommandCollection& d, Vec4<float> dim)
+	{
+		Vec4<float> _widths{ 0, 0, 0, 0 };
+		Vec4<Color> _colors{ {}, {}, {}, {} };
+
+		_widths.left = width;
+		_widths.top = width;
+		_widths.right = width;
+		_widths.bottom = width;
+
+		_colors.left = color.Current();
+		_colors.top = color.Current();
+		_colors.right = color.Current();
+		_colors.bottom = color.Current();
+
+		if (left.width > 0)
+			_widths.left = left.width, _colors.left = left.color.Current();
+		if (top.width > 0)
+			_widths.top = top.width, _colors.top = top.color.Current();
+		if (right.width > 0)
+			_widths.right = right.width, _colors.right = right.color.Current();
+		if (bottom.width > 0)
+			_widths.bottom = bottom.width, _colors.bottom = bottom.color.Current();
+
+		if (_widths.left)
+		{
+			d.Fill(_colors.left);
+			d.Quad({ dim.x, dim.y, _widths.left, dim.height });
+		}
+
+		if (_widths.top)
+		{
+			d.Fill(_colors.top);
+			d.Quad({ dim.x, dim.y, dim.width - _widths.right, _widths.top });
+		}
+
+		if (_widths.right)
+		{
+			d.Fill(_colors.right);
+			d.Quad({ dim.x + dim.width - _widths.right, dim.y, _widths.right, dim.height });
+		}
+
+		if (_widths.bottom)
+		{
+			d.Fill(_colors.bottom);
+			d.Quad({ dim.x, dim.y + dim.height - _widths.bottom, dim.width - _widths.right, _widths.bottom });
+		}
+	}
+
 	Panel::Panels::Panels(Panel& me, const std::vector<Pointer<Panel>>& data)
 		: data(data), me(me)
 	{}
@@ -631,7 +680,7 @@ namespace GuiCode
 		d.Fill(settings.background.Current());
 		d.Quad(dimensions);
 
-		RenderBorder(d);
+		settings.border.Render(d, dimensions);
 
 		if (settings.overflow.x != Overflow::Show || settings.overflow.y != Overflow::Show)
 		{
@@ -674,55 +723,6 @@ namespace GuiCode
 
 		if (scrollbar.y.State(Visible))
 			scrollbar.y.ForwardRender(d);
-	}
-
-	void Panel::RenderBorder(CommandCollection& d)
-	{
-		Vec4<float> _widths{ 0, 0, 0, 0 };
-		Vec4<Color> _colors{ {}, {}, {}, {} };
-
-		_widths.left = settings.border.width;
-		_widths.top = settings.border.width;
-		_widths.right = settings.border.width;
-		_widths.bottom = settings.border.width;
-
-		_colors.left = settings.border.color.Current();
-		_colors.top = settings.border.color.Current();
-		_colors.right = settings.border.color.Current();
-		_colors.bottom = settings.border.color.Current();
-
-		if (settings.border.left.width > 0)
-			_widths.left = settings.border.left.width, _colors.left = settings.border.left.color.Current();
-		if (settings.border.top.width > 0)
-			_widths.top = settings.border.top.width, _colors.top = settings.border.top.color.Current();
-		if (settings.border.right.width > 0)
-			_widths.right = settings.border.right.width, _colors.right = settings.border.right.color.Current();
-		if (settings.border.bottom.width > 0)
-			_widths.bottom = settings.border.bottom.width, _colors.bottom = settings.border.bottom.color.Current();
-
-		if (_widths.left)
-		{
-			d.Fill(_colors.left);
-			d.Quad({ x - _widths.left, y, _widths.left, height });
-		}
-
-		if (_widths.top)
-		{
-			d.Fill(_colors.top);
-			d.Quad({ x - _widths.left, y - _widths.top, width + _widths.left + _widths.right, _widths.top });
-		}
-
-		if (_widths.right)
-		{
-			d.Fill(_colors.right);
-			d.Quad({ x + width, y, _widths.right, height });
-		}
-
-		if (_widths.bottom)
-		{
-			d.Fill(_colors.bottom);
-			d.Quad({ x - _widths.left, y + height, width + _widths.left + _widths.right, _widths.bottom });
-		}
 	}
 
 	/**

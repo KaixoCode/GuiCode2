@@ -95,7 +95,9 @@ namespace GuiCode
 	{
 		d.PushClip();
 		Render(d);
-		std::sort(components.begin(), components.end(), [](auto& a, auto& b) { return a->zIndex < b->zIndex; });
+		//std::sort(components.begin(), components.end(), [](auto& a, auto& b) { return a->zIndex < b->zIndex; });
+
+		components.sort([](auto& a, auto& b) { return a->zIndex < b->zIndex; });
 
 		for (auto _c : components)
 			if (_c->State(Visible))
@@ -120,7 +122,6 @@ namespace GuiCode
 		Update();
 		ConstrainSize();
 		for (auto& _c : components)
-			if (_c->State(Visible))
-				_c->ForwardUpdate();
+			_c->ForwardUpdate();
 	}
 }

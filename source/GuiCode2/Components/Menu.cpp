@@ -22,6 +22,7 @@ namespace GuiCode
 
 	void Menu::InitListeners()
 	{
+		settings.Link(this);
 		*this += [&](const KeyPress& e)
 		{
 			if (e.Handled() || !State(Focused))
@@ -105,6 +106,14 @@ namespace GuiCode
 		};
 	}
 
+	void Menu::ForwardRender(CommandCollection& d) 
+	{
+		d.Fill(settings.background.Current());
+		d.Quad(dimensions);
+		settings.border.Render(d, dimensions);
+		Component::ForwardRender(d);
+	}
+
 	void Menu::ForwardUpdate() 
 	{
 		float _x = x + settings.margin.left;
@@ -116,15 +125,21 @@ namespace GuiCode
 		{
 			for (auto& i : components)
 			{
-				i->dimensions = { _x, _y, _w, i->height };
+				i->dimensions = { _x, _y, i->width, i->height };
 				_y += i->height + settings.padding * 2;
 
 				if (i->width > _b)
 					_b = i->width;
 			}
 
-			height = _y + settings.margin.bottom;
-			width = _b;
+			height = _y + settings.margin.bottom - y;
+			width = _b + settings.margin.left + settings.margin.right;
+
+			for (auto& i : components) 
+			{
+				i->width = _b;
+				i->ConstrainSize();
+			}
 		}
 		else 
 		{
@@ -136,7 +151,7 @@ namespace GuiCode
 					_b = i->height;
 			}
 
-			width = _x + settings.margin.right;
+			width = _x + settings.margin.right - x;
 			height = _b;
 		}
 
@@ -154,24 +169,6 @@ namespace GuiCode
 				return true;
 
 		return false;
-	}
-
-	SubMenuButton::SubMenuButton(const Settings& settings)
-		: Button(Button::Settings{
-			.group = settings.group,
-			.type = Button::Hover,
-			.callback = [this](bool v) {
-				if (v) ContextMenu::Open(menu, { x + width, y });
-				else ContextMenu::Close(menu);
-			},
-			.combo = settings.combo,
-			.graphics = settings.graphics,
-		})
-	{}
-
-	bool SubMenuButton::Hitbox(const Vec2<float>& pos) const
-	{
-		return Button::Hitbox(pos) || menu.Hitbox(pos - Vec2<float>{ x + width, y });
 	}
 
 	Divider::Divider(const Settings& settings)

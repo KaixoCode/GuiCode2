@@ -36,7 +36,7 @@ namespace GuiCode
 		};
 
 		float width = 0;		   // Border can be picked
-		StateColors color;               // for individual sides
+		StateColors color;         // for individual sides
 		Side left; 				   // or for the entire border
 		Side right; 			   // at once. If side is specified
 		Side top; 				   // it will override width/color
@@ -46,6 +46,8 @@ namespace GuiCode
 			color.Link(c), left.color.Link(c), right.color.Link(c), 
 				top.color.Link(c), bottom.color.Link(c); 
 		}
+
+		void Render(CommandCollection& d, Vec4<float> dim);
 	};
 
 	/**
@@ -209,7 +211,6 @@ namespace GuiCode
 		Vec4<float> m_Viewport; // Actual dimensions of the used space in this panel (used by scrollbars)
 
 		void RefreshScrollbars();
-		void RenderBorder(CommandCollection&);
 
 		void RowLayout(Vec4<float>& content);
 		void ColumnLayout(Vec4<float>& content);

@@ -162,7 +162,7 @@ namespace GuiCode
 	class EventListener
 	{
 	public:
-		std::vector<Pointer<Component>> components;
+		std::list<Pointer<Component>> components;
 
 		EventListener() = default;
 		EventListener(const EventListener&);

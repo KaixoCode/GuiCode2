@@ -24,7 +24,7 @@ namespace GuiCode
 		template<std::derived_from<WindowBase> T, class ...Args>
 		T& emplace(Args&& ...args) requires std::constructible_from<T, Args...>
 		{
-			return m_Windows.emplace_back(Pointer<T>{ std::forward<Args>(args)... });
+			return m_Windows.emplace_back(Pointer<T>{ new T{ std::forward<Args>(args)... } });
 		}
 
 		bool Loop();

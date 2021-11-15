@@ -49,14 +49,14 @@ namespace GuiCode
 	{
 		me = button;
 		auto _base = Get<GroupBase>();
-		if (_base) 
+		if (_base && button) 
 			_base->group.push_back(button);
 	}
 
 	void Button::Group::Unlink(Button* button)
 	{
 		auto _base = Get<GroupBase>();
-		if (_base)
+		if (_base && button)
 		{
 			auto _it = std::remove(_base->group.begin(), _base->group.end(), button);
 			if (_it != _base->group.end())

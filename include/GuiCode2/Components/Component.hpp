@@ -86,6 +86,18 @@ namespace GuiCode
 		 */
 		virtual void ForwardUpdate();
 
+		template<std::derived_from<Component> Type, typename ...Args> requires std::constructible_from<Type, Args...>
+		Type& emplace_back(Args&&...args) { return components.emplace_back(new Type{ std::forward<Args>(args)... }); }
+
+		template<std::derived_from<Component> Type>
+		Type& emplace_back(Type::Settings settings) { return components.emplace_back(new Type{ settings }); }
+
+		template<std::derived_from<Component> Type>
+		Type& push_back(Type::Settings settings) { return components.emplace_back(new Type{ settings }); }
+
+		template<std::derived_from<Component> Type>
+		Type& push_back(const Pointer<Type>& ptr) { return components.push_back(ptr); }
+
 	private:
 		mutable std::unordered_map<GuiCode::State, int> m_States;
 		void InitListeners();
