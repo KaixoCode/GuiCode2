@@ -27,6 +27,12 @@ namespace GuiCode
 			return m_Windows.emplace_back(Pointer<T>{ new T{ std::forward<Args>(args)... } });
 		}
 
+		template<std::derived_from<WindowBase> T>
+		T& emplace(T::Settings args = {})
+		{
+			return m_Windows.emplace_back(Pointer<T>{ new T{ args } });
+		}
+
 		bool Loop();
 		void Close() { m_Running = false; }
 

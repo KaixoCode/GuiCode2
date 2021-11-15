@@ -5,7 +5,7 @@ namespace GuiCode
 {
 	bool Gui::Loop()
 	{
-		//LIMIT_FPS(60);
+		LIMIT_FPS(60);
 		for (int i = m_Windows.size() - 1; i >= 0; i--)
 		{
 			auto& _w = m_Windows[i];
