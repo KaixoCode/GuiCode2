@@ -11,6 +11,7 @@ namespace GuiCode
 
     private:
         glm::vec4 FlipY(const glm::vec4& v) { return { v.x, m_Size.height - v.y - v.w, v.z, v.w }; };
+        glm::vec4 FlipYM(const glm::vec4& v) { return { v.x, m_Size.height - v.y, v.z, v.w }; };
         glm::vec4 FlipY2(const glm::vec4& v) { return { v.x, m_Size.height - v.y, v.z, m_Size.height - v.w }; };
 
         void Fill(const Color&) override;

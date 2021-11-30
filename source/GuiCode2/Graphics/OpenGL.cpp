@@ -31,7 +31,7 @@ namespace GuiCode
             case Command::Quad:         this->Quad(FlipY(a.a), a.bs.a, a.bs.c); break;
             case Command::TexturedQuad: this->TexturedQuad(a.bs2.b, FlipY(a.a), a.bs2.a, a.bs2.c); break;
             case Command::Line:         this->Line(FlipY2(a.a), a.bs.a); break;
-            case Command::Ellipse:      this->Ellipse(FlipY(a.a), a.b); break;
+            case Command::Ellipse:      this->Ellipse(FlipYM(a.a), a.b); break;
             case Command::Triangle:     this->Triangle(FlipY(a.a), a.bs.a); break;
             case Command::Text:         this->Text(a.view, a.b); break;
             case Command::Font:         this->Font(a.view); break;
@@ -568,11 +568,11 @@ void main() {
     {
         float _vertices[] = {
             -.5f, -.5f,
-            .5f, -.5f,
-            -.5f, .5f,
-            .5f, -.5f,
-            .5f, .5f,
-            -.5f, .5f
+             .5f, -.5f,
+            -.5f,  .5f,
+             .5f, -.5f,
+             .5f,  .5f,
+            -.5f,  .5f
         };
 
         glGenVertexArrays(1, &ellipse.vao);
@@ -620,7 +620,7 @@ void main() {
             "    if (aa < 0) aa = aa + 6.28318530718; "
             "    float r = (pow(pos.x - x, 2) / pow(dimensions.z / 2, 2)) + (pow(pos.y - y, 2) / pow(dimensions.w / 2, 2)); "
             "    if (aa > aend) { discard; } "
-            "    else if (r > 1) { discard; } "
+            "    else if (r > 1) { discard;  } "
             "    else if (r > 0.90) { FragColor = vec4(color.rgb, 10 * (1 - r) * color.a); } "
             "    else { FragColor = color; } "
             "} "
